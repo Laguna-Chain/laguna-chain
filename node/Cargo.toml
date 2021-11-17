@@ -1,8 +1,25 @@
 [package]
-name = "node"
-version = "0.1.0"
 edition = "2021"
+name = "hydro-node"
+version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "hydro-node"
+
+[package.metadata.docs.rs]
+targets = ['x86_64-unknown-linux-gnu']
+
+[build-dependencies.substrate-build-script-utils]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '3.0.0'
+
 [dependencies]
+
+[dependencies.sc-cli]
+features = ['wasmtime']
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '0.10.0-dev'

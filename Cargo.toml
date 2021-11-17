@@ -1,12 +1,12 @@
 [profile.release]
-panic = 'unwind'
+panic = 'unwind' # reduce binary size
 
 [profile.dev]
 split-debuginfo = "unpacked"
 
 [workspace]
 members = [
-    'node',
-    'runtime',
-]
-resolver = "2"
+  'node',
+  'runtime',
+] 
+resolver = "2" # use the new resolver for better dependency resolution
