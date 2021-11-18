@@ -6,3 +6,57 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+# basic runtime dependency
+[dependencies.frame-support]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '4.0.0-dev'
+
+[dependencies.frame-system]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '4.0.0-dev'
+
+[dependencies.sp-version]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '4.0.0-dev'
+
+[dependencies.sp-runtime]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '4.0.0-dev'
+
+[dependencies.sp-api]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '4.0.0-dev'
+
+[dependencies.sp-std]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '4.0.0-dev'
+
+# build dependency for the wasm runtime
+[build-dependencies.substrate-wasm-builder]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11'
+version = '5.0.0-dev'
+
+[features]
+default = ["std"]
+runtime-placeholder = []
+std = [
+  "frame-support/std",
+  "frame-system/std",
+  "sp-version/std",
+  "sp-runtime/std",
+  "sp-api/std",
+]
