@@ -8,5 +8,6 @@ split-debuginfo = "unpacked"
 members = [
   'node',
   'runtime',
+  'primitives',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution
