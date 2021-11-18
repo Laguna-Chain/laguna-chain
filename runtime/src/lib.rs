@@ -23,7 +23,7 @@ use sp_version::RuntimeVersion;
 
 // TODO: include all needed const as well
 
-// version declaration copy for wasm runtime from substrate-node-template
+// version declaration for wasm runtime copy from substrate-node-template
 // #[sp_version::runtime_version]
 // pub const VERSION: RuntimeVersion = RuntimeVersion {
 //     spec_name: create_runtime_str!("hydro-runtime-placeholder"),
