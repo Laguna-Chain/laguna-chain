@@ -13,7 +13,7 @@ targets = ['x86_64-unknown-linux-gnu']
 
 [build-dependencies.substrate-build-script-utils]
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11'
+tag = 'monthly-2021-11-1'
 version = '3.0.0'
 
 [dependencies]
@@ -21,5 +21,5 @@ version = '3.0.0'
 [dependencies.sc-cli]
 features = ['wasmtime']
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11'
+tag = 'monthly-2021-11-1'
 version = '0.10.0-dev'

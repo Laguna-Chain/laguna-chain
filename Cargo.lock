@@ -116,6 +116,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ee10e43ae4a853c0a3591d4e2ada1719e553be18199d9da9d4a83f5927c2f5c7"
 
 [[package]]
+name = "approx"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "072df7202e63b127ab55acfe16ce97013d5b97bf160489336d3f1840fd78e99e"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1368,7 +1377,7 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 [[package]]
 name = "fork-tree"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "parity-scale-codec",
 ]
@@ -1381,6 +1390,26 @@ checksum = "5fc25a87fa4fd2094bffb06925852034d90a17f0d1e05197d4956d3555752191"
 dependencies = [
  "matches",
  "percent-encoding 2.1.0",
+]
+
+[[package]]
+name = "frame-benchmarking"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "linregress",
+ "log",
+ "parity-scale-codec",
+ "paste",
+ "scale-info",
+ "sp-api",
+ "sp-io",
+ "sp-runtime",
+ "sp-runtime-interface",
+ "sp-std",
+ "sp-storage",
 ]
 
 [[package]]
@@ -1398,7 +1427,7 @@ dependencies = [
 [[package]]
 name = "frame-support"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "bitflags",
  "frame-metadata",
@@ -1411,22 +1440,22 @@ dependencies = [
  "scale-info",
  "serde",
  "smallvec",
- "sp-arithmetic 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-arithmetic",
+ "sp-core",
  "sp-inherents",
- "sp-io 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-io",
+ "sp-runtime",
  "sp-staking",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-state-machine",
+ "sp-std",
+ "sp-tracing",
  "tt-call",
 ]
 
 [[package]]
 name = "frame-support-procedural"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "Inflector",
  "frame-support-procedural-tools",
@@ -1438,7 +1467,7 @@ dependencies = [
 [[package]]
 name = "frame-support-procedural-tools"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "frame-support-procedural-tools-derive",
  "proc-macro-crate 1.1.0",
@@ -1450,7 +1479,7 @@ dependencies = [
 [[package]]
 name = "frame-support-procedural-tools-derive"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1460,17 +1489,17 @@ dependencies = [
 [[package]]
 name = "frame-system"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "frame-support",
  "log",
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-io 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
  "sp-version",
 ]
 
@@ -2309,6 +2338,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbe5e23404da5b4f555ef85ebed98fb4083e55a00c317800bc2a50ede9f3d219"
 
 [[package]]
+name = "libm"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7d73b3f436185384286bd8098d17ec07c9a7d2388a6599f824d8502b529702a"
+
+[[package]]
 name = "libp2p"
 version = "0.39.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2836,6 +2871,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "linregress"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d6c601a85f5ecd1aba625247bca0031585fb1c446461b142878a16f8245ddeb8"
+dependencies = [
+ "nalgebra",
+ "statrs",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2901,6 +2946,15 @@ name = "matches"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a3e378b66a060d48947b590737b30a1be76706c8dd7b8ba0f2fe3989c68a853f"
+
+[[package]]
+name = "matrixmultiply"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a8a15b776d9dfaecd44b03c5828c2199cddff5247215858aac14624f8d6b741"
+dependencies = [
+ "rawpointer",
+]
 
 [[package]]
 name = "memchr"
@@ -3141,6 +3195,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "nalgebra"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "462fffe4002f4f2e1f6a9dcf12cc1a6fc0e15989014efc02a941d3e0f5dc2120"
+dependencies = [
+ "approx",
+ "matrixmultiply",
+ "nalgebra-macros",
+ "num-complex",
+ "num-rational 0.4.0",
+ "num-traits",
+ "rand 0.8.4",
+ "rand_distr",
+ "simba",
+ "typenum",
+]
+
+[[package]]
+name = "nalgebra-macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "01fcc0b8149b4632adc89ac3b7b31a12fb6099a0317a4eb2ebff574ef7de7218"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "names"
 version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3193,6 +3276,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-complex"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "26873667bbbb7c5182d4a37c1add32cdf09f841af72da53318fdb81543c15085"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "num-integer"
 version = "0.1.44"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3215,12 +3307,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "num-rational"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
+dependencies = [
+ "autocfg",
+ "num-integer",
+ "num-traits",
+]
+
+[[package]]
 name = "num-traits"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
 dependencies = [
  "autocfg",
+ "libm",
 ]
 
 [[package]]
@@ -3276,6 +3380,112 @@ name = "openssl-probe"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "28988d872ab76095a6e6ac88d99b54fd267702734fd7ffe610ca27f533ddb95a"
+
+[[package]]
+name = "pallet-aura"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-application-crypto",
+ "sp-consensus-aura",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-authorship"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "impl-trait-for-tuples",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-authorship",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-grandpa"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-authorship",
+ "pallet-session",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-finality-grandpa",
+ "sp-io",
+ "sp-runtime",
+ "sp-session",
+ "sp-staking",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-session"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "impl-trait-for-tuples",
+ "log",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-session",
+ "sp-staking",
+ "sp-std",
+ "sp-trie",
+]
+
+[[package]]
+name = "pallet-sudo"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-timestamp"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-inherents",
+ "sp-runtime",
+ "sp-std",
+ "sp-timestamp",
+]
 
 [[package]]
 name = "parity-scale-codec"
@@ -3597,9 +3807,9 @@ dependencies = [
 name = "primitives"
 version = "0.1.0"
 dependencies = [
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -3848,6 +4058,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "rand_distr"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "964d548f8e7d12e102ef183a0de7e98180c9f8729f555897a857b96e48122d2f"
+dependencies = [
+ "num-traits",
+ "rand 0.8.4",
+]
+
+[[package]]
 name = "rand_hc"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3873,6 +4093,12 @@ checksum = "16abd0c1b639e9eb4d7c50c0b8100b0d0f849be2349829c740fe8e6eb4816429"
 dependencies = [
  "rand_core 0.5.1",
 ]
+
+[[package]]
+name = "rawpointer"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60a357793950651c4ed0f3f52338f53b2f809f32d83a07f72909fa13e4c6c1e3"
 
 [[package]]
 name = "rayon"
@@ -4043,9 +4269,13 @@ version = "0.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
+ "pallet-aura",
+ "pallet-grandpa",
+ "pallet-sudo",
+ "primitives",
  "sp-api",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-std",
  "sp-version",
  "substrate-wasm-builder",
 ]
@@ -4140,34 +4370,34 @@ dependencies = [
 [[package]]
 name = "sc-allocator"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "log",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-wasm-interface",
  "thiserror",
 ]
 
 [[package]]
 name = "sc-block-builder"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "parity-scale-codec",
  "sc-client-api",
  "sp-api",
  "sp-block-builder",
  "sp-blockchain",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-inherents",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-state-machine",
 ]
 
 [[package]]
 name = "sc-chain-spec"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
@@ -4176,14 +4406,14 @@ dependencies = [
  "sc-telemetry",
  "serde",
  "serde_json",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime",
 ]
 
 [[package]]
 name = "sc-chain-spec-derive"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro2",
@@ -4194,7 +4424,7 @@ dependencies = [
 [[package]]
 name = "sc-cli"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "chrono",
  "fdlimit",
@@ -4217,11 +4447,11 @@ dependencies = [
  "serde",
  "serde_json",
  "sp-blockchain",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-keyring",
- "sp-keystore 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-panic-handler 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-keystore",
+ "sp-panic-handler",
+ "sp-runtime",
  "sp-version",
  "structopt",
  "thiserror",
@@ -4232,7 +4462,7 @@ dependencies = [
 [[package]]
 name = "sc-client-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "fnv",
  "futures 0.3.17",
@@ -4246,21 +4476,21 @@ dependencies = [
  "sp-api",
  "sp-blockchain",
  "sp-consensus",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-database",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-keystore 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-storage 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-externalities",
+ "sp-keystore",
+ "sp-runtime",
+ "sp-state-machine",
+ "sp-storage",
+ "sp-trie",
  "substrate-prometheus-endpoint",
 ]
 
 [[package]]
 name = "sc-client-db"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "hash-db",
  "kvdb",
@@ -4271,19 +4501,19 @@ dependencies = [
  "parking_lot",
  "sc-client-api",
  "sc-state-db",
- "sp-arithmetic 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-arithmetic",
  "sp-blockchain",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-database",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-state-machine",
+ "sp-trie",
 ]
 
 [[package]]
 name = "sc-consensus"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-trait",
  "futures 0.3.17",
@@ -4297,9 +4527,9 @@ dependencies = [
  "sp-api",
  "sp-blockchain",
  "sp-consensus",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime",
+ "sp-state-machine",
  "substrate-prometheus-endpoint",
  "thiserror",
 ]
@@ -4307,7 +4537,7 @@ dependencies = [
 [[package]]
 name = "sc-executor"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "lazy_static",
  "libsecp256k1 0.6.0",
@@ -4318,32 +4548,32 @@ dependencies = [
  "sc-executor-wasmi",
  "sc-executor-wasmtime",
  "sp-api",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-io 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-panic-handler 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-externalities",
+ "sp-io",
+ "sp-panic-handler",
+ "sp-runtime-interface",
  "sp-tasks",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-trie",
  "sp-version",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-wasm-interface",
  "wasmi",
 ]
 
 [[package]]
 name = "sc-executor-common"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "derive_more",
  "environmental",
  "parity-scale-codec",
  "pwasm-utils",
  "sc-allocator",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-maybe-compressed-blob",
  "sp-serializer",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-wasm-interface",
  "thiserror",
  "wasmi",
 ]
@@ -4351,23 +4581,23 @@ dependencies = [
 [[package]]
 name = "sc-executor-wasmi"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "log",
  "parity-scale-codec",
  "sc-allocator",
  "sc-executor-common",
  "scoped-tls",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime-interface",
+ "sp-wasm-interface",
  "wasmi",
 ]
 
 [[package]]
 name = "sc-executor-wasmtime"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
@@ -4376,16 +4606,16 @@ dependencies = [
  "parity-wasm 0.42.2",
  "sc-allocator",
  "sc-executor-common",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime-interface",
+ "sp-wasm-interface",
  "wasmtime",
 ]
 
 [[package]]
 name = "sc-informant"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "ansi_term 0.12.1",
  "futures 0.3.17",
@@ -4396,28 +4626,28 @@ dependencies = [
  "sc-network",
  "sc-transaction-pool-api",
  "sp-blockchain",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
 ]
 
 [[package]]
 name = "sc-keystore"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-trait",
  "derive_more",
  "hex",
  "parking_lot",
  "serde_json",
- "sp-application-crypto 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-keystore 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-keystore",
 ]
 
 [[package]]
 name = "sc-network"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-std",
  "async-trait",
@@ -4452,12 +4682,12 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec",
- "sp-arithmetic 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-arithmetic",
  "sp-blockchain",
  "sp-consensus",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-finality-grandpa",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
  "substrate-prometheus-endpoint",
  "thiserror",
  "unsigned-varint 0.6.0",
@@ -4468,7 +4698,7 @@ dependencies = [
 [[package]]
 name = "sc-offchain"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "bytes 1.1.0",
  "fnv",
@@ -4487,16 +4717,16 @@ dependencies = [
  "sc-network",
  "sc-utils",
  "sp-api",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-offchain",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
  "threadpool",
 ]
 
 [[package]]
 name = "sc-peerset"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "futures 0.3.17",
  "libp2p",
@@ -4509,7 +4739,7 @@ dependencies = [
 [[package]]
 name = "sc-rpc"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "futures 0.3.17",
  "hash-db",
@@ -4528,11 +4758,11 @@ dependencies = [
  "serde_json",
  "sp-api",
  "sp-blockchain",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-keystore 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-keystore",
  "sp-offchain",
  "sp-rpc",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
  "sp-session",
  "sp-version",
 ]
@@ -4540,7 +4770,7 @@ dependencies = [
 [[package]]
 name = "sc-rpc-api"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "futures 0.3.17",
  "jsonrpc-core",
@@ -4554,10 +4784,10 @@ dependencies = [
  "sc-transaction-pool-api",
  "serde",
  "serde_json",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-rpc",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-tracing",
  "sp-version",
  "thiserror",
 ]
@@ -4565,7 +4795,7 @@ dependencies = [
 [[package]]
 name = "sc-rpc-server"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "futures 0.3.17",
  "jsonrpc-core",
@@ -4582,7 +4812,7 @@ dependencies = [
 [[package]]
 name = "sc-service"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-trait",
  "directories",
@@ -4618,22 +4848,22 @@ dependencies = [
  "serde",
  "serde_json",
  "sp-api",
- "sp-application-crypto 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-application-crypto",
  "sp-block-builder",
  "sp-blockchain",
  "sp-consensus",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-externalities",
  "sp-inherents",
- "sp-keystore 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-keystore",
+ "sp-runtime",
  "sp-session",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-storage 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-state-machine",
+ "sp-storage",
+ "sp-tracing",
  "sp-transaction-pool",
  "sp-transaction-storage-proof",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-trie",
  "sp-version",
  "substrate-prometheus-endpoint",
  "tempfile",
@@ -4646,7 +4876,7 @@ dependencies = [
 [[package]]
 name = "sc-state-db"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "log",
  "parity-scale-codec",
@@ -4654,13 +4884,13 @@ dependencies = [
  "parity-util-mem-derive",
  "parking_lot",
  "sc-client-api",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
 ]
 
 [[package]]
 name = "sc-telemetry"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "chrono",
  "futures 0.3.17",
@@ -4678,7 +4908,7 @@ dependencies = [
 [[package]]
 name = "sc-tracing"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "ansi_term 0.12.1",
  "atty",
@@ -4696,10 +4926,10 @@ dependencies = [
  "serde",
  "sp-api",
  "sp-blockchain",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-rpc",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-tracing",
  "thiserror",
  "tracing",
  "tracing-log",
@@ -4709,7 +4939,7 @@ dependencies = [
 [[package]]
 name = "sc-tracing-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro2",
@@ -4720,7 +4950,7 @@ dependencies = [
 [[package]]
 name = "sc-transaction-pool"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "futures 0.3.17",
  "intervalier",
@@ -4736,9 +4966,9 @@ dependencies = [
  "serde",
  "sp-api",
  "sp-blockchain",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime",
+ "sp-tracing",
  "sp-transaction-pool",
  "substrate-prometheus-endpoint",
  "thiserror",
@@ -4747,21 +4977,21 @@ dependencies = [
 [[package]]
 name = "sc-transaction-pool-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "derive_more",
  "futures 0.3.17",
  "log",
  "serde",
  "sp-blockchain",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
  "thiserror",
 ]
 
 [[package]]
 name = "sc-utils"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "futures 0.3.17",
  "futures-timer 3.0.2",
@@ -5039,6 +5269,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "02658e48d89f2bec991f9a78e69cfa4c316f8d6a6c4ec12fae1aeb263d486788"
 
 [[package]]
+name = "simba"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8e82063457853d00243beda9952e910b82593e4b07ae9f721b9278a99a0d3d5c"
+dependencies = [
+ "approx",
+ "num-complex",
+ "num-traits",
+ "paste",
+]
+
+[[package]]
 name = "slab"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5108,16 +5350,16 @@ dependencies = [
 [[package]]
 name = "sp-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "hash-db",
  "log",
  "parity-scale-codec",
  "sp-api-proc-macro",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime",
+ "sp-state-machine",
+ "sp-std",
  "sp-version",
  "thiserror",
 ]
@@ -5125,7 +5367,7 @@ dependencies = [
 [[package]]
 name = "sp-api-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "blake2-rfc",
  "proc-macro-crate 1.1.0",
@@ -5137,42 +5379,14 @@ dependencies = [
 [[package]]
 name = "sp-application-crypto"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-io 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
-]
-
-[[package]]
-name = "sp-application-crypto"
-version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-io 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
-]
-
-[[package]]
-name = "sp-arithmetic"
-version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "integer-sqrt",
- "num-traits",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-debug-derive 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "static_assertions",
+ "sp-core",
+ "sp-io",
+ "sp-std",
 ]
 
 [[package]]
@@ -5185,27 +5399,39 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-debug-derive 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-debug-derive",
+ "sp-std",
  "static_assertions",
+]
+
+[[package]]
+name = "sp-authorship"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "async-trait",
+ "parity-scale-codec",
+ "sp-inherents",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
 name = "sp-block-builder"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "parity-scale-codec",
  "sp-api",
  "sp-inherents",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
 name = "sp-blockchain"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "futures 0.3.17",
  "log",
@@ -5215,75 +5441,57 @@ dependencies = [
  "sp-api",
  "sp-consensus",
  "sp-database",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-state-machine",
  "thiserror",
 ]
 
 [[package]]
 name = "sp-consensus"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-trait",
  "futures 0.3.17",
  "futures-timer 3.0.2",
  "log",
  "parity-scale-codec",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-inherents",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-state-machine",
+ "sp-std",
  "sp-version",
  "thiserror",
 ]
 
 [[package]]
-name = "sp-core"
-version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+name = "sp-consensus-aura"
+version = "0.10.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
- "base58",
- "bitflags",
- "blake2-rfc",
- "byteorder",
- "dyn-clonable",
- "ed25519-dalek",
- "futures 0.3.17",
- "hash-db",
- "hash256-std-hasher",
- "hex",
- "impl-serde",
- "lazy_static",
- "libsecp256k1 0.6.0",
- "log",
- "merlin",
- "num-traits",
+ "async-trait",
  "parity-scale-codec",
- "parity-util-mem",
- "parking_lot",
- "primitive-types",
- "rand 0.7.3",
- "regex",
  "scale-info",
- "schnorrkel",
- "secrecy",
- "serde",
- "sha2 0.9.8",
- "sp-debug-derive 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-storage 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "ss58-registry",
- "substrate-bip39",
- "thiserror",
- "tiny-bip39",
- "tiny-keccak",
- "twox-hash",
- "wasmi",
- "zeroize",
+ "sp-api",
+ "sp-application-crypto",
+ "sp-consensus",
+ "sp-consensus-slots",
+ "sp-inherents",
+ "sp-runtime",
+ "sp-std",
+ "sp-timestamp",
+]
+
+[[package]]
+name = "sp-consensus-slots"
+version = "0.10.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic",
+ "sp-runtime",
 ]
 
 [[package]]
@@ -5318,11 +5526,11 @@ dependencies = [
  "secrecy",
  "serde",
  "sha2 0.9.8",
- "sp-debug-derive 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-runtime-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-storage 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-debug-derive",
+ "sp-externalities",
+ "sp-runtime-interface",
+ "sp-std",
+ "sp-storage",
  "ss58-registry",
  "substrate-bip39",
  "thiserror",
@@ -5336,7 +5544,7 @@ dependencies = [
 [[package]]
 name = "sp-database"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "kvdb",
  "parking_lot",
@@ -5345,16 +5553,6 @@ dependencies = [
 [[package]]
 name = "sp-debug-derive"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "sp-debug-derive"
-version = "3.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "proc-macro2",
@@ -5365,29 +5563,18 @@ dependencies = [
 [[package]]
 name = "sp-externalities"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "environmental",
- "parity-scale-codec",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-storage 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
-]
-
-[[package]]
-name = "sp-externalities"
-version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "environmental",
  "parity-scale-codec",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-storage 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-std",
+ "sp-storage",
 ]
 
 [[package]]
 name = "sp-finality-grandpa"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "finality-grandpa",
  "log",
@@ -5395,49 +5582,25 @@ dependencies = [
  "scale-info",
  "serde",
  "sp-api",
- "sp-application-crypto 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-keystore 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-application-crypto",
+ "sp-core",
+ "sp-keystore",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
 name = "sp-inherents"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-trait",
  "impl-trait-for-tuples",
  "parity-scale-codec",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
  "thiserror",
-]
-
-[[package]]
-name = "sp-io"
-version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "futures 0.3.17",
- "hash-db",
- "libsecp256k1 0.6.0",
- "log",
- "parity-scale-codec",
- "parking_lot",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-keystore 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "tracing",
- "tracing-core",
 ]
 
 [[package]]
@@ -5451,15 +5614,15 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "parking_lot",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-keystore 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-runtime-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-state-machine 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-core",
+ "sp-externalities",
+ "sp-keystore",
+ "sp-runtime-interface",
+ "sp-state-machine",
+ "sp-std",
+ "sp-tracing",
+ "sp-trie",
+ "sp-wasm-interface",
  "tracing",
  "tracing-core",
 ]
@@ -5467,18 +5630,18 @@ dependencies = [
 [[package]]
 name = "sp-keyring"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "lazy_static",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime",
  "strum",
 ]
 
 [[package]]
 name = "sp-keystore"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -5488,30 +5651,14 @@ dependencies = [
  "parking_lot",
  "schnorrkel",
  "serde",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
-]
-
-[[package]]
-name = "sp-keystore"
-version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
-dependencies = [
- "async-trait",
- "derive_more",
- "futures 0.3.17",
- "merlin",
- "parity-scale-codec",
- "parking_lot",
- "schnorrkel",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-core",
+ "sp-externalities",
 ]
 
 [[package]]
 name = "sp-maybe-compressed-blob"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "zstd",
 ]
@@ -5519,19 +5666,11 @@ dependencies = [
 [[package]]
 name = "sp-offchain"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "sp-api",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
-]
-
-[[package]]
-name = "sp-panic-handler"
-version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "backtrace",
+ "sp-core",
+ "sp-runtime",
 ]
 
 [[package]]
@@ -5545,33 +5684,11 @@ dependencies = [
 [[package]]
 name = "sp-rpc"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "rustc-hash",
  "serde",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
-]
-
-[[package]]
-name = "sp-runtime"
-version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "either",
- "hash256-std-hasher",
- "impl-trait-for-tuples",
- "log",
- "parity-scale-codec",
- "parity-util-mem",
- "paste",
- "rand 0.7.3",
- "scale-info",
- "serde",
- "sp-application-crypto 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-arithmetic 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-io 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
 ]
 
 [[package]]
@@ -5589,28 +5706,11 @@ dependencies = [
  "rand 0.7.3",
  "scale-info",
  "serde",
- "sp-application-crypto 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-arithmetic 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-io 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
-]
-
-[[package]]
-name = "sp-runtime-interface"
-version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "impl-trait-for-tuples",
- "parity-scale-codec",
- "primitive-types",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime-interface-proc-macro 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-storage 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "static_assertions",
+ "sp-application-crypto",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-std",
 ]
 
 [[package]]
@@ -5621,25 +5721,13 @@ dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
  "primitive-types",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-runtime-interface-proc-macro 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-storage 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-tracing 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-wasm-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-externalities",
+ "sp-runtime-interface-proc-macro",
+ "sp-std",
+ "sp-storage",
+ "sp-tracing",
+ "sp-wasm-interface",
  "static_assertions",
-]
-
-[[package]]
-name = "sp-runtime-interface-proc-macro"
-version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "Inflector",
- "proc-macro-crate 1.1.0",
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]
@@ -5657,7 +5745,7 @@ dependencies = [
 [[package]]
 name = "sp-serializer"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "serde",
  "serde_json",
@@ -5666,49 +5754,26 @@ dependencies = [
 [[package]]
 name = "sp-session"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
  "sp-api",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-runtime",
  "sp-staking",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-std",
 ]
 
 [[package]]
 name = "sp-staking"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
-]
-
-[[package]]
-name = "sp-state-machine"
-version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "hash-db",
- "log",
- "num-traits",
- "parity-scale-codec",
- "parking_lot",
- "rand 0.7.3",
- "smallvec",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-panic-handler 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "thiserror",
- "tracing",
- "trie-db",
- "trie-root",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -5723,11 +5788,11 @@ dependencies = [
  "parking_lot",
  "rand 0.7.3",
  "smallvec",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-panic-handler 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-core",
+ "sp-externalities",
+ "sp-panic-handler",
+ "sp-std",
+ "sp-trie",
  "thiserror",
  "tracing",
  "trie-db",
@@ -5737,25 +5802,7 @@ dependencies = [
 [[package]]
 name = "sp-std"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-
-[[package]]
-name = "sp-std"
-version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
-
-[[package]]
-name = "sp-storage"
-version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "impl-serde",
- "parity-scale-codec",
- "ref-cast",
- "serde",
- "sp-debug-derive 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
-]
 
 [[package]]
 name = "sp-storage"
@@ -5766,33 +5813,37 @@ dependencies = [
  "parity-scale-codec",
  "ref-cast",
  "serde",
- "sp-debug-derive 3.0.0 (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-debug-derive",
+ "sp-std",
 ]
 
 [[package]]
 name = "sp-tasks"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "log",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-externalities 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-io 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-runtime-interface 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
+ "sp-externalities",
+ "sp-io",
+ "sp-runtime-interface",
+ "sp-std",
 ]
 
 [[package]]
-name = "sp-tracing"
+name = "sp-timestamp"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
+ "async-trait",
+ "futures-timer 3.0.2",
+ "log",
  "parity-scale-codec",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "tracing",
- "tracing-core",
- "tracing-subscriber",
+ "sp-api",
+ "sp-inherents",
+ "sp-runtime",
+ "sp-std",
+ "thiserror",
 ]
 
 [[package]]
@@ -5801,7 +5852,7 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "parity-scale-codec",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-std",
  "tracing",
  "tracing-core",
  "tracing-subscriber",
@@ -5810,41 +5861,26 @@ dependencies = [
 [[package]]
 name = "sp-transaction-pool"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "sp-api",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
 ]
 
 [[package]]
 name = "sp-transaction-storage-proof"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-trait",
  "log",
  "parity-scale-codec",
  "scale-info",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-core",
  "sp-inherents",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-trie 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
-]
-
-[[package]]
-name = "sp-trie"
-version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "hash-db",
- "memory-db",
- "parity-scale-codec",
- "scale-info",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "trie-db",
- "trie-root",
+ "sp-runtime",
+ "sp-std",
+ "sp-trie",
 ]
 
 [[package]]
@@ -5856,8 +5892,8 @@ dependencies = [
  "memory-db",
  "parity-scale-codec",
  "scale-info",
- "sp-core 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-core",
+ "sp-std",
  "trie-db",
  "trie-root",
 ]
@@ -5865,15 +5901,15 @@ dependencies = [
 [[package]]
 name = "sp-version"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "impl-serde",
  "parity-scale-codec",
  "parity-wasm 0.42.2",
  "scale-info",
  "serde",
- "sp-runtime 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
+ "sp-runtime",
+ "sp-std",
  "sp-version-proc-macro",
  "thiserror",
 ]
@@ -5881,7 +5917,7 @@ dependencies = [
 [[package]]
 name = "sp-version-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "parity-scale-codec",
  "proc-macro2",
@@ -5892,22 +5928,11 @@ dependencies = [
 [[package]]
 name = "sp-wasm-interface"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
-dependencies = [
- "impl-trait-for-tuples",
- "parity-scale-codec",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11)",
- "wasmi",
-]
-
-[[package]]
-name = "sp-wasm-interface"
-version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
- "sp-std 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1)",
+ "sp-std",
  "wasmi",
 ]
 
@@ -5942,6 +5967,19 @@ name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
+name = "statrs"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05bdbb8e4e78216a85785a85d3ec3183144f98d0097b9281802c019bb07a6f05"
+dependencies = [
+ "approx",
+ "lazy_static",
+ "nalgebra",
+ "num-traits",
+ "rand 0.8.4",
+]
 
 [[package]]
 name = "strsim"
@@ -6010,7 +6048,7 @@ dependencies = [
 [[package]]
 name = "substrate-build-script-utils"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "platforms",
 ]
@@ -6018,7 +6056,7 @@ dependencies = [
 [[package]]
 name = "substrate-prometheus-endpoint"
 version = "0.9.0"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "async-std",
  "derive_more",
@@ -6032,7 +6070,7 @@ dependencies = [
 [[package]]
 name = "substrate-wasm-builder"
 version = "5.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11#26d69bcbe26f6b463e9374e1b1c54c3067fb6131"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "ansi_term 0.12.1",
  "build-helper",
@@ -6761,7 +6799,7 @@ dependencies = [
  "downcast-rs",
  "libc",
  "memory_units",
- "num-rational",
+ "num-rational 0.2.4",
  "num-traits",
  "parity-wasm 0.42.2",
  "wasmi-validation",
