@@ -45,6 +45,24 @@ git = 'https://github.com/ultrastable-money/substrate.git'
 tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
+[dependencies.sp-block-builder]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.sp-inherents]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.sp-consensus-aura]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '0.10.0-dev'
+
 [dependencies.pallet-aura]
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
@@ -63,6 +81,35 @@ git = 'https://github.com/ultrastable-money/substrate.git'
 tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
+[dependencies.pallet-balances]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.pallet-timestamp]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.frame-executive]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '2.0.0'
+
+[dependencies.scale-info]
+default-features = false
+features = ['derive']
+version = '1.0'
+
 # build dependency for the wasm runtime
 [build-dependencies.substrate-wasm-builder]
 git = 'https://github.com/ultrastable-money/substrate.git'
@@ -72,13 +119,21 @@ version = '5.0.0-dev'
 [features]
 default = ["std"]
 std = [
+  "codec/std",
+  "scale-info/std",
   "frame-support/std",
   "frame-system/std",
+  "frame-executive/std",
   "sp-version/std",
   "sp-runtime/std",
   "sp-api/std",
+  "sp-inherents/std",
+  "sp-block-builder/std",
+  "sp-consensus-aura/std",
   "primitives/std",
   "pallet-aura/std",
   "pallet-grandpa/std",
   "pallet-sudo/std",
+  "pallet-balances/std",
+  "pallet-timestamp/std",
 ]
