@@ -1,8 +1,18 @@
 //! cli interface compatible with SubstrateCl
-use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
-pub struct HydroCli;
+use super::command::Subcommand;
+use sc_cli::{ChainSpec, RunCmd, RuntimeVersion, SubstrateCli};
+use structopt::StructOpt;
 
-// TODO: only scaffolded now
+#[derive(StructOpt, Debug)]
+pub struct HydroCli {
+    #[structopt(subcommand)]
+    pub subcommand: Option<Subcommand>,
+
+    #[structopt(flatten)]
+    pub run: RunCmd,
+}
+
+// TODO: only scaffolding now
 impl SubstrateCli for HydroCli {
     fn impl_name() -> String {
         todo!()

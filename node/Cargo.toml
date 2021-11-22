@@ -68,4 +68,35 @@ git = 'https://github.com/ultrastable-money/substrate.git'
 tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
+[dependencies.sc-transaction-pool]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.sc-executor]
+features = ['wasmtime']
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '0.10.0-dev'
+
+[dependencies.sc-consensus]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '0.10.0-dev'
+
+[dependencies.sc-finality-grandpa]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '0.10.0-dev'
+
+[dependencies.sc-consensus-aura]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '0.10.0-dev'
+
+[dependencies.sc-telemetry]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
 [features]

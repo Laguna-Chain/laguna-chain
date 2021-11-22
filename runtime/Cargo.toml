@@ -63,6 +63,12 @@ git = 'https://github.com/ultrastable-money/substrate.git'
 tag = 'monthly-2021-11-1'
 version = '0.10.0-dev'
 
+[dependencies.sp-transaction-pool]
+default-features = false
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
 [dependencies.pallet-aura]
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'

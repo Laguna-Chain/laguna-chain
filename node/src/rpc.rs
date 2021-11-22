@@ -21,6 +21,7 @@ type RpcExtension = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 
 /// construct and mount all interface to io_handler
 pub fn create_full<Client, Pool>(deps: FullDeps<Client, Pool>) -> RpcExtension
+// TODO: provide additional rpc interface by adding Client: SomeConstraint
 where
     Client: ProvideRuntimeApi<Block>, // should be able to provide runtime-api
     Client: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static, // should be able to handle block header and metadata
