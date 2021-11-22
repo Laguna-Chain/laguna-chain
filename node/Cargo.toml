@@ -17,7 +17,9 @@ tag = 'monthly-2021-11-1'
 version = '3.0.0'
 
 [dependencies]
+jsonrpc-core = "18.0.0"
 runtime = {path = "../runtime"}
+structopt = "0.3.25"
 
 [dependencies.sc-cli]
 features = ['wasmtime']
@@ -30,3 +32,40 @@ features = ['wasmtime']
 git = 'https://github.com/ultrastable-money/substrate.git'
 tag = 'monthly-2021-11-1'
 version = '0.10.0-dev'
+
+[dependencies.sc-rpc]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.sc-rpc-api]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '0.10.0-dev'
+
+[dependencies.sp-api]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.sp-block-builder]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.sp-blockchain]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.substrate-frame-rpc-system]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[dependencies.sc-transaction-pool-api]
+git = 'https://github.com/ultrastable-money/substrate.git'
+tag = 'monthly-2021-11-1'
+version = '4.0.0-dev'
+
+[features]

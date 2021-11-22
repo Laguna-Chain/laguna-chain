@@ -1571,6 +1571,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "frame-system-rpc-runtime-api"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "parity-scale-codec",
+ "sp-api",
+]
+
+[[package]]
 name = "fs-swap"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1999,10 +2008,19 @@ dependencies = [
 name = "hydro-node"
 version = "0.1.0"
 dependencies = [
+ "jsonrpc-core",
  "runtime",
  "sc-cli",
+ "sc-rpc",
+ "sc-rpc-api",
  "sc-service",
+ "sc-transaction-pool-api",
+ "sp-api",
+ "sp-block-builder",
+ "sp-blockchain",
+ "structopt",
  "substrate-build-script-utils",
+ "substrate-frame-rpc-system",
 ]
 
 [[package]]
@@ -6327,6 +6345,28 @@ version = "3.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
 dependencies = [
  "platforms",
+]
+
+[[package]]
+name = "substrate-frame-rpc-system"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "frame-system-rpc-runtime-api",
+ "futures 0.3.17",
+ "jsonrpc-core",
+ "jsonrpc-core-client",
+ "jsonrpc-derive",
+ "log",
+ "parity-scale-codec",
+ "sc-client-api",
+ "sc-rpc-api",
+ "sc-transaction-pool-api",
+ "sp-api",
+ "sp-block-builder",
+ "sp-blockchain",
+ "sp-core",
+ "sp-runtime",
 ]
 
 [[package]]
