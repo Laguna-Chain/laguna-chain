@@ -1,31 +1,49 @@
-//! All subcommands exposed to sc-cli, constructed by StructOpt
+//! cli interface compatible with SubstrateCl
 
-use structopt::StructOpt;
+use crate::cli::HydroCli;
+use sc_cli::{ChainSpec, RunCmd, RuntimeVersion, SubstrateCli};
 
-// baseline subcommands, derived from substrate-node-template
-#[derive(Debug, StructOpt)]
-pub enum Subcommand {
-    /// Key management cli utilities
-    Key(sc_cli::KeySubcommand),
-    /// Build a chain specification.
-    BuildSpec(sc_cli::BuildSpecCmd),
+// TODO: only scaffolding now
+impl SubstrateCli for HydroCli {
+    fn impl_name() -> String {
+        todo!()
+    }
 
-    /// Validate blocks.
-    CheckBlock(sc_cli::CheckBlockCmd),
+    fn impl_version() -> String {
+        todo!()
+    }
 
-    /// Export blocks.
-    ExportBlocks(sc_cli::ExportBlocksCmd),
+    fn description() -> String {
+        todo!()
+    }
 
-    /// Export the state of a given block into a chain spec.
-    ExportState(sc_cli::ExportStateCmd),
+    fn author() -> String {
+        todo!()
+    }
 
-    /// Import blocks.
-    ImportBlocks(sc_cli::ImportBlocksCmd),
+    fn support_url() -> String {
+        todo!()
+    }
 
-    /// Remove the whole chain.
-    PurgeChain(sc_cli::PurgeChainCmd),
+    fn copyright_start_year() -> i32 {
+        todo!()
+    }
 
-    /// Revert the chain to a previous state.
-    Revert(sc_cli::RevertCmd),
-    // TODO: add benchmark cli command
+    fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
+        todo!()
+    }
+
+    fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
+        todo!()
+    }
+}
+
+pub fn run() -> sc_cli::Result<()> {
+    let cli = <HydroCli as SubstrateCli>::from_args();
+
+    // TODO: parse cli and execute corresponding command runner
+    match &cli.subcommand {
+        Some(_) => todo!(),
+        None => todo!(),
+    }
 }
