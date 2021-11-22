@@ -1,2 +1,3 @@
-/// All subcommands exposed to sc-cli
+//! All subcommands exposed to sc-cli
+
 pub enum SubCommands {}

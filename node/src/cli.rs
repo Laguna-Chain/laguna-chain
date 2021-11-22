@@ -1,3 +1,4 @@
+//! cli interface compatible with SubstrateCl
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 pub struct HydroCli;
 
