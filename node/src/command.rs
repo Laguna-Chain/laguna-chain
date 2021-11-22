@@ -1,49 +1,131 @@
 //! cli interface compatible with SubstrateCl
 
-use crate::cli::HydroCli;
-use sc_cli::{ChainSpec, RunCmd, RuntimeVersion, SubstrateCli};
+use crate::cli::{HydroCli, Subcommand};
+use hydro_node::{chain_spec, service};
+use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
+use sc_service::PartialComponents;
 
 // TODO: only scaffolding now
 impl SubstrateCli for HydroCli {
     fn impl_name() -> String {
-        todo!()
+        "hydro-node".into()
     }
 
     fn impl_version() -> String {
-        todo!()
+        env!("SUBSTRATE_CLI_IMPL_VERSION").into()
     }
 
     fn description() -> String {
-        todo!()
+        env!("CARGO_PKG_DESCRIPTION").into()
     }
 
     fn author() -> String {
-        todo!()
+        env!("CARGO_PKG_AUTHORS").into()
     }
 
     fn support_url() -> String {
-        todo!()
+        // TODO: adjust support url later
+        "TBD".into()
     }
 
     fn copyright_start_year() -> i32 {
-        todo!()
+        2021
     }
 
     fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
-        todo!()
+        Ok(match id {
+            "dev" => Box::new(chain_spec::testnet::local_testnet_config()?),
+            path => Box::new(chain_spec::testnet::ChainSpec::from_json_file(
+                std::path::PathBuf::from(path),
+            )?),
+        })
     }
 
-    fn native_runtime_version(chain_spec: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-        todo!()
+    fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
+        &runtime::VERSION
     }
 }
 
 pub fn run() -> sc_cli::Result<()> {
-    let cli = <HydroCli as SubstrateCli>::from_args();
+    let cli = HydroCli::from_args();
 
     // TODO: parse cli and execute corresponding command runner
     match &cli.subcommand {
-        Some(_) => todo!(),
-        None => todo!(),
+        // parse and handle subcommand properly
+        Some(Subcommand::Key(cmd)) => cmd.run(&cli),
+        Some(Subcommand::BuildSpec(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
+        }
+        Some(Subcommand::CheckBlock(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            runner.async_run(|config| {
+                let PartialComponents {
+                    client,
+                    task_manager,
+                    import_queue,
+                    ..
+                } = service::new_partial(&config)?;
+                Ok((cmd.run(client, import_queue), task_manager))
+            })
+        }
+        Some(Subcommand::ExportBlocks(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            runner.async_run(|config| {
+                let PartialComponents {
+                    client,
+                    task_manager,
+                    ..
+                } = service::new_partial(&config)?;
+                Ok((cmd.run(client, config.database), task_manager))
+            })
+        }
+        Some(Subcommand::ExportState(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            runner.async_run(|config| {
+                let PartialComponents {
+                    client,
+                    task_manager,
+                    ..
+                } = service::new_partial(&config)?;
+                Ok((cmd.run(client, config.chain_spec), task_manager))
+            })
+        }
+        Some(Subcommand::ImportBlocks(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            runner.async_run(|config| {
+                let PartialComponents {
+                    client,
+                    task_manager,
+                    import_queue,
+                    ..
+                } = service::new_partial(&config)?;
+                Ok((cmd.run(client, import_queue), task_manager))
+            })
+        }
+        Some(Subcommand::PurgeChain(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            runner.sync_run(|config| cmd.run(config.database))
+        }
+        Some(Subcommand::Revert(cmd)) => {
+            let runner = cli.create_runner(cmd)?;
+            runner.async_run(|config| {
+                let PartialComponents {
+                    client,
+                    task_manager,
+                    backend,
+                    ..
+                } = service::new_partial(&config)?;
+                Ok((cmd.run(client, backend), task_manager))
+            })
+        }
+
+        // if not specified, use with full dependency
+        None => {
+            let runner = cli.create_runner(&cli.run)?;
+            runner.run_node_until_exit(|config| async move {
+                service::new_full(config).map_err(sc_cli::Error::Service)
+            })
+        }
     }
 }
