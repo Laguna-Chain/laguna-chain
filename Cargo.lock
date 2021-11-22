@@ -2024,6 +2024,7 @@ dependencies = [
  "sp-api",
  "sp-block-builder",
  "sp-blockchain",
+ "sp-consensus",
  "structopt",
  "substrate-build-script-utils",
  "substrate-frame-rpc-system",
