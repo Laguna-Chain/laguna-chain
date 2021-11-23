@@ -1,8 +1,9 @@
 // expose rpc, derived from substrate-node-template
 
-use primitives::{AccountId, Balance, Index};
+use primitives::{AccountId, Index};
 use runtime::opaque::Block;
 use std::sync::Arc;
+use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
 pub use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
@@ -33,6 +34,18 @@ where
     Pool: TransactionPool + 'static,  // can submit tx into tx-pool
 {
     let mut io = jsonrpc_core::IoHandler::default();
+
+    let FullDeps {
+        client,
+        pool,
+        deny_unsafe,
+    } = deps;
+
+    io.extend_with(SystemApi::to_delegate(FullSystem::new(
+        client.clone(),
+        pool,
+        deny_unsafe,
+    )));
 
     // TODO: extend io with needed rpc here interface
 
