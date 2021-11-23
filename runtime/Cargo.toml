@@ -6,115 +6,37 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+# hydro-chain's primitives
 primitives = {path = "../primitives", default-features = false}
 
-# basic runtime dependency
-[dependencies.frame-support]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
+# runtime's basic pallet impl
+pallet-aura = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-sudo = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
-[dependencies.frame-system]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
+# interface for pallet build with frame
+frame-executive = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+frame-system-rpc-runtime-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
-[dependencies.sp-version]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
+# sp stands for substrate-primitives, used across node and runtime
+sp-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-block-builder = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-consensus-aura = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '0.10.0-dev'}
+sp-inherents = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-offchain = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-session = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-transaction-pool = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-version = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
-[dependencies.sp-runtime]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.sp-api]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.sp-std]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.sp-block-builder]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.sp-inherents]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.sp-consensus-aura]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '0.10.0-dev'
-
-[dependencies.sp-transaction-pool]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.pallet-aura]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.pallet-grandpa]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.pallet-sudo]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.pallet-balances]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.pallet-timestamp]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.frame-executive]
-default-features = false
-git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
-version = '4.0.0-dev'
-
-[dependencies.codec]
-default-features = false
-features = ['derive']
-package = 'parity-scale-codec'
-version = '2.0.0'
-
-[dependencies.scale-info]
-default-features = false
-features = ['derive']
-version = '1.0'
+# parity SCALE codec
+codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0'}
+scale-info = {default-features = false, features = ['derive'], version = '1.0'}
 
 # build dependency for the wasm runtime
 [build-dependencies.substrate-wasm-builder]
@@ -130,12 +52,17 @@ std = [
   "frame-support/std",
   "frame-system/std",
   "frame-executive/std",
+  "frame-system-rpc-runtime-api/std",
   "sp-version/std",
   "sp-runtime/std",
   "sp-api/std",
+  "sp-std/std",
   "sp-inherents/std",
   "sp-block-builder/std",
   "sp-consensus-aura/std",
+  "sp-transaction-pool/std",
+  "sp-offchain/std",
+  "sp-session/std",
   "primitives/std",
   "pallet-aura/std",
   "pallet-grandpa/std",
