@@ -230,8 +230,10 @@ pub type SignedExtra = (
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
     frame_system::CheckWeight<Runtime>,
+    // TODO: implement our own fee reduction system if draft came out
     // pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
+
 /// Unchecked extrinsic type as expected by this runtime.
 pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 
@@ -248,6 +250,8 @@ pub type Executive = frame_executive::Executive<
 // expose runtime apis, required by node services
 // TODO: common api impl are derived from substrate-node-template, add custom runtime-api later
 impl_runtime_apis! {
+
+    // provide generic api required by the node client
 
     impl sp_api::Core<Block> for Runtime {
         fn version() -> RuntimeVersion {
@@ -292,7 +296,6 @@ impl_runtime_apis! {
     }
 
 
-
     impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
         fn validate_transaction(
             source: TransactionSource,
@@ -303,6 +306,14 @@ impl_runtime_apis! {
         }
     }
 
+    impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
+        fn offchain_worker(header: &<Block as BlockT>::Header) {
+            Executive::offchain_worker(header)
+        }
+    }
+
+
+    // consensus related api below
     impl sp_consensus_aura::AuraApi<Block, AuraId> for Runtime {
         fn slot_duration() -> sp_consensus_aura::SlotDuration {
             sp_consensus_aura::SlotDuration::from_millis(Aura::slot_duration())
@@ -310,12 +321,6 @@ impl_runtime_apis! {
 
         fn authorities() -> Vec<AuraId> {
             Aura::authorities().into_inner()
-        }
-    }
-
-    impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
-        fn offchain_worker(header: &<Block as BlockT>::Header) {
-            Executive::offchain_worker(header)
         }
     }
 
@@ -328,12 +333,6 @@ impl_runtime_apis! {
             encoded: Vec<u8>,
         ) -> Option<Vec<(Vec<u8>, KeyTypeId)>> {
             opaque::SessionKeys::decode_into_raw_public_keys(&encoded)
-        }
-    }
-
-    impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
-        fn account_nonce(account: AccountId) -> Index {
-            System::account_nonce(account)
         }
     }
 
@@ -368,8 +367,17 @@ impl_runtime_apis! {
         }
     }
 
+    impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
+        fn account_nonce(account: AccountId) -> Index {
+            System::account_nonce(account)
+        }
+    }
 
     // TODO: add other needed runtime-api
+
+    // expose pallet defined rpc below
+
+
 
     // TODO: enable runtime-benchmark api for auto weight suggestion
 

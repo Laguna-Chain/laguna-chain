@@ -88,7 +88,9 @@ pub fn new_partial(
     let client = Arc::new(client);
 
     let telemetry = telemetry.map(|(worker, telemetry)| {
+        // spawn and run start telemetry worker with task_manager
         task_manager.spawn_handle().spawn("telemetry", worker.run());
+
         telemetry
     });
 
@@ -157,7 +159,7 @@ pub fn new_partial(
     })
 }
 
-/// create service for new-client
+/// create full service for node
 pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> {
     // create required components for normal node operation
     let sc_service::PartialComponents {
