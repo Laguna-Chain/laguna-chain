@@ -1,6 +1,7 @@
 // expose rpc, derived from substrate-node-template
 
-use runtime::{opaque::Block, AccountId, Balance, Index};
+use primitives::{AccountId, Balance, Index};
+use runtime::opaque::Block;
 use std::sync::Arc;
 
 pub use sc_rpc_api::DenyUnsafe;
@@ -12,7 +13,7 @@ use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 // TODO: light client before deprecation require additional dependencies
 
 pub struct FullDeps<Client, Pool> {
-    pub cliet: Arc<Client>,
+    pub client: Arc<Client>,
     pub pool: Arc<Pool>,
     pub deny_unsafe: DenyUnsafe,
 }
@@ -20,6 +21,7 @@ pub struct FullDeps<Client, Pool> {
 type RpcExtension = jsonrpc_core::IoHandler<sc_rpc::Metadata>;
 
 /// construct and mount all interface to io_handler
+/// runtime need meet the requirement by impl the constraint from impl_runtime_apis! macro
 pub fn create_full<Client, Pool>(deps: FullDeps<Client, Pool>) -> RpcExtension
 // TODO: provide additional rpc interface by adding Client: SomeConstraint
 where

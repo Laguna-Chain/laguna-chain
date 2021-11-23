@@ -2011,6 +2011,7 @@ dependencies = [
  "jsonrpc-core",
  "primitives",
  "runtime",
+ "sc-basic-authorship",
  "sc-cli",
  "sc-client-api",
  "sc-consensus",
@@ -4676,6 +4677,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "sc-basic-authorship"
+version = "0.10.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "futures 0.3.17",
+ "futures-timer 3.0.2",
+ "log",
+ "parity-scale-codec",
+ "sc-block-builder",
+ "sc-client-api",
+ "sc-proposer-metrics",
+ "sc-telemetry",
+ "sc-transaction-pool-api",
+ "sp-api",
+ "sp-blockchain",
+ "sp-consensus",
+ "sp-core",
+ "sp-inherents",
+ "sp-runtime",
+ "substrate-prometheus-endpoint",
+]
+
+[[package]]
 name = "sc-block-builder"
 version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
@@ -5141,6 +5165,15 @@ dependencies = [
  "sc-utils",
  "serde_json",
  "wasm-timer",
+]
+
+[[package]]
+name = "sc-proposer-metrics"
+version = "0.9.0"
+source = "git+https://github.com/ultrastable-money/substrate.git?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+dependencies = [
+ "log",
+ "substrate-prometheus-endpoint",
 ]
 
 [[package]]

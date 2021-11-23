@@ -49,7 +49,7 @@ impl SubstrateCli for HydroCli {
 pub fn run() -> sc_cli::Result<()> {
     let cli = HydroCli::from_args();
 
-    // TODO: parse cli and execute corresponding command runner
+    // parse cli and execute corresponding subcommand
     match &cli.subcommand {
         // parse and handle subcommand properly
         Some(Subcommand::Key(cmd)) => cmd.run(&cli),
@@ -120,7 +120,7 @@ pub fn run() -> sc_cli::Result<()> {
             })
         }
 
-        // if not specified, use with full dependency
+        // if not a subcommand, start full service runner for sc-cli
         None => {
             let runner = cli.create_runner(&cli.run)?;
             runner.run_node_until_exit(|config| async move {

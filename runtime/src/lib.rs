@@ -18,7 +18,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::{
     app_crypto::sp_core::OpaqueMetadata,
     create_runtime_str, generic, impl_opaque_keys,
-    traits::{AccountIdLookup, BlakeTwo256, Block as BlockT},
+    traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFor},
     transaction_validity::{TransactionSource, TransactionValidity},
     ApplyExtrinsicResult, KeyTypeId, Perbill,
 };
@@ -34,7 +34,7 @@ use pallet_grandpa::{
     fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
 
-pub use primitives::*;
+use primitives::*;
 
 // opaque module copied from substrate-node-template, allows cli to sync the network without knowing runtime specific formats
 pub mod opaque {
@@ -291,6 +291,8 @@ impl_runtime_apis! {
         }
     }
 
+
+
     impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
         fn validate_transaction(
             source: TransactionSource,
@@ -308,6 +310,61 @@ impl_runtime_apis! {
 
         fn authorities() -> Vec<AuraId> {
             Aura::authorities().into_inner()
+        }
+    }
+
+    impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
+        fn offchain_worker(header: &<Block as BlockT>::Header) {
+            Executive::offchain_worker(header)
+        }
+    }
+
+    impl sp_session::SessionKeys<Block> for Runtime {
+        fn generate_session_keys(seed: Option<Vec<u8>>) -> Vec<u8> {
+            opaque::SessionKeys::generate(seed)
+        }
+
+        fn decode_session_keys(
+            encoded: Vec<u8>,
+        ) -> Option<Vec<(Vec<u8>, KeyTypeId)>> {
+            opaque::SessionKeys::decode_into_raw_public_keys(&encoded)
+        }
+    }
+
+    impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
+        fn account_nonce(account: AccountId) -> Index {
+            System::account_nonce(account)
+        }
+    }
+
+
+    impl fg_primitives::GrandpaApi<Block> for Runtime {
+        fn grandpa_authorities() -> GrandpaAuthorityList {
+            Grandpa::grandpa_authorities()
+        }
+
+        fn current_set_id() -> fg_primitives::SetId {
+            Grandpa::current_set_id()
+        }
+
+        fn submit_report_equivocation_unsigned_extrinsic(
+            _equivocation_proof: fg_primitives::EquivocationProof<
+                <Block as BlockT>::Hash,
+                NumberFor<Block>,
+            >,
+            _key_owner_proof: fg_primitives::OpaqueKeyOwnershipProof,
+        ) -> Option<()> {
+            None
+        }
+
+        fn generate_key_ownership_proof(
+            _set_id: fg_primitives::SetId,
+            _authority_id: GrandpaId,
+        ) -> Option<fg_primitives::OpaqueKeyOwnershipProof> {
+            // NOTE: this is the only implementation possible since we've
+            // defined our key owner proof type as a bottom type (i.e. a type
+            // with no values).
+            None
         }
     }
 

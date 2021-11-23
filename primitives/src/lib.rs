@@ -4,15 +4,19 @@
 
 use sp_runtime::{
     generic,
-    traits::{BlakeTwo256, IdentifyAccount, Verify},
+    traits::{BlakeTwo256, Verify},
     MultiSignature,
 };
+
+pub use sp_runtime::traits::IdentifyAccount;
 
 pub type BlockNumber = u32;
 
 pub type Signature = MultiSignature;
 
 pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
+
+pub type AccountPublic = <Signature as Verify>::Signer;
 
 pub type Balance = u128;
 
