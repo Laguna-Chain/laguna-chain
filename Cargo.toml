@@ -9,5 +9,6 @@ members = [
   'node',
   'runtime',
   'primitives',
+  'pallets/rando',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution

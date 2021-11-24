@@ -1,6 +1,7 @@
 // expose rpc, derived from substrate-node-template
 
-use primitives::{AccountId, Index};
+use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
+use primitives::{AccountId, Balance, Index};
 use runtime::opaque::Block;
 use std::sync::Arc;
 use substrate_frame_rpc_system::{FullSystem, SystemApi};
@@ -30,6 +31,7 @@ where
     Client: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static, // should be able to handle block header and metadata
     Client: Send + Sync + 'static,
     Client::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>, // client be able to distinquish tx index
+    Client::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
     Client::Api: BlockBuilder<Block>, // should be able to produce block
     Pool: TransactionPool + 'static,  // can submit tx into tx-pool
 {
@@ -45,6 +47,11 @@ where
         client.clone(),
         pool,
         deny_unsafe,
+    )));
+
+    // allow submit transaction by paying the fee
+    io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(
+        client.clone(),
     )));
 
     // TODO: extend io with needed rpc here interface

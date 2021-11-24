@@ -10,9 +10,13 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use frame_support::{
     construct_runtime, parameter_types,
     traits::KeyOwnerProofSystem,
-    weights::constants::{RocksDbWeight, WEIGHT_PER_SECOND},
+    weights::{
+        constants::{RocksDbWeight, WEIGHT_PER_SECOND},
+        IdentityFee,
+    },
 };
 
+use pallet_transaction_payment::CurrencyAdapter;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::{
@@ -29,6 +33,7 @@ use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
 
 // TODO: include all needed pallets and their impl
+use pallet_rando;
 
 use pallet_grandpa::{
     fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
@@ -199,6 +204,42 @@ impl pallet_grandpa::Config for Runtime {
     type MaxAuthorities = MaxAuthorities;
 }
 
+impl pallet_rando::Config for Runtime {
+    type Event = Event;
+}
+
+parameter_types! {
+    pub const ExistentialDeposit: u128 = 500;
+    pub const MaxLocks: u32 = 50;
+}
+
+impl pallet_balances::Config for Runtime {
+    type MaxLocks = MaxLocks;
+    type MaxReserves = ();
+    type ReserveIdentifier = [u8; 8];
+    /// The type for recording an account's balance.
+    type Balance = Balance;
+    /// The ubiquitous event type.
+    type Event = Event;
+    type DustRemoval = ();
+    type ExistentialDeposit = ExistentialDeposit;
+    type AccountStore = System;
+    type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
+    pub const TransactionByteFee: Balance = 1;
+    pub OperationalFeeMultiplier: u8 = 5;
+}
+
+impl pallet_transaction_payment::Config for Runtime {
+    type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+    type TransactionByteFee = TransactionByteFee;
+    type OperationalFeeMultiplier = OperationalFeeMultiplier;
+    type WeightToFee = IdentityFee<Balance>;
+    type FeeMultiplierUpdate = ();
+}
+
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the same time, most of the time they cross reference each other
@@ -209,11 +250,16 @@ construct_runtime!(
         NodeBlock = opaque::Block,
         UncheckedExtrinsic = UncheckedExtrinsic
         {
-            System: frame_system,
-            Timestamp: pallet_timestamp,
-            Aura: pallet_aura,
-            Grandpa: pallet_grandpa,
-            Sudo: pallet_sudo,
+            // import needed part of the pallet
+            // NOTICE: will effect life cycle of a pallet
+            System: frame_system::{Pallet, Call, Config, Storage, Event<T>} = 0,
+            Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 1,
+            Aura: pallet_aura::{Pallet, Config<T>} = 2,
+            Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event} = 3,
+            Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 4,
+            TransactionPayment: pallet_transaction_payment::{Pallet, Storage} = 5,
+            Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>} = 6,
+            Rando: pallet_rando::{Pallet, Event<T>, Call} = 7,
         }
 );
 
@@ -231,7 +277,7 @@ pub type SignedExtra = (
     frame_system::CheckNonce<Runtime>,
     frame_system::CheckWeight<Runtime>,
     // TODO: implement our own fee reduction system if draft came out
-    // pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
+    pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 
 /// Unchecked extrinsic type as expected by this runtime.
@@ -370,6 +416,21 @@ impl_runtime_apis! {
     impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
         fn account_nonce(account: AccountId) -> Index {
             System::account_nonce(account)
+        }
+    }
+
+    impl pallet_transaction_payment_rpc_runtime_api::TransactionPaymentApi<Block, Balance> for Runtime {
+        fn query_info(
+            uxt: <Block as BlockT>::Extrinsic,
+            len: u32,
+        ) -> pallet_transaction_payment_rpc_runtime_api::RuntimeDispatchInfo<Balance> {
+            TransactionPayment::query_info(uxt, len)
+        }
+        fn query_fee_details(
+            uxt: <Block as BlockT>::Extrinsic,
+            len: u32,
+        ) -> pallet_transaction_payment::FeeDetails<Balance> {
+            TransactionPayment::query_fee_details(uxt, len)
         }
     }
 

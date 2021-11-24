@@ -13,8 +13,11 @@ primitives = {path = "../primitives", default-features = false}
 pallet-aura = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-rando = {default-features = false, version = "0.1.0", path = "../pallets/rando"}
 pallet-sudo = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-transaction-payment = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-transaction-payment-rpc-runtime-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
 # interface for pallet build with frame
 frame-executive = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
@@ -31,6 +34,7 @@ sp-offchain = {default-features = false, git = 'https://github.com/ultrastable-m
 sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 sp-session = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+
 sp-transaction-pool = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 sp-version = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
@@ -69,4 +73,7 @@ std = [
   "pallet-sudo/std",
   "pallet-balances/std",
   "pallet-timestamp/std",
+  'pallet-rando/std',
+  'pallet-transaction-payment/std',
+  'pallet-transaction-payment-rpc-runtime-api/std',
 ]

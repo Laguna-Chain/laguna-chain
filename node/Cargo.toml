@@ -49,6 +49,8 @@ sp-timestamp = {git = 'https://github.com/ultrastable-money/substrate.git', tag 
 
 substrate-frame-rpc-system = {git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
+pallet-transaction-payment-rpc = {git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+
 jsonrpc-core = "18.0.0"
 structopt = "0.3.25"
 

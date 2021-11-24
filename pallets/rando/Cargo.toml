@@ -1,0 +1,23 @@
+[package]
+edition = "2021"
+name = "pallet-rando"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0'}
+log = "0.4.14"
+scale-info = {default-features = false, features = ['derive'], version = '1.0'}
+
+frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+
+[features]
+default = ["std"]
+std = [
+  "codec/std",
+  "scale-info/std",
+  "frame-support/std",
+  "frame-system/std",
+]

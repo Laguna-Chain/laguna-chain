@@ -119,8 +119,9 @@ pub fn run() -> sc_cli::Result<()> {
                 Ok((cmd.run(client, backend), task_manager))
             })
         }
+        // TODO: add benchmark for correct weight correction
 
-        // if not a subcommand, start full service runner for sc-cli
+        // if not one of the subcommand, start full service runner for sc-cli
         None => {
             let runner = cli.create_runner(&cli.run)?;
             runner.run_node_until_exit(|config| async move {
