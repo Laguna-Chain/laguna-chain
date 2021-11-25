@@ -14,6 +14,7 @@ pallet-aura = {default-features = false, git = 'https://github.com/ultrastable-m
 pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-rando = {default-features = false, version = "0.1.0", path = "../pallets/rando"}
+pallet-scheduler = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-sudo = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-transaction-payment = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
@@ -74,6 +75,7 @@ std = [
   "pallet-balances/std",
   "pallet-timestamp/std",
   'pallet-rando/std',
+  'pallet-scheduler/std',
   'pallet-transaction-payment/std',
   'pallet-transaction-payment-rpc-runtime-api/std',
 ]

@@ -25,7 +25,7 @@ pub mod pallet {
     impl<T: Config> Pallet<T> {
         #[pallet::weight(0)]
         pub fn dummy(_: OriginFor<T>) -> DispatchResult {
-            log::info!("successfull");
+            log::info!(target: "pallet_rando", "successfull");
             Self::deposit_event(Event::Report);
 
             Ok(())

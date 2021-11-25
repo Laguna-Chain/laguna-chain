@@ -107,9 +107,12 @@ fn testnet_genesis(
                 .map(|x| (x.1.clone(), 1))
                 .collect(),
         },
+
         sudo: SudoConfig {
             // Assign network admin rights.
             key: root_key,
         },
+        transaction_payment: Default::default(),
+        scheduler: Default::default(),
     }
 }

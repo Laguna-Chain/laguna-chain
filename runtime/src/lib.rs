@@ -9,13 +9,14 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use frame_support::{
     construct_runtime, parameter_types,
-    traits::KeyOwnerProofSystem,
+    traits::{EqualPrivilegeOnly, KeyOwnerProofSystem},
     weights::{
         constants::{RocksDbWeight, WEIGHT_PER_SECOND},
         IdentityFee,
     },
 };
 
+use frame_system::EnsureRoot;
 use pallet_transaction_payment::CurrencyAdapter;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -38,6 +39,8 @@ use pallet_rando;
 use pallet_grandpa::{
     fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
+
+use frame_support::weights::Weight;
 
 use primitives::*;
 
@@ -240,6 +243,37 @@ impl pallet_transaction_payment::Config for Runtime {
     type FeeMultiplierUpdate = ();
 }
 
+parameter_types! {
+
+
+    pub MaximumSchedulerWeight: Weight = 100_u64 as Weight;
+
+    pub const MaxScheduledPerBlock: u32 = 50;
+}
+
+impl pallet_scheduler::Config for Runtime {
+    // allow to invoke runtime::Call on behalf of the underlyding pallets
+    type Call = Call;
+
+    type Event = Event;
+
+    type Origin = Origin;
+
+    type PalletsOrigin = OriginCaller;
+
+    // only root account can invoke the scheduler
+    type ScheduleOrigin = EnsureRoot<AccountId>;
+
+    // set priviledge required to cancel scheduler
+    type OriginPrivilegeCmp = EqualPrivilegeOnly;
+
+    type MaximumWeight = MaximumSchedulerWeight;
+
+    type MaxScheduledPerBlock = MaxScheduledPerBlock;
+
+    type WeightInfo = ();
+}
+
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the same time, most of the time they cross reference each other
@@ -252,14 +286,15 @@ construct_runtime!(
         {
             // import needed part of the pallet
             // NOTICE: will effect life cycle of a pallet
-            System: frame_system::{Pallet, Call, Config, Storage, Event<T>} = 0,
-            Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 1,
-            Aura: pallet_aura::{Pallet, Config<T>} = 2,
-            Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event} = 3,
-            Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 4,
-            TransactionPayment: pallet_transaction_payment::{Pallet, Storage} = 5,
-            Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>} = 6,
-            Rando: pallet_rando::{Pallet, Event<T>, Call} = 7,
+            System: frame_system = 0,
+            Timestamp: pallet_timestamp = 1,
+            Aura: pallet_aura = 2,
+            Grandpa: pallet_grandpa = 3,
+            Balances: pallet_balances = 4,
+            TransactionPayment: pallet_transaction_payment = 5,
+            Sudo: pallet_sudo = 6,
+            Rando: pallet_rando = 7,
+            Scheduler: pallet_scheduler = 8,
         }
 );
 
