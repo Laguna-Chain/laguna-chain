@@ -16,8 +16,8 @@ use std::{sync::Arc, time::Duration};
 pub struct ExecutorDispatch;
 
 impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
-    // TODO: add runtime-benchmark later
-    type ExtendHostFunctions = ();
+    // expose runtime-benchmark so node can run it natively
+    type ExtendHostFunctions = frame_benchmarking::benchmarking::HostFunctions;
 
     fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
         runtime::api::dispatch(method, data)

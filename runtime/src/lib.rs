@@ -16,7 +16,7 @@ use frame_support::{
     },
 };
 
-use frame_system::{EnsureRoot, WeightInfo};
+use frame_system::EnsureRoot;
 use pallet_transaction_payment::CurrencyAdapter;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -41,8 +41,10 @@ use pallet_grandpa::{
 };
 
 use frame_support::weights::Weight;
-
 use primitives::*;
+
+// placeholder module to collect WeightInfo provided by runtime-benchmark
+mod weights;
 
 // opaque module copied from substrate-node-template, allows cli to sync the network without knowing runtime specific formats
 pub mod opaque {
@@ -464,9 +466,6 @@ impl_runtime_apis! {
 
     // expose pallet defined rpc below
 
-
-
-    // TODO: enable runtime-benchmark api for auto weight suggestion
     #[cfg(feature = "runtime-benchmarks")]
     impl frame_benchmarking::Benchmark<Block> for Runtime {
         fn benchmark_metadata(extra: bool) -> (
@@ -480,7 +479,15 @@ impl_runtime_apis! {
 
             let mut list = Vec::<BenchmarkList>::new();
 
-            // TODO: expose all benchmarks defined by various pallets
+            // include system-level benchmarks
+            list_benchmark!(list, extra, frame_benchmarking, BaselineBench::<Runtime>);
+            list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
+
+            // include pallet benchmarks
+            list_benchmark!(list, extra, pallet_balances, Balances);
+
+            // TODO: add all benchmarks defined by pallets
+
 
             let storage_info = AllPalletsWithSystem::storage_info();
 
@@ -519,7 +526,15 @@ impl_runtime_apis! {
             add_benchmark!(params, batches, frame_benchmarking, BaselineBench::<Runtime>);
             add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 
+            // pallet-specific bench items
+            add_benchmark!(params, batches, pallet_balances, Balances);
+
             // TODO: add pallet-specific bench items below
+
+
+            if batches.is_empty() {
+                return Err("no benchmark items found".into())
+            }
 
 
             Ok(batches)
