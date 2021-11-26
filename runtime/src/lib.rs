@@ -16,7 +16,7 @@ use frame_support::{
     },
 };
 
-use frame_system::EnsureRoot;
+use frame_system::{EnsureRoot, WeightInfo};
 use pallet_transaction_payment::CurrencyAdapter;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -209,6 +209,7 @@ impl pallet_grandpa::Config for Runtime {
 
 impl pallet_rando::Config for Runtime {
     type Event = Event;
+    type WeightInfo = ();
 }
 
 parameter_types! {
@@ -244,33 +245,23 @@ impl pallet_transaction_payment::Config for Runtime {
 }
 
 parameter_types! {
-
-
-    pub MaximumSchedulerWeight: Weight = 100_u64 as Weight;
-
+    pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
+        BlockWeights::get().max_block;
     pub const MaxScheduledPerBlock: u32 = 50;
 }
 
 impl pallet_scheduler::Config for Runtime {
     // allow to invoke runtime::Call on behalf of the underlyding pallets
     type Call = Call;
-
     type Event = Event;
-
     type Origin = Origin;
-
     type PalletsOrigin = OriginCaller;
-
     // only root account can invoke the scheduler
     type ScheduleOrigin = EnsureRoot<AccountId>;
-
     // set priviledge required to cancel scheduler
     type OriginPrivilegeCmp = EqualPrivilegeOnly;
-
     type MaximumWeight = MaximumSchedulerWeight;
-
     type MaxScheduledPerBlock = MaxScheduledPerBlock;
-
     type WeightInfo = ();
 }
 
@@ -294,7 +285,7 @@ construct_runtime!(
             TransactionPayment: pallet_transaction_payment = 5,
             Sudo: pallet_sudo = 6,
             Rando: pallet_rando = 7,
-            Scheduler: pallet_scheduler = 8,
+            Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>} = 8,
         }
 );
 
@@ -476,5 +467,63 @@ impl_runtime_apis! {
 
 
     // TODO: enable runtime-benchmark api for auto weight suggestion
+    #[cfg(feature = "runtime-benchmarks")]
+    impl frame_benchmarking::Benchmark<Block> for Runtime {
+        fn benchmark_metadata(extra: bool) -> (
+            Vec<frame_benchmarking::BenchmarkList>,
+            Vec<frame_support::traits::StorageInfo>,
+        ) {
+            use frame_benchmarking::{list_benchmark, baseline, Benchmarking, BenchmarkList};
+            use frame_support::traits::StorageInfoTrait;
+            use frame_system_benchmarking::Pallet as SystemBench;
+            use baseline::Pallet as BaselineBench;
+
+            let mut list = Vec::<BenchmarkList>::new();
+
+            // TODO: expose all benchmarks defined by various pallets
+
+            let storage_info = AllPalletsWithSystem::storage_info();
+
+            return (list, storage_info)
+        }
+
+        fn dispatch_benchmark(
+            config: frame_benchmarking::BenchmarkConfig
+        ) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
+            use frame_benchmarking::{baseline, Benchmarking, BenchmarkBatch, add_benchmark, TrackedStorageKey};
+
+            use frame_system_benchmarking::Pallet as SystemBench;
+            use baseline::Pallet as BaselineBench;
+
+            impl frame_system_benchmarking::Config for Runtime {}
+            impl baseline::Config for Runtime {}
+
+            // escape params below
+            let whitelist: Vec<TrackedStorageKey> = vec![
+                // Block Number
+                hex_literal::hex!("26aa394eea5630e07c48ae0c9558cef702a5c1b19ab7a04f536c519aca4983ac").to_vec().into(),
+                // Total Issuance
+                hex_literal::hex!("c2261276cc9d1f8598ea4b6a74b15c2f57c875e4cff74148e4628f264b974c80").to_vec().into(),
+                // Execution Phase
+                hex_literal::hex!("26aa394eea5630e07c48ae0c9558cef7ff553b5a9862a516939d82b3d3d8661a").to_vec().into(),
+                // Event Count
+                hex_literal::hex!("26aa394eea5630e07c48ae0c9558cef70a98fdbe9ce6c55837576c60c7af3850").to_vec().into(),
+                // System Events
+                hex_literal::hex!("26aa394eea5630e07c48ae0c9558cef780d41e5e16056765bc8461851072c9d7").to_vec().into(),
+            ];
+
+            let mut batches = Vec::<BenchmarkBatch>::new();
+            let params = (&config, &whitelist);
+
+            // system level bench items
+            add_benchmark!(params, batches, frame_benchmarking, BaselineBench::<Runtime>);
+            add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
+
+            // TODO: add pallet-specific bench items below
+
+
+            Ok(batches)
+        }
+    }
 
 }

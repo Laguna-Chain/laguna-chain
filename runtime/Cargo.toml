@@ -21,9 +21,11 @@ pallet-transaction-payment = {default-features = false, git = 'https://github.co
 pallet-transaction-payment-rpc-runtime-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
 # interface for pallet build with frame
+frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev', optional = true}
 frame-executive = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+frame-system-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev', optional = true}
 frame-system-rpc-runtime-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
 # sp stands for substrate-primitives, used across node and runtime
@@ -41,6 +43,7 @@ sp-version = {default-features = false, git = 'https://github.com/ultrastable-mo
 
 # parity SCALE codec
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0'}
+hex-literal = {optional = true, version = '0.3.1'}
 scale-info = {default-features = false, features = ['derive'], version = '1.0'}
 
 # build dependency for the wasm runtime
@@ -51,6 +54,17 @@ version = '5.0.0-dev'
 
 [features]
 default = ["std"]
+runtime-benchmarks = [
+  "frame-benchmarking",
+  'frame-support/runtime-benchmarks',
+  'frame-system-benchmarking',
+  'frame-system/runtime-benchmarks',
+  'pallet-balances/runtime-benchmarks',
+  'pallet-timestamp/runtime-benchmarks',
+  'sp-runtime/runtime-benchmarks',
+  "pallet-rando/runtime-benchmarks",
+  "hex-literal",
+]
 std = [
   "codec/std",
   "scale-info/std",

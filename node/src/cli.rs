@@ -37,5 +37,8 @@ pub enum Subcommand {
 
     /// Revert the chain to a previous state.
     Revert(sc_cli::RevertCmd),
-    // TODO: add benchmark cli command
+
+    /// conduct runtime benchmark for more accurate Weight impl
+    #[structopt(name = "benchmark", about = "Benchmark runtime pallets")]
+    Benchmark(frame_benchmarking_cli::BenchmarkCmd),
 }

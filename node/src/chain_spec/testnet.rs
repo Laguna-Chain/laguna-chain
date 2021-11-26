@@ -90,8 +90,17 @@ fn testnet_genesis(
             code: wasm_binary.to_vec(),
             changes_trie_config: Default::default(),
         },
+
         aura: AuraConfig {
+            // allowed node owner to participate in PoA with AURA
             authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
+        },
+        grandpa: GrandpaConfig {
+            // 
+            authorities: initial_authorities
+                .iter()
+                .map(|x| (x.1.clone(), 1))
+                .collect(),
         },
         balances: BalancesConfig {
             // Configure endowed accounts with initial balance of 1 << 60.
@@ -101,18 +110,11 @@ fn testnet_genesis(
                 .map(|k| (k, 1 << 60))
                 .collect(),
         },
-        grandpa: GrandpaConfig {
-            authorities: initial_authorities
-                .iter()
-                .map(|x| (x.1.clone(), 1))
-                .collect(),
-        },
 
+        transaction_payment: Default::default(),
         sudo: SudoConfig {
             // Assign network admin rights.
             key: root_key,
         },
-        transaction_payment: Default::default(),
-        scheduler: Default::default(),
     }
 }

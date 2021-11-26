@@ -2,6 +2,7 @@
 
 use crate::cli::{HydroCli, Subcommand};
 use hydro_node::{chain_spec, service};
+use runtime::Block;
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
 
@@ -119,7 +120,14 @@ pub fn run() -> sc_cli::Result<()> {
                 Ok((cmd.run(client, backend), task_manager))
             })
         }
-        // TODO: add benchmark for correct weight correction
+        Some(Subcommand::Benchmark(cmd)) => {
+            if cfg!(feature = "runtime-benchmarks") {
+                let runner = cli.create_runner(cmd)?;
+                runner.sync_run(|config| cmd.run::<Block, service::ExecutorDispatch>(config))
+            } else {
+                Err("Benchmarks not enabled, need feature='runtime-benchmarks'".into())
+            }
+        }
 
         // if not one of the subcommand, start full service runner for sc-cli
         None => {
