@@ -21,7 +21,7 @@
 // --repeat
 // 20
 // --output
-// ./out.rs
+// ./pallets/weights
 
 
 #![cfg_attr(rustfmt, rustfmt_skip)]
@@ -36,7 +36,7 @@ pub struct WeightInfo<T>(PhantomData<T>);
 impl<T: frame_system::Config> pallet_balances::WeightInfo for WeightInfo<T> {
 	// Storage: System Account (r:1 w:1)
 	fn transfer() -> Weight {
-		(73_980_000 as Weight)
+		(73_900_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
