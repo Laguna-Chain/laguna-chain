@@ -9,7 +9,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use frame_support::{
     construct_runtime, parameter_types,
-    traits::{EqualPrivilegeOnly, KeyOwnerProofSystem},
+    traits::{Contains, EqualPrivilegeOnly, KeyOwnerProofSystem},
     weights::{
         constants::{RocksDbWeight, WEIGHT_PER_SECOND},
         IdentityFee,
@@ -44,6 +44,8 @@ use pallet_grandpa::{
 use frame_support::weights::Weight;
 use primitives::*;
 
+pub mod constants;
+
 // placeholder module to collect WeightInfo provided by runtime-benchmark
 mod weights;
 
@@ -60,7 +62,6 @@ pub mod opaque {
     /// Opaque block identifier type.
     pub type BlockId = generic::BlockId<Block>;
 
-    // TODO: construct opaque key after construct_runtime!
     impl_opaque_keys! {
         pub struct SessionKeys {
             pub aura: Aura,
@@ -70,6 +71,7 @@ pub mod opaque {
 }
 
 // TODO: include all needed const as well
+use constants::*;
 
 // version declaration for wasm runtime copy from substrate-node-template
 #[sp_version::runtime_version]
@@ -272,6 +274,36 @@ impl pallet_scheduler::Config for Runtime {
     type WeightInfo = ();
 }
 
+pub struct DustRemovalWhitelist;
+
+impl Contains<AccountId> for DustRemovalWhitelist {
+    fn contains(t: &AccountId) -> bool {
+        unimplemented!()
+    }
+}
+
+orml_traits::parameter_type_with_key! {
+    pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+
+        match currency_id {
+            &CurrencyId::NativeToken(TokenId::Hydro) => 10 * MILLI_HYDRO,
+            _ => Balance::max_value() // unreachable ED value for unverified currency type
+        }
+    };
+}
+
+impl orml_tokens::Config for Runtime {
+    type Event = Event;
+    type Balance = Balance;
+    type Amount = Amount;
+    type CurrencyId = primitives::CurrencyId;
+    type WeightInfo = ();
+    type ExistentialDeposits = ExistentialDeposits;
+    type OnDust = ();
+    type MaxLocks = MaxLocks;
+    type DustRemovalWhitelist = DustRemovalWhitelist;
+}
+
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the same time, most of the time they cross reference each other
@@ -284,15 +316,20 @@ construct_runtime!(
         {
             // import needed part of the pallet
             // NOTICE: will effect life cycle of a pallet
-            System: frame_system = 0,
-            Timestamp: pallet_timestamp = 1,
-            Aura: pallet_aura = 2,
-            Grandpa: pallet_grandpa = 3,
-            Balances: pallet_balances = 4,
-            TransactionPayment: pallet_transaction_payment = 5,
-            Sudo: pallet_sudo = 6,
-            Rando: pallet_rando = 7,
-            Scheduler: pallet_scheduler = 8,
+            System: frame_system ,
+            Timestamp: pallet_timestamp ,
+            Sudo: pallet_sudo ,
+            Scheduler: pallet_scheduler ,
+
+            // conseus mechanism
+            Aura: pallet_aura ,
+            Grandpa: pallet_grandpa ,
+
+            Balances: pallet_balances ,
+            TransactionPayment: pallet_transaction_payment ,
+            Rando: pallet_rando ,
+
+            Tokens: orml_tokens
         }
 );
 

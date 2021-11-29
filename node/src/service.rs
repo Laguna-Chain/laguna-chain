@@ -167,7 +167,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
         backend,
         mut task_manager,
         import_queue,
-        mut keystore_container,
+        keystore_container,
         select_chain,
         transaction_pool,
         other: (block_import, grandpa_link, mut telemetry),
@@ -190,10 +190,6 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
         Vec::default(),
     ));
 
-    // TODO: offchain worker not implemented
-    // if config.offchain_worker.enabled {
-    // }
-
     let (network, system_rpc_tx, network_starter) =
         sc_service::build_network(sc_service::BuildNetworkParams {
             config: &config,
@@ -205,6 +201,15 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
             block_announce_validator_builder: None,
             warp_sync: Some(warp_sync),
         })?;
+
+    if config.offchain_worker.enabled {
+        sc_service::build_offchain_workers(
+            &config,
+            task_manager.spawn_handle(),
+            client.clone(),
+            network.clone(),
+        );
+    }
 
     // sc-cli specific parameter extract from sc-cli
     let role = config.role.clone();

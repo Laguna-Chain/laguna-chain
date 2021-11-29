@@ -2,13 +2,18 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+pub use sp_runtime::traits::IdentifyAccount;
 use sp_runtime::{
     generic,
     traits::{BlakeTwo256, Verify},
     MultiSignature,
 };
 
-pub use sp_runtime::traits::IdentifyAccount;
+pub(crate) mod currency;
+pub use currency::*;
+
+pub(crate) mod time;
+pub use time::*;
 
 pub type BlockNumber = u32;
 
@@ -20,6 +25,8 @@ pub type AccountPublic = <Signature as Verify>::Signer;
 
 pub type Balance = u128;
 
+pub type Amount = i128;
+
 pub type Index = u32;
 
 pub type Hash = sp_core::H256;
@@ -28,19 +35,3 @@ pub type Hash = sp_core::H256;
 pub type Address = sp_runtime::MultiAddress<AccountId, ()>;
 
 pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
-
-// time measurement based on adjustable blocktime
-// allow conversion based on runtime specified milliseconds per block
-// derived from substrate-node-template
-
-pub const fn minutes(millisec_per_block: u64) -> BlockNumber {
-    60_000 / (millisec_per_block as BlockNumber)
-}
-
-pub const fn hours(millisec_per_block: u64) -> BlockNumber {
-    minutes(millisec_per_block) * 60
-}
-
-pub const fn days(millisec_per_block: u64) -> BlockNumber {
-    hours(millisec_per_block) * 24
-}

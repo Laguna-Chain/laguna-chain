@@ -12,3 +12,11 @@ members = [
   'pallets/rando',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution
+
+[patch.'https://github.com/paritytech/substrate']
+# patch dependency for orml
+frame-support = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
+frame-system = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
+sp-io = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
+sp-runtime = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
+sp-std = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}

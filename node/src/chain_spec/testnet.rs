@@ -7,7 +7,6 @@ use runtime::{
     BalancesConfig,
     GenesisConfig,
     GrandpaConfig,
-    SchedulerConfig,
     SudoConfig,
     SystemConfig,
     WASM_BINARY,
@@ -116,5 +115,6 @@ fn testnet_genesis(
             key: root_key,
         },
         scheduler: Default::default(),
+        tokens: Default::default(),
     }
 }
