@@ -35,8 +35,6 @@ use sp_version::RuntimeVersion;
 
 // include all needed pallets and their impl below
 
-// use pallet_rando;
-
 use pallet_grandpa::{
     fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
@@ -286,12 +284,13 @@ orml_traits::parameter_type_with_key! {
     pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
 
         match currency_id {
-            &CurrencyId::NativeToken(TokenId::Hydro) => 10 * MILLI_HYDRO,
+            &CurrencyId::NativeToken(TokenId::Hydro) => MICRO_HYDRO,
             _ => Balance::max_value() // unreachable ED value for unverified currency type
         }
     };
 }
 
+// use orml's token to represent both native and erc20 tokens
 impl orml_tokens::Config for Runtime {
     type Event = Event;
     type Balance = Balance;

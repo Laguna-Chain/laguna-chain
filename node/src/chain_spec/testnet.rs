@@ -1,7 +1,8 @@
 // import runtime primitives and modules
-use primitives::AccountId;
+use primitives::{AccountId, CurrencyId, TokenId};
 
 use runtime::{
+    constants::HYDROS,
     // provided by construct_runtime! macro
     AuraConfig,
     BalancesConfig,
@@ -9,6 +10,8 @@ use runtime::{
     GrandpaConfig,
     SudoConfig,
     SystemConfig,
+    TokensConfig,
+
     WASM_BINARY,
 };
 
@@ -115,6 +118,12 @@ fn testnet_genesis(
             key: root_key,
         },
         scheduler: Default::default(),
-        tokens: Default::default(),
+        tokens: TokensConfig {
+            balances: endowed_accounts
+                .iter()
+                .cloned()
+                .map(|acc| (acc, CurrencyId::NativeToken(TokenId::Hydro), HYDROS))
+                .collect(),
+        },
     }
 }

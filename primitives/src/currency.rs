@@ -1,3 +1,19 @@
+//! # The currency module
+//!
+//! ## currency types: `CurrencyId`
+//!
+//! **native token**
+//!
+//! native tokens are defined in substrate where token are regulated by related pallet
+//!
+//! **(WIP) erc20 tokens**
+//!
+//! erc20 tokens are tokens implemented by solidity erc20 smart contracts
+//!
+//! ## native token id: `TokenId`
+//!
+//! `TokenId` defines Token issued on the platform for various use cases.
+
 use sp_core::{Decode, Encode, RuntimeDebug};
 
 #[cfg(feature = "std")]

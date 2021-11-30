@@ -1,4 +1,4 @@
-// Primitives are used for internal representation across runtime and node
+//! Primitives are used for internal representation across runtime and node
 
 #![cfg_attr(not(feature = "std"), no_std)]
 

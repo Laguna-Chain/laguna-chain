@@ -1,3 +1,7 @@
+//! # Time module
+//!
+//! thie module implements various time conversion helper based on BlockNumber and milliseconds per block
+
 use super::BlockNumber;
 
 // time measurement based on adjustable blocktime
