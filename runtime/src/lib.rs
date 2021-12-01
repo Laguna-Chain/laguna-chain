@@ -334,6 +334,9 @@ construct_runtime!(
 
 // The following types are copied from substrate-node-template to boostrap development
 
+/// Unchecked extrinsic type as expected by this runtime.
+pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
+
 /// Block type as expected by this runtime.
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 
@@ -345,12 +348,8 @@ pub type SignedExtra = (
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
     frame_system::CheckWeight<Runtime>,
-    // TODO: implement our own fee reduction system after draft came out
     pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
-
-/// Unchecked extrinsic type as expected by this runtime.
-pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 
 /// Executive: handles dispatch to the various modules -> virtual dispatch caller
 pub type Executive = frame_executive::Executive<
