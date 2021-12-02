@@ -7,7 +7,7 @@ use hydro_node::{chain_spec, service};
 use dummy_runtime::Block;
 
 #[cfg(not(feature = "test_runtime"))]
-use runtime::Block;
+use hydro_runtime::Block;
 
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
@@ -54,7 +54,7 @@ impl SubstrateCli for HydroCli {
 
         #[cfg(not(feature = "test_runtime"))]
         {
-            &runtime::VERSION
+            &hydro_runtime::VERSION
         }
     }
 }

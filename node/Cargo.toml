@@ -21,7 +21,7 @@ version = '3.0.0'
 primitives = {path = "../primitives"}
 
 # hydro chain runtime
-runtime = {path = "../runtime", optional = true}
+hydro-runtime = {path = "../runtime", optional = true}
 
 sc-basic-authorship = {git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '0.10.0-dev'}
 sc-cli = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '0.10.0-dev'}
@@ -55,17 +55,17 @@ pallet-transaction-payment-rpc = {git = 'https://github.com/ultrastable-money/su
 frame-benchmarking = {git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 frame-benchmarking-cli = {git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
-dummy_runtime = {path = "../dummy_runtime", optional = true}
+dummy-runtime = {path = "../dummy_runtime", optional = true}
 jsonrpc-core = "18.0.0"
 structopt = "0.3.25"
 
 [features]
 default = [
-  "runtime",
+  "hydro-runtime",
 ]
 runtime-benchmarks = [
-  "runtime/runtime-benchmarks",
+  "hydro-runtime/runtime-benchmarks",
 ]
 test_runtime = [
-  "dummy_runtime",
+  "dummy-runtime",
 ]

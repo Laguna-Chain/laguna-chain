@@ -2,7 +2,7 @@
 //! Derived from substrate-node-template
 
 #[cfg(not(feature = "test_runtime"))]
-use runtime::{self, opaque::Block, RuntimeApi};
+use hydro_runtime::{self, opaque::Block, RuntimeApi};
 
 #[cfg(feature = "test_runtime")]
 use dummy_runtime::{self, opaque::Block, RuntimeApi};
@@ -36,7 +36,7 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 
         #[cfg(not(feature = "test_runtime"))]
         {
-            runtime::api::dispatch(method, data)
+            hydro_runtime::api::dispatch(method, data)
         }
     }
 
@@ -48,7 +48,7 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 
         #[cfg(not(feature = "test_runtime"))]
         {
-            runtime::native_version()
+            hydro_runtime::native_version()
         }
     }
 }

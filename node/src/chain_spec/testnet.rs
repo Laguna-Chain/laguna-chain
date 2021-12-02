@@ -18,7 +18,7 @@ use dummy_runtime::{
 };
 
 #[cfg(not(feature = "test_runtime"))]
-use runtime::{
+use hydro_runtime::{
     // runtime constants, for setting up genesis
     constants::HYDROS,
 
