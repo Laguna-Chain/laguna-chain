@@ -1,8 +1,10 @@
-// import runtime primitives and modules
+// chain-wise primitives and modules
 use primitives::{AccountId, CurrencyId, TokenId};
 
 use runtime::{
+    // runtime constants, for setting up genesis
     constants::HYDROS,
+
     // provided by construct_runtime! macro
     AuraConfig,
     BalancesConfig,
@@ -12,6 +14,7 @@ use runtime::{
     SystemConfig,
     TokensConfig,
 
+    // wasm binary build by runtime's build.rs
     WASM_BINARY,
 };
 

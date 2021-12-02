@@ -17,6 +17,7 @@ use frame_support::{
 };
 
 use frame_system::EnsureRoot;
+use orml_currencies::BasicCurrencyAdapter;
 use pallet_transaction_payment::CurrencyAdapter;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -276,7 +277,8 @@ pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
     fn contains(t: &AccountId) -> bool {
-        unimplemented!()
+        // TODO: all account are possible to be dust-removed now
+        false
     }
 }
 
@@ -303,6 +305,18 @@ impl orml_tokens::Config for Runtime {
     type DustRemovalWhitelist = DustRemovalWhitelist;
 }
 
+parameter_types! {
+    pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(NATIVE_TOKEN);
+}
+
+impl orml_currencies::Config for Runtime {
+    type Event = Event;
+    type MultiCurrency = Tokens;
+    type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
+    type GetNativeCurrencyId = NativeCurrencyId;
+    type WeightInfo = ();
+}
+
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the same time, most of the time they cross reference each other
@@ -315,20 +329,24 @@ construct_runtime!(
         {
             // import needed part of the pallet
             // NOTICE: will effect life cycle of a pallet
+
+            // system pallets
             System: frame_system ,
             Timestamp: pallet_timestamp ,
             Sudo: pallet_sudo ,
+            TransactionPayment: pallet_transaction_payment ,
             Scheduler: pallet_scheduler ,
 
             // conseus mechanism
             Aura: pallet_aura ,
             Grandpa: pallet_grandpa ,
 
+            // token and currency
             Balances: pallet_balances ,
-            TransactionPayment: pallet_transaction_payment ,
-            Rando: pallet_rando ,
+            Currencies: orml_currencies,
+            Tokens: orml_tokens,
 
-            Tokens: orml_tokens
+            Rando: pallet_rando ,
         }
 );
 

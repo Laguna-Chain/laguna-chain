@@ -6,7 +6,6 @@ use runtime::Block;
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
 use sc_service::PartialComponents;
 
-// TODO: only scaffolding now
 impl SubstrateCli for HydroCli {
     fn impl_name() -> String {
         "hydro-node".into()
@@ -25,8 +24,7 @@ impl SubstrateCli for HydroCli {
     }
 
     fn support_url() -> String {
-        // TODO: adjust support url later
-        "TBD".into()
+        "support.anonymous.an".into()
     }
 
     fn copyright_start_year() -> i32 {
