@@ -2,7 +2,13 @@
 
 use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
 use primitives::{AccountId, Balance, Index};
+
+#[cfg(not(feature = "test_runtime"))]
 use runtime::opaque::Block;
+
+#[cfg(feature = "test_runtime")]
+use dummy_runtime::opaque::Block;
+
 use std::sync::Arc;
 use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
