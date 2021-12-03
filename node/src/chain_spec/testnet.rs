@@ -1,4 +1,5 @@
 // chain-wise primitives and modules
+use pallet_evm::GenesisAccount;
 use primitives::AccountId;
 
 #[cfg(not(feature = "test_runtime"))]
@@ -25,12 +26,13 @@ use hydro_runtime::{
     // provided by construct_runtime! macro
     AuraConfig,
     BalancesConfig,
+    EvmConfig,
+
     GenesisConfig,
     GrandpaConfig,
     SudoConfig,
     SystemConfig,
     TokensConfig,
-
     // wasm binary build by runtime's build.rs
     WASM_BINARY,
 };
@@ -40,7 +42,7 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 
 use super::util::{authority_keys_from_seed, get_account_id_from_seed};
 use sc_service::ChainType;
-use sp_core::sr25519;
+use sp_core::{sr25519, H160, U256};
 
 // Spec derived from runtiem GenisisConfig
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
@@ -147,6 +149,24 @@ fn testnet_genesis(
                     .cloned()
                     .map(|acc| (acc, CurrencyId::NativeToken(TokenId::Hydro), HYDROS))
                     .collect(),
+            },
+            evm: EvmConfig {
+                accounts: {
+                    let mut accounts = std::collections::BTreeMap::new();
+                    accounts.insert(
+                        H160::from_slice(&hex_literal::hex!(
+                            "37C54011486B797FAA83c5CF6de88C567843a23F"
+                        )),
+                        GenesisAccount {
+                            nonce: U256::zero(),
+                            // Using a larger number, so I can tell the accounts apart by balance.
+                            balance: U256::from(1u64 << 61),
+                            code: vec![],
+                            storage: std::collections::BTreeMap::new(),
+                        },
+                    );
+                    accounts
+                },
             },
         }
     }

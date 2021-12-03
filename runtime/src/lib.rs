@@ -16,13 +16,19 @@ use frame_support::{
     },
 };
 
+mod precompiles;
+use precompiles::FrontierPrecompiles;
+
 use frame_system::EnsureRoot;
 use orml_currencies::BasicCurrencyAdapter;
+use pallet_evm::{
+    EnsureAddressNever, EnsureAddressRoot, HashedAddressMapping, SubstrateBlockHashMapping,
+};
 use pallet_transaction_payment::CurrencyAdapter;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::{
-    app_crypto::sp_core::OpaqueMetadata,
+    app_crypto::sp_core::{OpaqueMetadata, U256},
     create_runtime_str, generic, impl_opaque_keys,
     traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFor},
     transaction_validity::{TransactionSource, TransactionValidity},
@@ -65,6 +71,7 @@ pub mod opaque {
         pub struct SessionKeys {
             pub aura: Aura,
             pub grandpa: Grandpa,
+
         }
     }
 }
@@ -317,6 +324,31 @@ impl orml_currencies::Config for Runtime {
     type WeightInfo = ();
 }
 
+parameter_types! {
+    // TODO: setup correct rule for chain_id
+    pub const ChainId: u64 = 1234;
+    pub BlockGasLimit: U256 = U256::from(u32::max_value());
+    pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
+}
+
+impl pallet_evm::Config for Runtime {
+    type Event = Event;
+    type Currency = Balances;
+    type BlockGasLimit = BlockGasLimit;
+    type FeeCalculator = ();
+    type CallOrigin = EnsureAddressRoot<AccountId>;
+    type WithdrawOrigin = EnsureAddressNever<AccountId>;
+    type AddressMapping = HashedAddressMapping<BlakeTwo256>;
+    type GasWeightMapping = ();
+    type BlockHashMapping = SubstrateBlockHashMapping<Self>;
+    type PrecompilesType = FrontierPrecompiles<Self>;
+    type PrecompilesValue = PrecompilesValue;
+    type ChainId = ChainId;
+    type Runner = pallet_evm::runner::stack::Runner<Self>;
+    type OnChargeTransaction = ();
+    type FindAuthor = ();
+}
+
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the same time, most of the time they cross reference each other
@@ -347,6 +379,9 @@ construct_runtime!(
             Tokens: orml_tokens,
 
             Rando: pallet_rando ,
+
+            // evm the bytecode execution environment, can preload precompiles
+            Evm: pallet_evm,
         }
 );
 
