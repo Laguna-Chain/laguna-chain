@@ -22,7 +22,8 @@ use precompiles::FrontierPrecompiles;
 use frame_system::EnsureRoot;
 use orml_currencies::BasicCurrencyAdapter;
 use pallet_evm::{
-    EnsureAddressNever, EnsureAddressRoot, HashedAddressMapping, SubstrateBlockHashMapping,
+    EnsureAddressNever, EnsureAddressRoot, EnsureAddressTruncated, HashedAddressMapping,
+    SubstrateBlockHashMapping,
 };
 use pallet_transaction_payment::CurrencyAdapter;
 use sp_api::impl_runtime_apis;
@@ -342,10 +343,10 @@ impl pallet_evm::Config for Runtime {
     type FeeCalculator = ();
 
     // TODO: decide which identity should be executing evm
-    type CallOrigin = EnsureRoot<AccountId>;
+    type CallOrigin = EnsureAddressRoot<AccountId>;
 
     // specify Origin allowed to receive evm balance
-    type WithdrawOrigin = EnsureAddressNever<AccountId>;
+    type WithdrawOrigin = EnsureAddressTruncated;
     type AddressMapping = HashedAddressMapping<BlakeTwo256>;
 
     // eth.gas <=> substrate.weight mapping, default is 1:1
