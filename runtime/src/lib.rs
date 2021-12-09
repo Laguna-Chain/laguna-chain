@@ -299,7 +299,7 @@ orml_traits::parameter_type_with_key! {
     };
 }
 
-// use orml's token to represent both native and erc20 tokens
+// use orml's token to represent both native and other tokens
 impl orml_tokens::Config for Runtime {
     type Event = Event;
     type Balance = Balance;
@@ -333,19 +333,41 @@ parameter_types! {
 
 impl pallet_evm::Config for Runtime {
     type Event = Event;
-    type Currency = Balances;
+    type Currency = orml_tokens::CurrencyAdapter<Runtime, NativeCurrencyId>;
+
+    // limit the max op allowed in a block
     type BlockGasLimit = BlockGasLimit;
+
+    // will limit min gas needed, combined with gas reduction for finer gas control, default at min=0
     type FeeCalculator = ();
-    type CallOrigin = EnsureAddressRoot<AccountId>;
+
+    // TODO: decide which identity should be executing evm
+    type CallOrigin = EnsureRoot<AccountId>;
+
+    // specify Origin allowed to receive evm balance
     type WithdrawOrigin = EnsureAddressNever<AccountId>;
     type AddressMapping = HashedAddressMapping<BlakeTwo256>;
+
+    // eth.gas <=> substrate.weight mapping, default is 1:1
     type GasWeightMapping = ();
+
+    // maintain block order of substrate
+    // TODO: evaluate whether we do custom block mapping for external tooling, may at the cost of bigger block-size
     type BlockHashMapping = SubstrateBlockHashMapping<Self>;
+
+    // expose functionalities to evm
+    // TODO: include platform specific pallet features to assist solidity developers
     type PrecompilesType = FrontierPrecompiles<Self>;
     type PrecompilesValue = PrecompilesValue;
+
     type ChainId = ChainId;
     type Runner = pallet_evm::runner::stack::Runner<Self>;
+
+    // for evm gas `gas(op) = max(gas) - reduced`
+    // we can specify gas reduction if certain criteria is met, e.g, early return
     type OnChargeTransaction = ();
+
+    // finding the block author in H160 format
     type FindAuthor = ();
 }
 
@@ -378,6 +400,7 @@ construct_runtime!(
             Currencies: orml_currencies,
             Tokens: orml_tokens,
 
+            // dummy pallet for testing interface coupling
             Rando: pallet_rando ,
 
             // evm the bytecode execution environment, can preload precompiles
@@ -395,12 +418,15 @@ pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 
 /// The SignedExtension to the basic transaction logic
 pub type SignedExtra = (
+    // frame_system required once
     frame_system::CheckSpecVersion<Runtime>,
     frame_system::CheckTxVersion<Runtime>,
     frame_system::CheckGenesis<Runtime>,
     frame_system::CheckEra<Runtime>,
     frame_system::CheckNonce<Runtime>,
     frame_system::CheckWeight<Runtime>,
+    // fee and tipping related
+    // TODO: justify whether we need to include if "feeless" transaction is included
     pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 
@@ -414,6 +440,9 @@ pub type Executive = frame_executive::Executive<
 >;
 
 // expose runtime apis, required by node services
+// this allow software outside of the wasm blob to access internal functionalities
+// often referred to as breaking the "wasm boundary" within substrate ecosystem
+
 // TODO: common api impl are derived from substrate-node-template, add custom runtime-api later
 impl_runtime_apis! {
 
