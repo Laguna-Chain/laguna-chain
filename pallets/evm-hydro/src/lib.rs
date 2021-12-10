@@ -5,48 +5,42 @@ pub use pallet::*;
 #[frame_support::pallet]
 pub mod pallet {
 
-    use frame_support::{pallet_prelude::*, traits::IsType};
+    use frame_support::{pallet_prelude::*, sp_runtime::app_crypto::sp_core::H160, traits::IsType};
     use frame_system::{ensure_root, pallet_prelude::OriginFor};
+
+    use pallet_evm::pallet as pallet_evm;
+    use sp_std::prelude::*;
+
+    use sp_core::H256;
     #[pallet::config]
-    pub trait Config: frame_system::Config {
-        type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-        type Wrapper: Wrapper;
+    pub trait Config: frame_system::Config + pallet_evm::Config {
+        type Event: IsType<<Self as frame_system::Config>::Event> + From<Event<Self>>;
     }
 
     #[pallet::pallet]
     pub struct Pallet<T>(_);
 
     #[pallet::event]
-    #[pallet::generate_deposit(pub(super) fn deposit_event)]
-    pub enum Event<T: Config> {
-        ExaminePass,
-        ExamineFail,
-    }
-
-    impl<T: Config> From<bool> for Event<T> {
-        fn from(val: bool) -> Self {
-            if val {
-                Event::ExaminePass
-            } else {
-                Event::ExamineFail
-            }
-        }
+    #[pallet::generate_deposit(pub fn deposit_event)]
+    pub enum Event<T> {
+        InspectOutput(Vec<u8>),
     }
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
-        #[pallet::weight(100_000_000)]
-        pub fn trigger(origin: OriginFor<T>, code: Vec<u8>) -> DispatchResult {
+        #[pallet::weight(100_000)]
+        pub fn inspect(
+            origin: OriginFor<T>,
+            contract_address: H160,
+            storage_key: H256,
+        ) -> DispatchResult {
             let _ = ensure_root(origin)?;
 
-            Self::deposit_event(T::Wrapper::examine(code).into());
+            let value = pallet_evm::Pallet::<T>::account_storages(contract_address, storage_key);
+
+            Self::deposit_event(Event::InspectOutput(value.as_bytes().to_vec()));
 
             Ok(())
         }
-    }
-
-    // allow other trait to specify their pallet behaviour
-    pub trait Wrapper {
-        fn examine(code: Vec<u8>) -> bool;
     }
 }

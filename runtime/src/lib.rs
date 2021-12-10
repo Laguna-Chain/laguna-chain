@@ -372,6 +372,10 @@ impl pallet_evm::Config for Runtime {
     type FindAuthor = ();
 }
 
+impl evm_hydro::Config for Runtime {
+    type Event = Event;
+}
+
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the same time, most of the time they cross reference each other
@@ -406,6 +410,8 @@ construct_runtime!(
 
             // evm the bytecode execution environment, can preload precompiles
             Evm: pallet_evm,
+
+            EvmHydro: evm_hydro
         }
 );
 
@@ -537,6 +543,7 @@ impl_runtime_apis! {
         fn grandpa_authorities() -> GrandpaAuthorityList {
             Grandpa::grandpa_authorities()
         }
+        
 
         fn current_set_id() -> fg_primitives::SetId {
             Grandpa::current_set_id()

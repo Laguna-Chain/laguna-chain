@@ -55,9 +55,9 @@ sp-version = {default-features = false, git = 'https://github.com/ultrastable-mo
 
 # parity SCALE codec
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0'}
+evm-hydro = {path = "../pallets/evm-hydro", default-features = false}
 hex-literal = {optional = true, version = '0.3.1'}
 scale-info = {default-features = false, features = ['derive'], version = '1.0'}
-evm-hydro = { path = "../pallets/evm-hydro" }
 
 # build dependency for the wasm runtime
 [build-dependencies.substrate-wasm-builder]
@@ -113,4 +113,5 @@ std = [
   'pallet-evm-precompile-simple/std',
   'pallet-evm-precompile-modexp/std',
   'pallet-evm-precompile-sha3fips/std',
+  "evm-hydro/std",
 ]
