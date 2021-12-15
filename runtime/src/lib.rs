@@ -22,8 +22,7 @@ use precompiles::FrontierPrecompiles;
 use frame_system::EnsureRoot;
 use orml_currencies::BasicCurrencyAdapter;
 use pallet_evm::{
-    EnsureAddressNever, EnsureAddressRoot, EnsureAddressTruncated, HashedAddressMapping,
-    SubstrateBlockHashMapping,
+    EnsureAddressRoot, EnsureAddressTruncated, HashedAddressMapping, SubstrateBlockHashMapping,
 };
 use pallet_transaction_payment::CurrencyAdapter;
 use sp_api::impl_runtime_apis;
@@ -248,19 +247,6 @@ impl pallet_balances::Config for Runtime {
 }
 
 parameter_types! {
-    pub const TransactionByteFee: Balance = 1;
-    pub OperationalFeeMultiplier: u8 = 5;
-}
-
-impl pallet_transaction_payment::Config for Runtime {
-    type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
-    type TransactionByteFee = TransactionByteFee;
-    type OperationalFeeMultiplier = OperationalFeeMultiplier;
-    type WeightToFee = IdentityFee<Balance>;
-    type FeeMultiplierUpdate = ();
-}
-
-parameter_types! {
     pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
         BlockWeights::get().max_block;
     pub const MaxScheduledPerBlock: u32 = 50;
@@ -334,6 +320,8 @@ parameter_types! {
 
 impl pallet_evm::Config for Runtime {
     type Event = Event;
+
+    // Use platform native token as evm's native token as well
     type Currency = orml_tokens::CurrencyAdapter<Runtime, NativeCurrencyId>;
 
     // limit the max op allowed in a block
@@ -376,6 +364,19 @@ impl evm_hydro::Config for Runtime {
     type Event = Event;
 }
 
+parameter_types! {
+    pub const TransactionByteFee: Balance = 1;
+    pub OperationalFeeMultiplier: u8 = 5;
+}
+
+impl pallet_transaction_payment::Config for Runtime {
+    type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+    type TransactionByteFee = TransactionByteFee;
+    type OperationalFeeMultiplier = OperationalFeeMultiplier;
+    type WeightToFee = IdentityFee<Balance>;
+    type FeeMultiplierUpdate = ();
+}
+
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the same time, most of the time they cross reference each other
@@ -393,8 +394,8 @@ construct_runtime!(
             System: frame_system ,
             Timestamp: pallet_timestamp ,
             Sudo: pallet_sudo ,
-            TransactionPayment: pallet_transaction_payment ,
             Scheduler: pallet_scheduler ,
+            TransactionPayment: pallet_transaction_payment ,
 
             // conseus mechanism
             Aura: pallet_aura ,
@@ -543,7 +544,7 @@ impl_runtime_apis! {
         fn grandpa_authorities() -> GrandpaAuthorityList {
             Grandpa::grandpa_authorities()
         }
-        
+
 
         fn current_set_id() -> fg_primitives::SetId {
             Grandpa::current_set_id()

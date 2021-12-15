@@ -12,6 +12,7 @@ members = [
   'primitives',
   'pallets/rando',
   'pallets/evm-hydro',
+  'pallets/fluent-fee'
 ] 
 resolver = "2" # use the new resolver for better dependency resolution
 

@@ -10,6 +10,7 @@ version = "0.1.0"
 primitives = {path = "../primitives", default-features = false}
 
 # runtime's basic pallet impl
+fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
 pallet-aura = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
@@ -26,6 +27,7 @@ orml-tokens = {git = 'https://github.com/ultrastable-money/open-runtime-module-l
 orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, rev = "03fe5543968c3774738ab38c64323b1d1c7d58d4"}
 
 # evm related
+evm-hydro = {path = "../pallets/evm-hydro", default-features = false}
 pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-modexp = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-sha3fips = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
@@ -55,7 +57,6 @@ sp-version = {default-features = false, git = 'https://github.com/ultrastable-mo
 
 # parity SCALE codec
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0'}
-evm-hydro = {path = "../pallets/evm-hydro", default-features = false}
 hex-literal = {optional = true, version = '0.3.1'}
 scale-info = {default-features = false, features = ['derive'], version = '1.0'}
 
@@ -113,5 +114,6 @@ std = [
   'pallet-evm-precompile-simple/std',
   'pallet-evm-precompile-modexp/std',
   'pallet-evm-precompile-sha3fips/std',
+  "fluent-fee/std",
   "evm-hydro/std",
 ]

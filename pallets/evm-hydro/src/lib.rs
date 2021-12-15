@@ -9,9 +9,9 @@ pub mod pallet {
     use frame_system::{ensure_root, pallet_prelude::OriginFor};
 
     use pallet_evm::pallet as pallet_evm;
+    use sp_core::H256;
     use sp_std::prelude::*;
 
-    use sp_core::H256;
     #[pallet::config]
     pub trait Config: frame_system::Config + pallet_evm::Config {
         type Event: IsType<<Self as frame_system::Config>::Event> + From<Event<Self>>;
