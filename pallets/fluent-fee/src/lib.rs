@@ -12,7 +12,7 @@ use pallet_transaction_payment::OnChargeTransaction;
 pub mod pallet {
 
     use frame_support::pallet_prelude::*;
-    use frame_system::{ensure_root, pallet_prelude::OriginFor};
+    use frame_system::{ensure_root, ensure_signed, pallet_prelude::OriginFor};
     use orml_traits::{BasicCurrency, MultiCurrency};
     use primitives::CurrencyId;
     use scale_info::TypeInfo;
@@ -32,12 +32,15 @@ pub mod pallet {
     pub enum Event<T: Config> {
         FeeSourceAdded((CurrencyId, FeeRatePoint)),
         FeeSourceRemoved((CurrencyId, FeeRatePoint)),
+        PreferenceSet(CurrencyId),
+        PreferenceUnset,
     }
 
     #[pallet::error]
     pub enum Error<T> {
         DuplicateCurrencyEntry,
         IllegalFeeRate,
+        UnsetBlankPreference,
     }
 
     #[pallet::pallet]
@@ -85,6 +88,30 @@ pub mod pallet {
 
             FeeSource::<T>::insert(&currency, &fee_rate);
             Pallet::<T>::deposit_event(Event::<T>::FeeSourceAdded((currency, fee_rate)));
+
+            Ok(())
+        }
+
+        #[pallet::weight(1000_000)]
+        pub fn set_fee_preference(origin: OriginFor<T>, currency: CurrencyId) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            FeePreference::<T>::insert(who, &currency);
+            Pallet::<T>::deposit_event(Event::<T>::PreferenceSet(currency));
+
+            Ok(())
+        }
+
+        #[pallet::weight(1000_000)]
+        pub fn unset_fee_preference(origin: OriginFor<T>, currency: CurrencyId) -> DispatchResult {
+            let who = ensure_signed(origin)?;
+
+            let old = Pallet::<T>::get_fee_preference(&who);
+
+            ensure!(old.is_some(), Error::<T>::UnsetBlankPreference);
+
+            FeePreference::<T>::remove(who);
+            Pallet::<T>::deposit_event(Event::<T>::PreferenceUnset);
 
             Ok(())
         }
