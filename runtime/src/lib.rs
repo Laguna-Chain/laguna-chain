@@ -370,11 +370,20 @@ parameter_types! {
 }
 
 impl pallet_transaction_payment::Config for Runtime {
-    type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+    // TODO: add benchmark around cross pallet interaction between fee
+    type OnChargeTransaction = FluentFee;
     type TransactionByteFee = TransactionByteFee;
     type OperationalFeeMultiplier = OperationalFeeMultiplier;
     type WeightToFee = IdentityFee<Balance>;
     type FeeMultiplierUpdate = ();
+}
+
+impl fluent_fee::Config for Runtime {
+    type Event = Event;
+
+    type MultiCurrency = Currencies;
+
+    type NativeCurrencyId = NativeCurrencyId;
 }
 
 // runtime as enum, can cross reference enum variants as pallet impl type associates
@@ -395,24 +404,27 @@ construct_runtime!(
             Timestamp: pallet_timestamp ,
             Sudo: pallet_sudo ,
             Scheduler: pallet_scheduler ,
-            TransactionPayment: pallet_transaction_payment ,
-
-            // conseus mechanism
-            Aura: pallet_aura ,
-            Grandpa: pallet_grandpa ,
 
             // token and currency
             Balances: pallet_balances ,
             Currencies: orml_currencies,
             Tokens: orml_tokens,
+            // weight and fee management
+            TransactionPayment: pallet_transaction_payment ,
+            FluentFee: fluent_fee,
 
-            // dummy pallet for testing interface coupling
-            Rando: pallet_rando ,
+            // conseus mechanism
+            Aura: pallet_aura ,
+            Grandpa: pallet_grandpa ,
+
+
 
             // evm the bytecode execution environment, can preload precompiles
             Evm: pallet_evm,
+            EvmHydro: evm_hydro,
 
-            EvmHydro: evm_hydro
+            // dummy pallet for testing interface coupling
+            Rando: pallet_rando ,
         }
 );
 
