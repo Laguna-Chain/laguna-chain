@@ -31,4 +31,5 @@ pub enum CurrencyId {
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum TokenId {
     Hydro, // Native token of the hydro-chain
+    GasToken,
 }

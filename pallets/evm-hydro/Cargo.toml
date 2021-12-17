@@ -14,6 +14,7 @@ frame-support = {default-features = false, git = 'https://github.com/ultrastable
 frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
 sp-core = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+
 sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 
 frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev', optional = true}

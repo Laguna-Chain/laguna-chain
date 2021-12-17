@@ -280,7 +280,12 @@ orml_traits::parameter_type_with_key! {
     pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
 
         match currency_id {
-            &CurrencyId::NativeToken(TokenId::Hydro) => MICRO_HYDRO,
+            &CurrencyId::NativeToken(token) => {
+                match token {
+                    TokenId::Hydro => MICRO_HYDRO,
+                    TokenId::GasToken => MICRO_HYDRO,
+                }
+            },
             _ => Balance::max_value() // unreachable ED value for unverified currency type
         }
     };
@@ -289,8 +294,11 @@ orml_traits::parameter_type_with_key! {
 // use orml's token to represent both native and other tokens
 impl orml_tokens::Config for Runtime {
     type Event = Event;
+    // how tokens are measured
     type Balance = Balance;
     type Amount = Amount;
+
+    // how's tokens represented
     type CurrencyId = primitives::CurrencyId;
     type WeightInfo = ();
     type ExistentialDeposits = ExistentialDeposits;
@@ -305,8 +313,12 @@ parameter_types! {
 
 impl orml_currencies::Config for Runtime {
     type Event = Event;
+
     type MultiCurrency = Tokens;
+
+    // Native transfer will trigger the underlying mechanism via the underlying `Balances` module
     type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
+
     type GetNativeCurrencyId = NativeCurrencyId;
     type WeightInfo = ();
 }
@@ -382,7 +394,6 @@ impl fluent_fee::Config for Runtime {
     type Event = Event;
 
     type MultiCurrency = Currencies;
-
     type NativeCurrencyId = NativeCurrencyId;
 }
 

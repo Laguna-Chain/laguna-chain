@@ -5,6 +5,9 @@ use orml_traits::{arithmetic::Zero, MultiCurrency};
 pub use pallet::*;
 use pallet_transaction_payment::OnChargeTransaction;
 
+mod mock;
+mod tests;
+
 /// # fluent fee
 ///
 /// this modules customize and replace the how fee is charged for a given transaction
@@ -13,7 +16,7 @@ pub mod pallet {
 
     use frame_support::pallet_prelude::*;
     use frame_system::{ensure_root, ensure_signed, pallet_prelude::OriginFor};
-    use orml_traits::{BasicCurrency, MultiCurrency};
+    use orml_traits::MultiCurrency;
     use primitives::CurrencyId;
     use scale_info::TypeInfo;
 
@@ -82,7 +85,7 @@ pub mod pallet {
             );
 
             ensure!(
-                fee_rate.base > fee_rate.point && fee_rate.point != 0 && fee_rate.base != 0,
+                fee_rate.base >= fee_rate.point && fee_rate.point != 0 && fee_rate.base != 0,
                 Error::<T>::IllegalFeeRate
             );
 
@@ -103,7 +106,7 @@ pub mod pallet {
         }
 
         #[pallet::weight(1000_000)]
-        pub fn unset_fee_preference(origin: OriginFor<T>, currency: CurrencyId) -> DispatchResult {
+        pub fn unset_fee_preference(origin: OriginFor<T>) -> DispatchResult {
             let who = ensure_signed(origin)?;
 
             let old = Pallet::<T>::get_fee_preference(&who);
