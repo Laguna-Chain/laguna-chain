@@ -8,11 +8,11 @@ use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
 
-pub struct FrontierPrecompiles<R>(PhantomData<R>);
+pub struct HydroPrecompiles<R>(PhantomData<R>);
 
-impl<R> FrontierPrecompiles<R>
+impl<Runtime> HydroPrecompiles<Runtime>
 where
-    R: pallet_evm::Config,
+    Runtime: pallet_evm::Config,
 {
     pub fn new() -> Self {
         Self(Default::default())
@@ -25,9 +25,9 @@ where
     }
 }
 
-impl<R> PrecompileSet for FrontierPrecompiles<R>
+impl<Runtime> PrecompileSet for HydroPrecompiles<Runtime>
 where
-    R: pallet_evm::Config,
+    Runtime: pallet_evm::Config,
 {
     fn execute(
         &self,

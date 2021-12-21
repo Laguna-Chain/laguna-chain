@@ -17,14 +17,14 @@ use frame_support::{
 };
 
 mod precompiles;
-use precompiles::FrontierPrecompiles;
+use precompiles::HydroPrecompiles;
 
 use frame_system::EnsureRoot;
 use orml_currencies::BasicCurrencyAdapter;
 use pallet_evm::{
     EnsureAddressRoot, EnsureAddressTruncated, HashedAddressMapping, SubstrateBlockHashMapping,
 };
-use pallet_transaction_payment::CurrencyAdapter;
+
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::{
@@ -327,7 +327,7 @@ parameter_types! {
     // TODO: setup correct rule for chain_id
     pub const ChainId: u64 = 1234;
     pub BlockGasLimit: U256 = U256::from(u32::max_value());
-    pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
+    pub PrecompilesValue: HydroPrecompiles<Runtime> = HydroPrecompiles::<_>::new();
 }
 
 impl pallet_evm::Config for Runtime {
@@ -358,7 +358,7 @@ impl pallet_evm::Config for Runtime {
 
     // expose functionalities to evm
     // TODO: include platform specific pallet features to assist solidity developers
-    type PrecompilesType = FrontierPrecompiles<Self>;
+    type PrecompilesType = HydroPrecompiles<Self>;
     type PrecompilesValue = PrecompilesValue;
 
     type ChainId = ChainId;

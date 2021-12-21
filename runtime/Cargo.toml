@@ -29,9 +29,11 @@ orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-l
 # evm related
 evm-hydro = {path = "../pallets/evm-hydro", default-features = false}
 pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
+pallet-evm-precompile-dispatch = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-modexp = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-sha3fips = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-simple = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
+pallet-rando-precompile = { path = "../precompiles/rando", default-features = false }
 
 # interface for pallet build with frame
 frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev', optional = true}
@@ -114,6 +116,7 @@ std = [
   'pallet-evm-precompile-simple/std',
   'pallet-evm-precompile-modexp/std',
   'pallet-evm-precompile-sha3fips/std',
+  "pallet-rando-precompile/std",
   "fluent-fee/std",
   "evm-hydro/std",
 ]
