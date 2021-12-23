@@ -3,12 +3,15 @@
 use std::marker::PhantomData;
 
 use evm::{Context, ExitSucceed};
-use fp_evm::{
-    LinearCostPrecompile, Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult,
-};
+use fp_evm::{Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
 use precompile_utils::{EvmDataReader, EvmResult, Gasometer, RuntimeHelper};
+
+mod mock;
+
+#[cfg(test)]
+mod tests;
 
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]

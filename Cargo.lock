@@ -4218,10 +4218,19 @@ dependencies = [
  "frame-support",
  "frame-system",
  "num_enum",
+ "pallet-balances",
  "pallet-evm",
+ "pallet-evm-precompile-dispatch",
  "pallet-rando",
+ "pallet-timestamp",
  "parity-scale-codec",
  "precompile-utils",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
