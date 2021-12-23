@@ -14,6 +14,7 @@ members = [
   'pallets/evm-hydro',
   'pallets/fluent-fee',
   'precompiles/rando',
+  'precompiles/utils',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution
 

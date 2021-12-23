@@ -4028,7 +4028,7 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
- "xcm",
+ "xcm 0.9.12",
 ]
 
 [[package]]
@@ -4221,6 +4221,7 @@ dependencies = [
  "pallet-evm",
  "pallet-rando",
  "parity-scale-codec",
+ "precompile-utils",
 ]
 
 [[package]]
@@ -4713,6 +4714,37 @@ name = "ppv-lite86"
 version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ed0cfbc8191465bed66e1718596ee0b0b35d5ee1f41c5df2189d0fe8bde535ba"
+
+[[package]]
+name = "precompile-utils"
+version = "0.1.0"
+dependencies = [
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "hex-literal",
+ "log",
+ "num_enum",
+ "pallet-evm",
+ "parity-scale-codec",
+ "precompile-utils-macro",
+ "sha3 0.9.1",
+ "sp-core",
+ "sp-io",
+ "sp-std",
+ "xcm 0.9.13",
+]
+
+[[package]]
+name = "precompile-utils-macro"
+version = "0.1.0"
+dependencies = [
+ "num_enum",
+ "proc-macro2",
+ "quote",
+ "sha3 0.8.2",
+ "syn",
+]
 
 [[package]]
 name = "primitive-types"
@@ -8307,13 +8339,36 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "scale-info",
- "xcm-procedural",
+ "xcm-procedural 0.1.0 (git+https://github.com/paritytech/polkadot?branch=release-v0.9.12)",
+]
+
+[[package]]
+name = "xcm"
+version = "0.9.13"
+source = "git+https://github.com/paritytech/polkadot#42c66654f38332ee570c31d94c3989fd6ebed839"
+dependencies = [
+ "derivative",
+ "impl-trait-for-tuples",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "xcm-procedural 0.1.0 (git+https://github.com/paritytech/polkadot)",
 ]
 
 [[package]]
 name = "xcm-procedural"
 version = "0.1.0"
 source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.12#5feed981cf0fe671447eabaa9c0d235a8dd0003e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "xcm-procedural"
+version = "0.1.0"
+source = "git+https://github.com/paritytech/polkadot#42c66654f38332ee570c31d94c3989fd6ebed839"
 dependencies = [
  "proc-macro2",
  "quote",

@@ -14,7 +14,7 @@ frame-system = {default-features = false, git = 'https://github.com/ultrastable-
 num_enum = {version = '0.5.3', default-features = false}
 pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-rando = {path = "../../pallets/rando", default-features = false}
-# precompile-utils = {git = "https://github.com/PureStake/moonbeam", default-features = false}
+precompile-utils = {path = "../utils", default-features = false}
 
 [features]
 default = ["std"]

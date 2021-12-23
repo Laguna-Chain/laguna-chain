@@ -1,12 +1,14 @@
 // this is copied from frontier-workshop, we'll add our own later on
 
 use pallet_evm::{Context, Precompile, PrecompileResult, PrecompileSet};
+use pallet_evm_precompile_dispatch::Dispatch;
 use sp_core::H160;
 use sp_std::marker::PhantomData;
 
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
+use pallet_rando_precompile::RandoPrecompile;
 
 pub struct HydroPrecompiles<R>(PhantomData<R>);
 
@@ -18,7 +20,7 @@ where
         Self(Default::default())
     }
     pub fn used_addresses() -> sp_std::vec::Vec<H160> {
-        sp_std::vec![1, 2, 3, 4, 5, 1024, 1025]
+        sp_std::vec![1, 2, 3, 4, 5, 1024, 1025, 9001]
             .into_iter()
             .map(|x| hash(x))
             .collect()
@@ -27,7 +29,9 @@ where
 
 impl<Runtime> PrecompileSet for HydroPrecompiles<Runtime>
 where
-    Runtime: pallet_evm::Config,
+    Dispatch<Runtime>: Precompile,
+    RandoPrecompile<Runtime>: Precompile,
+    Runtime: pallet_evm::Config + pallet_rando::Config,
 {
     fn execute(
         &self,
@@ -49,6 +53,9 @@ where
                 Some(Sha3FIPS256::execute(input, target_gas, context, is_static))
             }
             a if a == hash(1025) => Some(ECRecoverPublicKey::execute(
+                input, target_gas, context, is_static,
+            )),
+            a if a == hash(9001) => Some(RandoPrecompile::<Runtime>::execute(
                 input, target_gas, context, is_static,
             )),
             _ => None,
