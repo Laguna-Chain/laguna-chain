@@ -34,8 +34,6 @@ where
         context: &Context,
         is_static: bool,
     ) -> PrecompileResult {
-        // TODO: extract input into rust struct for better composability
-
         // parse the evm selector from the action struct we defined, with the help of the generate_function_selector proc_macro
         let (input, selector) = EvmDataReader::new_with_selector(input)
             .map_err(|e| PrecompileFailure::Error { exit_status: e })?;

@@ -115,7 +115,7 @@ where
         is_static: bool,
     ) -> Option<PrecompileResult> {
         match address {
-            a if a == hash(9001) => Some(RandoPrecompile::<Runtime>::execute(
+            a if a == hash(1) => Some(RandoPrecompile::<Runtime>::execute(
                 input, target_gas, context, is_static,
             )),
             _ => None,
@@ -201,7 +201,14 @@ construct_runtime!(
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
-pub const ID_1: LockIdentifier = *b"1       ";
+
+pub fn alice() -> H160 {
+    H160([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])
+}
+
+pub fn bob() -> H160 {
+    H160([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2])
+}
 
 pub struct ExtBuilder {
     balances: Vec<(AccountId, Balance)>,
@@ -235,6 +242,16 @@ impl ExtBuilder {
     }
 }
 
-fn hash(a: u64) -> H160 {
+// generate address at position `a` into H160 hex string
+pub fn hash(a: u64) -> H160 {
     H160::from_low_u64_be(a)
+}
+
+// empty evm context
+pub fn context() -> Context {
+    Context {
+        address: Default::default(),
+        caller: Default::default(),
+        apparent_value: From::from(0),
+    }
 }
