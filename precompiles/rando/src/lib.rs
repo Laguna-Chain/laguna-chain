@@ -6,7 +6,7 @@ use evm::{Context, ExitSucceed};
 use fp_evm::{Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use pallet_evm::AddressMapping;
-use precompile_utils::{EvmDataReader, EvmResult, Gasometer, RuntimeHelper};
+use precompile_utils::{EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper};
 
 mod mock;
 
@@ -17,6 +17,7 @@ mod tests;
 #[derive(Debug, PartialEq)]
 enum Action {
     CallRando = "call_rando()",
+    GetCounts = "get_count()",
 }
 
 pub struct RandoPrecompile<Runtime>(PhantomData<Runtime>);
@@ -41,6 +42,8 @@ where
         // match evm function selector to pallet action
         match selector {
             Action::CallRando => Self::call_rando(context, target_gas)
+                .map_err(|e| PrecompileFailure::Error { exit_status: e }),
+            Action::GetCounts => Self::get_counts(context, target_gas)
                 .map_err(|e| PrecompileFailure::Error { exit_status: e }),
         }
     }
@@ -77,6 +80,23 @@ where
             exit_status: ExitSucceed::Stopped,
             cost: gasometer.used_gas(),
             output: Default::default(),
+            logs: Default::default(),
+        })
+    }
+
+    fn get_counts(context: &Context, target_gas: Option<u64>) -> EvmResult<PrecompileOutput> {
+        // create a gasometer to convert and calculate gas usage of this Pallet::Call
+        let mut gasometer = Gasometer::new(target_gas);
+
+        let counts = pallet_rando::Counter::<Runtime>::get().unwrap_or_default();
+
+        gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
+
+        let output = EvmDataWriter::new().write(counts).build();
+        Ok(PrecompileOutput {
+            exit_status: ExitSucceed::Returned,
+            cost: gasometer.used_gas(),
+            output,
             logs: Default::default(),
         })
     }

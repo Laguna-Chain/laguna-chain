@@ -66,5 +66,26 @@ fn execute_precompile_dummy() {
 
             // precompile of PalletRando::dummy will stop after success execution
             assert_eq!(out.exit_status, ExitSucceed::Stopped);
+
+            let selector = EvmDataWriter::new_with_selector(Action::GetCounts).build();
+
+            // run the selector on the precompiled address of the wrapped module
+            let rs =
+                Precompiles::<Runtime>::new().execute(hash(1), &selector, None, &context(), false);
+
+            // should have result from precoimpleset
+            assert!(rs.is_some());
+            let out = rs.unwrap();
+
+            // execution should be done without error
+            assert!(out.is_ok());
+            let out: PrecompileOutput = out.unwrap();
+
+            // precompile of PalletRando::get_counts have returning data
+            assert_eq!(out.exit_status, ExitSucceed::Returned);
+
+            let output = EvmDataWriter::new().write(1_u16).build();
+
+            assert_eq!(out.output, output);
         });
 }
