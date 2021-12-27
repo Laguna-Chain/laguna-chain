@@ -38,6 +38,7 @@ std = [
   "pallet-balances/std",
   "pallet-timestamp/std",
   "evm/std",
+  "precompile-utils/std",
   "pallet-rando/std",
   "fp-evm/std",
   "num_enum/std",

@@ -4,7 +4,7 @@ use fp_evm::PrecompileSet;
 use frame_support::{
     construct_runtime, parameter_types,
     sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-    traits::{Everything, LockIdentifier},
+    traits::Everything,
 };
 
 use pallet_evm::{

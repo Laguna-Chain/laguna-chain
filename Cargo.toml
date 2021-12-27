@@ -37,8 +37,3 @@ sp-runtime-interface = {git = "https://github.com/ultrastable-money/substrate", 
 sp-std = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
 sp-storage = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
 sp-timestamp = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-
-# [patch.'https://github.com/purestake/frontier']
-# fp-evm = {git = "https://github.com/ultrastable-money/frontier", branch = "master"}
-# frame-system = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-# pallet-evm = {git = "https://github.com/ultrastable-money/frontier", branch = "master"}

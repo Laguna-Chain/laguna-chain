@@ -5,7 +5,10 @@ use orml_traits::{arithmetic::Zero, MultiCurrency};
 pub use pallet::*;
 use pallet_transaction_payment::OnChargeTransaction;
 
+#[cfg(test)]
 mod mock;
+
+#[cfg(test)]
 mod tests;
 
 /// # fluent fee

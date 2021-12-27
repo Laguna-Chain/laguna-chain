@@ -1,5 +1,5 @@
 use fp_evm::PrecompileSet;
-use frame_support::{assert_ok, log};
+use frame_support::assert_ok;
 use precompile_utils::EvmDataWriter;
 
 use pallet_evm::Call as EvmCall;

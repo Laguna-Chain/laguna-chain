@@ -1,13 +1,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use std::marker::PhantomData;
-
 use evm::{Context, ExitSucceed};
 use fp_evm::{Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult};
 use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
+use frame_support::pallet_prelude::PhantomData;
 use pallet_evm::AddressMapping;
 use precompile_utils::{EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper};
 
+#[cfg(test)]
 mod mock;
 
 #[cfg(test)]

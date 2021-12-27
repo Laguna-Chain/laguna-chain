@@ -10,9 +10,9 @@ version = "0.1.0"
 primitives = {path = "../primitives", default-features = false}
 
 # runtime's basic pallet impl
-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
 pallet-aura = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
 pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
 pallet-rando = {default-features = false, version = "0.1.0", path = "../pallets/rando"}
 pallet-scheduler = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
@@ -33,7 +33,7 @@ pallet-evm-precompile-dispatch = {default-features = false, git = 'https://githu
 pallet-evm-precompile-modexp = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-sha3fips = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-simple = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
-pallet-rando-precompile = { path = "../precompiles/rando", default-features = false }
+pallet-rando-precompile = {path = "../precompiles/rando", default-features = false}
 
 # interface for pallet build with frame
 frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev', optional = true}
@@ -117,6 +117,6 @@ std = [
   'pallet-evm-precompile-modexp/std',
   'pallet-evm-precompile-sha3fips/std',
   "pallet-rando-precompile/std",
-  "fluent-fee/std",
+  "pallet-fluent-fee/std",
   "evm-hydro/std",
 ]

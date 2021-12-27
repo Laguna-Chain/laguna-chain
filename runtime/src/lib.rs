@@ -17,6 +17,7 @@ use frame_support::{
 };
 
 mod precompiles;
+use pallet_transaction_payment::CurrencyAdapter;
 use precompiles::HydroPrecompiles;
 
 use frame_system::EnsureRoot;
@@ -334,7 +335,8 @@ impl pallet_evm::Config for Runtime {
     type Event = Event;
 
     // Use platform native token as evm's native token as well
-    type Currency = orml_tokens::CurrencyAdapter<Runtime, NativeCurrencyId>;
+    // type Currency = orml_tokens::CurrencyAdapter<Runtime, NativeCurrencyId>;
+    type Currency = Balances;
 
     // limit the max op allowed in a block
     type BlockGasLimit = BlockGasLimit;
@@ -383,14 +385,14 @@ parameter_types! {
 
 impl pallet_transaction_payment::Config for Runtime {
     // TODO: add benchmark around cross pallet interaction between fee
-    type OnChargeTransaction = FluentFee;
+    type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
     type TransactionByteFee = TransactionByteFee;
     type OperationalFeeMultiplier = OperationalFeeMultiplier;
     type WeightToFee = IdentityFee<Balance>;
     type FeeMultiplierUpdate = ();
 }
 
-impl fluent_fee::Config for Runtime {
+impl pallet_fluent_fee::Config for Runtime {
     type Event = Event;
 
     type MultiCurrency = Currencies;
@@ -422,7 +424,7 @@ construct_runtime!(
             Tokens: orml_tokens,
             // weight and fee management
             TransactionPayment: pallet_transaction_payment ,
-            FluentFee: fluent_fee,
+            FluentFee: pallet_fluent_fee,
 
             // conseus mechanism
             Aura: pallet_aura ,
