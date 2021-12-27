@@ -42,7 +42,7 @@ pub mod pallet {
             Counter::<T>::try_mutate(|counts| {
                 match counts {
                     Some(val) => {
-                        *val = 1;
+                        *val += 1;
                     }
                     None => {
                         *counts = Some(1);

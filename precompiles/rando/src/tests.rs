@@ -17,8 +17,8 @@ fn evm_call(input: Vec<u8>) -> EvmCall<Runtime> {
         value: U256::zero(), // No value sent in EVM
         gas_limit: u64::max_value(),
         nonce: None,
-        max_fee_per_gas: U256::max_value(),
-        max_priority_fee_per_gas: None,
+        max_fee_per_gas: 0.into(),
+        max_priority_fee_per_gas: Some(U256::zero()),
         access_list: vec![], // Use the next nonce
     }
 }
@@ -41,6 +41,32 @@ fn precompile_exist() {
 
     // address H160(2) shouldn't contain precompile
     assert!(!Precompiles::<Runtime>::new().is_precompile(hash(2)));
+}
+
+#[test]
+fn execute_from_evm() {
+    ExtBuilder::default()
+        .balances(vec![(ALICE, 1000)])
+        .build()
+        .execute_with(|| {
+            // getter expect bumped result of the extrinsic call
+            let counts = pallet_rando::Counter::<Runtime>::get().unwrap_or_default();
+            assert_eq!(counts, 0);
+
+            // directly call the precompile_address with input of Action::CallRando
+            let selector_buf = EvmDataWriter::new_with_selector(Action::CallRando).build();
+            let call = evm_call(selector_buf);
+            assert_ok!(Call::Evm(call).dispatch(Origin::root()));
+
+            // directly call the precompile_address with input of Action::GetCounts
+            let selector_buf = EvmDataWriter::new_with_selector(Action::GetCounts).build();
+            let call = evm_call(selector_buf);
+            assert_ok!(Call::Evm(call).dispatch(Origin::root()));
+
+            // getter expect bumped result of the extrinsic call
+            let counts = pallet_rando::Counter::<Runtime>::get().unwrap_or_default();
+            assert_eq!(counts, 1);
+        });
 }
 
 #[test]

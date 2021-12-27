@@ -2,8 +2,11 @@
 
 use evm::{Context, ExitSucceed};
 use fp_evm::{Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult};
-use frame_support::dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo};
 use frame_support::pallet_prelude::PhantomData;
+use frame_support::{
+    dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
+    log,
+};
 use pallet_evm::AddressMapping;
 use precompile_utils::{EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper};
 
