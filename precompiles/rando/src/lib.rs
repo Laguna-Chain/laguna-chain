@@ -39,16 +39,24 @@ where
         is_static: bool,
     ) -> PrecompileResult {
         // parse the evm selector from the action struct we defined, with the help of the generate_function_selector proc_macro
-        let (input, selector) = EvmDataReader::new_with_selector(input)
-            .map_err(|e| PrecompileFailure::Error { exit_status: e })?;
+        let (input, selector) = EvmDataReader::new_with_selector(input).map_err(|e| {
+            log::debug!("parsing failed");
+            PrecompileFailure::Error { exit_status: e }
+        })?;
+
+        log::debug!("found matching selector with input {:x?}", input);
 
         // match evm function selector to pallet action
-        match selector {
+        let rs = match selector {
             Action::CallRando => Self::call_rando(context, target_gas)
                 .map_err(|e| PrecompileFailure::Error { exit_status: e }),
             Action::GetCounts => Self::get_counts(context, target_gas)
                 .map_err(|e| PrecompileFailure::Error { exit_status: e }),
-        }
+        };
+
+        log::debug!("{:?}", rs);
+
+        rs
     }
 }
 

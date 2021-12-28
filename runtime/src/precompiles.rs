@@ -1,5 +1,6 @@
 // this is copied from frontier-workshop, we'll add our own later on
 
+use frame_support::log;
 use pallet_evm::{Context, Precompile, PrecompileResult, PrecompileSet};
 use pallet_evm_precompile_dispatch::Dispatch;
 use sp_core::H160;
@@ -41,6 +42,7 @@ where
         context: &Context,
         is_static: bool,
     ) -> Option<PrecompileResult> {
+        log::debug!("parsing precompile modules with the hashed addr");
         match address {
             // Ethereum precompiles :
             a if a == hash(1) => Some(ECRecover::execute(input, target_gas, context, is_static)),
@@ -58,7 +60,10 @@ where
             a if a == hash(9001) => Some(RandoPrecompile::<Runtime>::execute(
                 input, target_gas, context, is_static,
             )),
-            _ => None,
+            _ => {
+                log::debug!("unmatched address: {:?}", address);
+                None
+            }
         }
     }
 
