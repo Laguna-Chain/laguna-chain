@@ -5,5 +5,5 @@ pragma solidity >=0.8.0;
 interface IRando {
     function call_rando() external;
 
-    function get_count() external;
+    function get_count() external returns (uint256);
 }

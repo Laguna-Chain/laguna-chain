@@ -19,6 +19,7 @@ contract Rando is IRando {
         (bool success, bytes memory returnData) = precompile.staticcall(
             abi.encodeWithSignature("call_rando()")
         );
+
         assembly {
             if eq(success, 0) {
                 revert(add(returnData, 0x20), returndatasize())
@@ -26,7 +27,7 @@ contract Rando is IRando {
         }
     }
 
-    function get_count() public view override {
+    function get_count() public view override returns (uint256) {
         (bool success, bytes memory returnData) = precompile.staticcall(
             abi.encodeWithSignature("get_count()")
         );
@@ -35,5 +36,7 @@ contract Rando is IRando {
                 revert(add(returnData, 0x20), returndatasize())
             }
         }
+
+        return abi.decode(returnData, (uint256));
     }
 }

@@ -18,7 +18,7 @@ mod tests;
 
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
-enum Action {
+pub enum Action {
     CallRando = "call_rando()",
     GetCounts = "get_count()",
 }
@@ -102,8 +102,8 @@ where
         let counts = pallet_rando::Counter::<Runtime>::get().unwrap_or_default();
 
         gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
-
         let output = EvmDataWriter::new().write(counts).build();
+
         Ok(PrecompileOutput {
             exit_status: ExitSucceed::Returned,
             cost: gasometer.used_gas(),
