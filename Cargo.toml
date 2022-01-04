@@ -17,6 +17,7 @@ members = [
   'precompiles/rando',
   'precompiles/utils', 
   'precompiles/native-asset',
+  'precompiles/erc20',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution
 

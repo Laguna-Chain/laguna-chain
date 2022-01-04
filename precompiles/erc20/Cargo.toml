@@ -1,0 +1,48 @@
+[package]
+edition = "2021"
+name = "erc20-precompile"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+codec = {package = "parity-scale-codec", version = "2.2.0", default-features = false}
+evm = {version = "0.33.0", default-features = false}
+fp-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
+frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+num_enum = {version = '0.5.3', default-features = false}
+pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
+pallet-evm-precompile-dispatch = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
+pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+
+precompile-utils = {path = "../utils", default-features = false}
+primitives = {path = "../../primitives", default-features = false}
+scale-info = {default-features = false, features = ['derive'], version = '1.0'}
+sp-core = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-io = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+
+[features]
+default = ["std"]
+std = [
+  "scale-info/std",
+  "codec/std",
+  "frame-support/std",
+  "frame-system/std",
+  "pallet-evm/std",
+  "pallet-balances/std",
+  "pallet-timestamp/std",
+  "evm/std",
+  "precompile-utils/std",
+  "fp-evm/std",
+  "num_enum/std",
+  "sp-core/std",
+  "sp-runtime/std",
+  "sp-io/std",
+  "sp-std/std",
+  "primitives/std",
+  "pallet-evm-precompile-dispatch/std",
+]

@@ -265,7 +265,7 @@ dependencies = [
  "memchr",
  "num_cpus",
  "once_cell",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
  "pin-utils",
  "slab",
  "wasm-bindgen-futures",
@@ -312,7 +312,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "memchr",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
 ]
 
 [[package]]
@@ -325,7 +325,7 @@ dependencies = [
  "futures-sink",
  "futures-util",
  "memchr",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
 ]
 
 [[package]]
@@ -1334,6 +1334,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68b91989ae21441195d7d9b9993a2f9295c7e1a8c96255d8b729accddc124797"
 
 [[package]]
+name = "erc20-precompile"
+version = "0.1.0"
+dependencies = [
+ "evm",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "num_enum",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-evm-precompile-dispatch",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "precompile-utils",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "errno"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1608,7 +1631,7 @@ dependencies = [
 [[package]]
 name = "fp-evm"
 version = "3.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#6df6b1da57b1f61a62c040a40bec46d76d3183ee"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
 dependencies = [
  "evm",
  "parity-scale-codec",
@@ -1904,7 +1927,7 @@ dependencies = [
  "futures-io",
  "memchr",
  "parking",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
  "waker-fn",
 ]
 
@@ -1968,7 +1991,7 @@ dependencies = [
  "futures-sink",
  "futures-task",
  "memchr",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
  "pin-utils",
  "slab",
 ]
@@ -2193,13 +2216,13 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "0.2.5"
+version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1323096b05d41827dadeaee54c9981958c0f94e670bc94ed80037d1a7b8b186b"
+checksum = "31f4c6746584866f0feabcc69893c5b51beef3831656a968ed7ae254cdc4fd03"
 dependencies = [
  "bytes 1.1.0",
  "fnv",
- "itoa 0.4.8",
+ "itoa 1.0.1",
 ]
 
 [[package]]
@@ -2210,7 +2233,7 @@ checksum = "1ff4f84919677303da5f147645dbea6b1881f368d03ac84e1dc09031ebd7b2c6"
 dependencies = [
  "bytes 1.1.0",
  "http",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
 ]
 
 [[package]]
@@ -2338,7 +2361,7 @@ dependencies = [
  "httparse",
  "httpdate",
  "itoa 0.4.8",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
  "socket2 0.4.2",
  "tokio",
  "tower-service",
@@ -2845,7 +2868,7 @@ dependencies = [
  "libp2p-yamux",
  "multiaddr",
  "parking_lot",
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "smallvec",
  "wasm-timer",
 ]
@@ -2870,7 +2893,7 @@ dependencies = [
  "multihash 0.14.0",
  "multistream-select",
  "parking_lot",
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "prost",
  "prost-build",
  "rand 0.7.3",
@@ -3096,7 +3119,7 @@ checksum = "07cb4dd4b917e5b40ddefe49b96b07adcd8d342e0317011d175b7b2bb1dcc974"
 dependencies = [
  "futures 0.3.19",
  "log",
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "rand 0.7.3",
  "salsa20",
  "sha3 0.9.1",
@@ -3115,7 +3138,7 @@ dependencies = [
  "libp2p-core",
  "libp2p-swarm",
  "log",
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "prost",
  "prost-build",
  "rand 0.7.3",
@@ -3710,7 +3733,7 @@ dependencies = [
  "bytes 1.1.0",
  "futures 0.3.19",
  "log",
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "smallvec",
  "unsigned-varint 0.7.1",
 ]
@@ -3756,6 +3779,25 @@ dependencies = [
 [[package]]
 name = "native-asset-precompile"
 version = "0.1.0"
+dependencies = [
+ "evm",
+ "fp-evm",
+ "frame-support",
+ "frame-system",
+ "num_enum",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-evm-precompile-dispatch",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "precompile-utils",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
 
 [[package]]
 name = "net2"
@@ -3912,19 +3954,18 @@ dependencies = [
 
 [[package]]
 name = "num_enum"
-version = "0.5.5"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "085fe377a4b2805c0fbc09484415ec261174614b7f080b0e0d520456ac421a67"
+checksum = "720d3ea1055e4e4574c0c0b0f8c3fd4f24c4cdaf465948206dea090b57b526ad"
 dependencies = [
- "derivative",
  "num_enum_derive",
 ]
 
 [[package]]
 name = "num_enum_derive"
-version = "0.5.5"
+version = "0.5.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5249369707a1e07b39f78d98c8f34e00aca7dcb053812fdbb5ad7be82c1bba38"
+checksum = "0d992b768490d7fe0d8586d9b5745f6c49f557da6d81dc982b1d167ad4edbb21"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro2",
@@ -4098,7 +4139,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm"
 version = "6.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#6df6b1da57b1f61a62c040a40bec46d76d3183ee"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
 dependencies = [
  "evm",
  "evm-gasometer",
@@ -4126,7 +4167,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-dispatch"
 version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#6df6b1da57b1f61a62c040a40bec46d76d3183ee"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
 dependencies = [
  "fp-evm",
  "frame-support",
@@ -4139,7 +4180,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-modexp"
 version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#6df6b1da57b1f61a62c040a40bec46d76d3183ee"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
 dependencies = [
  "fp-evm",
  "num",
@@ -4150,7 +4191,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-sha3fips"
 version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#6df6b1da57b1f61a62c040a40bec46d76d3183ee"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
 dependencies = [
  "fp-evm",
  "sp-core",
@@ -4161,7 +4202,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-simple"
 version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#6df6b1da57b1f61a62c040a40bec46d76d3183ee"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
 dependencies = [
  "fp-evm",
  "ripemd160",
@@ -4659,11 +4700,11 @@ dependencies = [
 
 [[package]]
 name = "pin-project"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1622113ce508488160cff04e6abc60960e676d330e1ca0f77c0b8df17c81438f"
+checksum = "58ad3879ad3baf4e44784bc6a718a8698867bb991f8ce24d1bcbe2cfb4c3a75e"
 dependencies = [
- "pin-project-internal 1.0.9",
+ "pin-project-internal 1.0.10",
 ]
 
 [[package]]
@@ -4679,9 +4720,9 @@ dependencies = [
 
 [[package]]
 name = "pin-project-internal"
-version = "1.0.9"
+version = "1.0.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b95af56fee93df76d721d356ac1ca41fccf168bc448eb14049234df764ba3e76"
+checksum = "744b6f092ba29c3650faf274db506afd39944f48420f6c86b17cfe0ee1cb36bb"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4696,9 +4737,9 @@ checksum = "257b64915a082f7811703966789728173279bdebb956b143dbcd23f6f970a777"
 
 [[package]]
 name = "pin-project-lite"
-version = "0.2.7"
+version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d31d11c69a6b52a174b42bdc0c30e5e11670f90788b2c471c31c1d17d449443"
+checksum = "e280fbe77cc62c91527259e9442153f4688736748d24660126286329742b4c6c"
 
 [[package]]
 name = "pin-utils"
@@ -4756,9 +4797,9 @@ dependencies = [
 
 [[package]]
 name = "ppv-lite86"
-version = "0.2.15"
+version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed0cfbc8191465bed66e1718596ee0b0b35d5ee1f41c5df2189d0fe8bde535ba"
+checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
 
 [[package]]
 name = "precompile-utils"
@@ -5838,7 +5879,7 @@ dependencies = [
  "lru",
  "parity-scale-codec",
  "parking_lot",
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "prost",
  "prost-build",
  "rand 0.7.3",
@@ -6019,7 +6060,7 @@ dependencies = [
  "parity-scale-codec",
  "parity-util-mem",
  "parking_lot",
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "rand 0.7.3",
  "sc-block-builder",
  "sc-chain-spec",
@@ -6090,7 +6131,7 @@ dependencies = [
  "libp2p",
  "log",
  "parking_lot",
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "rand 0.7.3",
  "serde",
  "serde_json",
@@ -6351,18 +6392,18 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.132"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8b9875c23cf305cd1fd7eb77234cbb705f21ea6a72c637a5c6db5fe4b8e7f008"
+checksum = "97565067517b60e2d1ea8b268e59ce036de907ac523ad83a0475da04e818989a"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.132"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecc0db5cb2556c0e558887d9bbdcf6ac4471e83ff66cf696e5419024d1606276"
+checksum = "ed201699328568d8d08208fdd080e3ff594e6c422e438b6705905da01005d537"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6371,9 +6412,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.73"
+version = "1.0.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcbd0344bc6533bc7ec56df11d42fb70f1b912351c0825ccb7211b59d8af7cf5"
+checksum = "ee2bb9cd061c5865d345bb02ca49fcef1391741b672b54a0bf7b679badec3142"
 dependencies = [
  "itoa 1.0.1",
  "ryu",
@@ -7514,7 +7555,7 @@ dependencies = [
  "mio 0.7.14",
  "num_cpus",
  "once_cell",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
  "signal-hook-registry",
  "winapi 0.3.9",
 ]
@@ -7537,7 +7578,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50145484efff8818b5ccd256697f36863f587da82cf8b409c53adf1e840798e3"
 dependencies = [
  "futures-core",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
  "tokio",
 ]
 
@@ -7551,7 +7592,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "log",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
  "tokio",
 ]
 
@@ -7577,7 +7618,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "375a639232caf30edfc78e8d89b2d4c375515393e7af7e16f01cd96917fb2105"
 dependencies = [
  "cfg-if 1.0.0",
- "pin-project-lite 0.2.7",
+ "pin-project-lite 0.2.8",
  "tracing-attributes",
  "tracing-core",
 ]
@@ -7608,7 +7649,7 @@ version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97d095ae15e245a057c8e8451bab9b3ee1e1f68e9ba2b4fbc18d0ac5237835f2"
 dependencies = [
- "pin-project 1.0.9",
+ "pin-project 1.0.10",
  "tracing",
 ]
 
@@ -7913,9 +7954,9 @@ checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
 
 [[package]]
 name = "version_check"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
+checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
 name = "void"
@@ -8390,7 +8431,7 @@ dependencies = [
 [[package]]
 name = "xcm"
 version = "0.9.13"
-source = "git+https://github.com/paritytech/polkadot#d1ba35d23c1530bfc68aca0b84e6ce2e5f74be55"
+source = "git+https://github.com/paritytech/polkadot#9de0185558bbe130575afecd3a27485a1e1404af"
 dependencies = [
  "derivative",
  "impl-trait-for-tuples",
@@ -8413,8 +8454,9 @@ dependencies = [
 [[package]]
 name = "xcm-procedural"
 version = "0.1.0"
-source = "git+https://github.com/paritytech/polkadot#d1ba35d23c1530bfc68aca0b84e6ce2e5f74be55"
+source = "git+https://github.com/paritytech/polkadot#9de0185558bbe130575afecd3a27485a1e1404af"
 dependencies = [
+ "Inflector",
  "proc-macro2",
  "quote",
  "syn",

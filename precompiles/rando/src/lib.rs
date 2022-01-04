@@ -48,11 +48,10 @@ where
 
         // match evm function selector to pallet action
         let rs = match selector {
-            Action::CallRando => Self::call_rando(context, target_gas)
-                .map_err(|e| PrecompileFailure::Error { exit_status: e }),
-            Action::GetCounts => Self::get_counts(context, target_gas)
-                .map_err(|e| PrecompileFailure::Error { exit_status: e }),
-        };
+            Action::CallRando => Self::call_rando(context, target_gas),
+            Action::GetCounts => Self::get_counts(context, target_gas),
+        }
+        .map_err(|e| PrecompileFailure::Error { exit_status: e });
 
         log::debug!("{:?}", rs);
 
