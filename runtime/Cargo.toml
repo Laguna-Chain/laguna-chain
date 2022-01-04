@@ -29,6 +29,7 @@ orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-l
 
 # evm related
 evm-hydro = {path = "../pallets/evm-hydro", default-features = false}
+native-asset-precompile = {path = "../precompiles/native-asset", default-features = false}
 pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-dispatch = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-modexp = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
@@ -119,6 +120,7 @@ std = [
   'pallet-evm-precompile-modexp/std',
   'pallet-evm-precompile-sha3fips/std',
   'pallet-evm-precompile-dispatch/std',
+  "native-asset-precompile/std",
   "pallet-rando-precompile/std",
   "pallet-fluent-fee/std",
   "pallet-reverse-evm-call/std",

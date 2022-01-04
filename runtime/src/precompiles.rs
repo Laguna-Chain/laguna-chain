@@ -1,6 +1,10 @@
 // this is copied from frontier-workshop, we'll add our own later on
 
-use frame_support::log;
+use frame_support::{
+    dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
+    log,
+};
+use native_asset_precompile::NativeCurrencyPrecompile;
 use pallet_evm::{Context, Precompile, PrecompileResult, PrecompileSet};
 use sp_core::H160;
 use sp_std::marker::PhantomData;
@@ -32,7 +36,10 @@ impl<Runtime> PrecompileSet for HydroPrecompiles<Runtime>
 where
     Dispatch<Runtime>: Precompile,
     RandoPrecompile<Runtime>: Precompile,
-    Runtime: pallet_evm::Config + pallet_rando::Config,
+    Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
+    Runtime: pallet_evm::Config + pallet_rando::Config + pallet_balances::Config,
+    <Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
+    sp_core::U256: From<<Runtime as pallet_balances::Config>::Balance>,
 {
     fn execute(
         &self,
@@ -60,7 +67,7 @@ where
             a if a == hash(9001) => Some(RandoPrecompile::<Runtime>::execute(
                 input, target_gas, context, is_static,
             )),
-            a if a == hash(9002) => Some(Dispatch::<Runtime>::execute(
+            a if a == hash(9002) => Some(NativeCurrencyPrecompile::<Runtime>::execute(
                 input, target_gas, context, is_static,
             )),
             _ => {
