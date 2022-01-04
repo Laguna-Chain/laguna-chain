@@ -118,6 +118,7 @@ std = [
   'pallet-evm-precompile-simple/std',
   'pallet-evm-precompile-modexp/std',
   'pallet-evm-precompile-sha3fips/std',
+  'pallet-evm-precompile-dispatch/std',
   "pallet-rando-precompile/std",
   "pallet-fluent-fee/std",
   "pallet-reverse-evm-call/std",

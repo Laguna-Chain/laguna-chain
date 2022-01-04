@@ -431,28 +431,27 @@ construct_runtime!(
             System: frame_system ,
             Timestamp: pallet_timestamp ,
             Sudo: pallet_sudo ,
-            Scheduler: pallet_scheduler ,
+            Scheduler: pallet_scheduler,
 
             // token and currency
-            Balances: pallet_balances ,
+            Balances: pallet_balances,
             Currencies: orml_currencies,
             Tokens: orml_tokens,
+
             // weight and fee management
-            TransactionPayment: pallet_transaction_payment ,
+            TransactionPayment: pallet_transaction_payment,
             FluentFee: pallet_fluent_fee,
 
             // conseus mechanism
-            Aura: pallet_aura ,
-            Grandpa: pallet_grandpa ,
-
-
+            Aura: pallet_aura,
+            Grandpa: pallet_grandpa,
 
             // evm the bytecode execution environment, can preload precompiles
             Evm: pallet_evm,
             EvmHydro: evm_hydro,
 
             // dummy pallet for testing interface coupling
-            Rando: pallet_rando ,
+            Rando: pallet_rando,
 
             ReverseEvmCall: pallet_reverse_evm_call,
         }

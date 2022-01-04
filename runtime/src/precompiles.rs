@@ -2,10 +2,10 @@
 
 use frame_support::log;
 use pallet_evm::{Context, Precompile, PrecompileResult, PrecompileSet};
-use pallet_evm_precompile_dispatch::Dispatch;
 use sp_core::H160;
 use sp_std::marker::PhantomData;
 
+use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
@@ -58,6 +58,9 @@ where
                 input, target_gas, context, is_static,
             )),
             a if a == hash(9001) => Some(RandoPrecompile::<Runtime>::execute(
+                input, target_gas, context, is_static,
+            )),
+            a if a == hash(9002) => Some(Dispatch::<Runtime>::execute(
                 input, target_gas, context, is_static,
             )),
             _ => {
