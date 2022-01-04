@@ -1378,6 +1378,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "ethabi"
+version = "16.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a4c98847055d934070b90e806e12d3936b787d0a115068981c1d8dfd5dfef5a5"
+dependencies = [
+ "ethereum-types",
+ "hex",
+ "sha3 0.9.1",
+ "thiserror",
+ "uint",
+]
+
+[[package]]
 name = "ethbloom"
 version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1394,9 +1407,9 @@ dependencies = [
 
 [[package]]
 name = "ethereum"
-version = "0.11.0"
+version = "0.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04b864b7fc48e8eaa89976b00dbeed860665f8778e2567fcb8f4530fdefdd95e"
+checksum = "34c90e0a755da706ce0970ec0fa8cc48aabcc8e8efa1245336acf718dab06ffe"
 dependencies = [
  "bytes 1.1.0",
  "ethereum-types",
@@ -2308,6 +2321,7 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "hex-literal",
+ "native-asset-precompile",
  "orml-currencies",
  "orml-tokens",
  "orml-traits",
@@ -3780,6 +3794,7 @@ dependencies = [
 name = "native-asset-precompile"
 version = "0.1.0"
 dependencies = [
+ "ethabi",
  "evm",
  "fp-evm",
  "frame-support",
@@ -8431,7 +8446,7 @@ dependencies = [
 [[package]]
 name = "xcm"
 version = "0.9.13"
-source = "git+https://github.com/paritytech/polkadot#9de0185558bbe130575afecd3a27485a1e1404af"
+source = "git+https://github.com/paritytech/polkadot#ed2ed6d93e10747106e6eda9bf485079b894205f"
 dependencies = [
  "derivative",
  "impl-trait-for-tuples",
@@ -8454,7 +8469,7 @@ dependencies = [
 [[package]]
 name = "xcm-procedural"
 version = "0.1.0"
-source = "git+https://github.com/paritytech/polkadot#9de0185558bbe130575afecd3a27485a1e1404af"
+source = "git+https://github.com/paritytech/polkadot#ed2ed6d93e10747106e6eda9bf485079b894205f"
 dependencies = [
  "Inflector",
  "proc-macro2",
