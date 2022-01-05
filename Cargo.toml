@@ -12,11 +12,9 @@ members = [
   'primitives',
   'pallets/rando',
   'pallets/evm-hydro',
-  'pallets/reverse-evm-call',
   'pallets/fluent-fee',
   'precompiles/rando',
   'precompiles/utils',
-  'precompiles/native-asset',
 ]
 
 resolver = "2" # use the new resolver for better dependency resolution

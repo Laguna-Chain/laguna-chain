@@ -406,14 +406,6 @@ parameter_types! {
     pub TargetAddress: (H160, Vec<u8>) = (H160::from_low_u64_be(9001), precompile_utils::EvmDataWriter::new_with_selector(pallet_rando_precompile::Action::CallRando).build());
 }
 
-impl pallet_reverse_evm_call::Config for Runtime {
-    type Event = Event;
-
-    type Caller = Caller;
-
-    type TargetAddress = TargetAddress;
-}
-
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the same time, most of the time they cross reference each other
@@ -453,8 +445,6 @@ construct_runtime!(
 
             // dummy pallet for testing interface coupling
             Rando: pallet_rando ,
-
-            ReverseEvmCall: pallet_reverse_evm_call,
         }
 );
 

@@ -35,7 +35,6 @@ pallet-evm-precompile-modexp = {default-features = false, git = 'https://github.
 pallet-evm-precompile-sha3fips = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-evm-precompile-simple = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
 pallet-rando-precompile = {path = "../precompiles/rando", default-features = false}
-pallet-reverse-evm-call = {path = "../pallets/reverse-evm-call", default-features = false}
 precompile-utils = {path = "../precompiles/utils", default-features = false}
 
 # interface for pallet build with frame
@@ -120,7 +119,6 @@ std = [
   'pallet-evm-precompile-sha3fips/std',
   "pallet-rando-precompile/std",
   "pallet-fluent-fee/std",
-  "pallet-reverse-evm-call/std",
   "precompile-utils/std",
   "evm-hydro/std",
 ]
