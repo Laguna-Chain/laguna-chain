@@ -15,9 +15,10 @@ members = [
   'pallets/reverse-evm-call',
   'pallets/fluent-fee',
   'precompiles/rando',
-  'precompiles/utils', 
+  'precompiles/utils',
   'precompiles/native-asset',
-] 
+]
+
 resolver = "2" # use the new resolver for better dependency resolution
 
 [patch.'https://github.com/paritytech/substrate']
