@@ -592,9 +592,9 @@ dependencies = [
 
 [[package]]
 name = "bumpalo"
-version = "3.8.0"
+version = "3.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f1e260c3a9040a7c19a12468758f4c16f31a81a1fe087482be9570ec864bb6c"
+checksum = "a4a45a46ab1f2412e53d3a0ade76ffad2025804294569aae387231a0cd6e0899"
 
 [[package]]
 name = "byte-slice-cast"
@@ -1292,7 +1292,7 @@ dependencies = [
  "ed25519",
  "rand 0.7.3",
  "serde",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "zeroize",
 ]
 
@@ -1337,7 +1337,6 @@ checksum = "68b91989ae21441195d7d9b9993a2f9295c7e1a8c96255d8b729accddc124797"
 name = "erc20-precompile"
 version = "0.1.0"
 dependencies = [
- "evm",
  "fp-evm",
  "frame-support",
  "frame-system",
@@ -1394,9 +1393,9 @@ dependencies = [
 
 [[package]]
 name = "ethereum"
-version = "0.11.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34c90e0a755da706ce0970ec0fa8cc48aabcc8e8efa1245336acf718dab06ffe"
+checksum = "81fb916554a4dba293ea69c69ad5653e21d770a9d0c2496b5fa0a1f5a3946d87"
 dependencies = [
  "bytes 1.1.0",
  "ethereum-types",
@@ -1613,7 +1612,7 @@ checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 [[package]]
 name = "fork-tree"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
 ]
@@ -1631,7 +1630,7 @@ dependencies = [
 [[package]]
 name = "fp-evm"
 version = "3.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#8a02590e444a8b37e752d05a4ddfc6232aaa8360"
 dependencies = [
  "evm",
  "parity-scale-codec",
@@ -1643,7 +1642,7 @@ dependencies = [
 [[package]]
 name = "frame-benchmarking"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -1663,7 +1662,7 @@ dependencies = [
 [[package]]
 name = "frame-benchmarking-cli"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "Inflector",
  "chrono",
@@ -1689,7 +1688,7 @@ dependencies = [
 [[package]]
 name = "frame-executive"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -1717,7 +1716,7 @@ dependencies = [
 [[package]]
 name = "frame-support"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "bitflags",
  "frame-metadata",
@@ -1745,7 +1744,7 @@ dependencies = [
 [[package]]
 name = "frame-support-procedural"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "Inflector",
  "frame-support-procedural-tools",
@@ -1757,7 +1756,7 @@ dependencies = [
 [[package]]
 name = "frame-support-procedural-tools"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support-procedural-tools-derive",
  "proc-macro-crate 1.1.0",
@@ -1769,7 +1768,7 @@ dependencies = [
 [[package]]
 name = "frame-support-procedural-tools-derive"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1779,7 +1778,7 @@ dependencies = [
 [[package]]
 name = "frame-system"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "log",
@@ -1796,7 +1795,7 @@ dependencies = [
 [[package]]
 name = "frame-system-benchmarking"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -1811,7 +1810,7 @@ dependencies = [
 [[package]]
 name = "frame-system-rpc-runtime-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "sp-api",
@@ -2900,7 +2899,7 @@ dependencies = [
  "rand 0.7.3",
  "ring",
  "rw-stream-sink",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "smallvec",
  "thiserror",
  "unsigned-varint 0.7.1",
@@ -2971,7 +2970,7 @@ dependencies = [
  "prost-build",
  "rand 0.7.3",
  "regex",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "smallvec",
  "unsigned-varint 0.7.1",
  "wasm-timer",
@@ -3011,7 +3010,7 @@ dependencies = [
  "prost",
  "prost-build",
  "rand 0.7.3",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "smallvec",
  "uint",
  "unsigned-varint 0.7.1",
@@ -3073,7 +3072,7 @@ dependencies = [
  "prost",
  "prost-build",
  "rand 0.8.4",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "snow",
  "static_assertions",
  "x25519-dalek",
@@ -3296,7 +3295,7 @@ dependencies = [
  "libsecp256k1-gen-genmult",
  "rand 0.7.3",
  "serde",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "typenum",
 ]
 
@@ -3315,7 +3314,7 @@ dependencies = [
  "libsecp256k1-gen-genmult",
  "rand 0.7.3",
  "serde",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "typenum",
 ]
 
@@ -3687,7 +3686,7 @@ dependencies = [
  "digest 0.9.0",
  "generic-array 0.14.5",
  "multihash-derive",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "sha3 0.9.1",
  "unsigned-varint 0.5.1",
 ]
@@ -3701,7 +3700,7 @@ dependencies = [
  "digest 0.9.0",
  "generic-array 0.14.5",
  "multihash-derive",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "unsigned-varint 0.7.1",
 ]
 
@@ -4020,7 +4019,7 @@ checksum = "28988d872ab76095a6e6ac88d99b54fd267702734fd7ffe610ca27f533ddb95a"
 [[package]]
 name = "orml-currencies"
 version = "0.4.1-dev"
-source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?rev=03fe5543968c3774738ab38c64323b1d1c7d58d4#03fe5543968c3774738ab38c64323b1d1c7d58d4"
+source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?branch=hydro-dep-master#8a1e861b8f482772bd5025438c6d94105b1a27a5"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4037,7 +4036,7 @@ dependencies = [
 [[package]]
 name = "orml-tokens"
 version = "0.4.1-dev"
-source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?rev=03fe5543968c3774738ab38c64323b1d1c7d58d4#03fe5543968c3774738ab38c64323b1d1c7d58d4"
+source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?branch=hydro-dep-master#8a1e861b8f482772bd5025438c6d94105b1a27a5"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4052,7 +4051,7 @@ dependencies = [
 [[package]]
 name = "orml-traits"
 version = "0.4.1-dev"
-source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?rev=03fe5543968c3774738ab38c64323b1d1c7d58d4#03fe5543968c3774738ab38c64323b1d1c7d58d4"
+source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?branch=hydro-dep-master#8a1e861b8f482772bd5025438c6d94105b1a27a5"
 dependencies = [
  "frame-support",
  "impl-trait-for-tuples",
@@ -4064,13 +4063,13 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
- "xcm 0.9.12",
+ "xcm 0.9.13 (git+https://github.com/paritytech/polkadot?branch=release-v0.9.13)",
 ]
 
 [[package]]
 name = "orml-utilities"
 version = "0.4.1-dev"
-source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?rev=03fe5543968c3774738ab38c64323b1d1c7d58d4#03fe5543968c3774738ab38c64323b1d1c7d58d4"
+source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?branch=hydro-dep-master#8a1e861b8f482772bd5025438c6d94105b1a27a5"
 dependencies = [
  "frame-support",
  "parity-scale-codec",
@@ -4093,7 +4092,7 @@ dependencies = [
 [[package]]
 name = "pallet-aura"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4109,7 +4108,7 @@ dependencies = [
 [[package]]
 name = "pallet-authorship"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4124,7 +4123,7 @@ dependencies = [
 [[package]]
 name = "pallet-balances"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -4139,7 +4138,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm"
 version = "6.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#8a02590e444a8b37e752d05a4ddfc6232aaa8360"
 dependencies = [
  "evm",
  "evm-gasometer",
@@ -4167,7 +4166,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-dispatch"
 version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#8a02590e444a8b37e752d05a4ddfc6232aaa8360"
 dependencies = [
  "fp-evm",
  "frame-support",
@@ -4180,7 +4179,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-modexp"
 version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#8a02590e444a8b37e752d05a4ddfc6232aaa8360"
 dependencies = [
  "fp-evm",
  "num",
@@ -4191,7 +4190,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-sha3fips"
 version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#8a02590e444a8b37e752d05a4ddfc6232aaa8360"
 dependencies = [
  "fp-evm",
  "sp-core",
@@ -4202,7 +4201,7 @@ dependencies = [
 [[package]]
 name = "pallet-evm-precompile-simple"
 version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=master#0562ffc60e5f2f6636d46e0c5fd59f6f7ed7adc6"
+source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#8a02590e444a8b37e752d05a4ddfc6232aaa8360"
 dependencies = [
  "fp-evm",
  "ripemd160",
@@ -4237,7 +4236,7 @@ dependencies = [
 [[package]]
 name = "pallet-grandpa"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -4273,7 +4272,6 @@ dependencies = [
 name = "pallet-rando-precompile"
 version = "0.1.0"
 dependencies = [
- "evm",
  "fp-evm",
  "frame-support",
  "frame-system",
@@ -4296,7 +4294,7 @@ dependencies = [
 [[package]]
 name = "pallet-randomness-collective-flip"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4327,7 +4325,7 @@ dependencies = [
 [[package]]
 name = "pallet-scheduler"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -4343,7 +4341,7 @@ dependencies = [
 [[package]]
 name = "pallet-session"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4364,7 +4362,7 @@ dependencies = [
 [[package]]
 name = "pallet-sudo"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4378,7 +4376,7 @@ dependencies = [
 [[package]]
 name = "pallet-timestamp"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-benchmarking",
  "frame-support",
@@ -4396,7 +4394,7 @@ dependencies = [
 [[package]]
 name = "pallet-transaction-payment"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -4413,7 +4411,7 @@ dependencies = [
 [[package]]
 name = "pallet-transaction-payment-rpc"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "jsonrpc-core",
  "jsonrpc-core-client",
@@ -4430,7 +4428,7 @@ dependencies = [
 [[package]]
 name = "pallet-transaction-payment-rpc-runtime-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "pallet-transaction-payment",
  "parity-scale-codec",
@@ -4818,7 +4816,7 @@ dependencies = [
  "sp-core",
  "sp-io",
  "sp-std",
- "xcm 0.9.13",
+ "xcm 0.9.13 (git+https://github.com/paritytech/polkadot)",
 ]
 
 [[package]]
@@ -5462,7 +5460,7 @@ dependencies = [
 [[package]]
 name = "sc-allocator"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "log",
  "sp-core",
@@ -5473,7 +5471,7 @@ dependencies = [
 [[package]]
 name = "sc-basic-authorship"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "futures-timer 3.0.2",
@@ -5496,7 +5494,7 @@ dependencies = [
 [[package]]
 name = "sc-block-builder"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "sc-client-api",
@@ -5512,7 +5510,7 @@ dependencies = [
 [[package]]
 name = "sc-chain-spec"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
@@ -5528,7 +5526,7 @@ dependencies = [
 [[package]]
 name = "sc-chain-spec-derive"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro2",
@@ -5539,7 +5537,7 @@ dependencies = [
 [[package]]
 name = "sc-cli"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "chrono",
  "fdlimit",
@@ -5577,7 +5575,7 @@ dependencies = [
 [[package]]
 name = "sc-client-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "fnv",
  "futures 0.3.19",
@@ -5605,7 +5603,7 @@ dependencies = [
 [[package]]
 name = "sc-client-db"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "hash-db",
  "kvdb",
@@ -5630,7 +5628,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "futures 0.3.19",
@@ -5654,7 +5652,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-aura"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -5683,7 +5681,7 @@ dependencies = [
 [[package]]
 name = "sc-consensus-slots"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "futures 0.3.19",
@@ -5709,7 +5707,7 @@ dependencies = [
 [[package]]
 name = "sc-executor"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "lazy_static",
  "libsecp256k1 0.6.0",
@@ -5735,7 +5733,7 @@ dependencies = [
 [[package]]
 name = "sc-executor-common"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "derive_more",
  "environmental",
@@ -5753,7 +5751,7 @@ dependencies = [
 [[package]]
 name = "sc-executor-wasmi"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "log",
  "parity-scale-codec",
@@ -5769,7 +5767,7 @@ dependencies = [
 [[package]]
 name = "sc-executor-wasmtime"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "cfg-if 1.0.0",
  "libc",
@@ -5787,7 +5785,7 @@ dependencies = [
 [[package]]
 name = "sc-finality-grandpa"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -5824,7 +5822,7 @@ dependencies = [
 [[package]]
 name = "sc-informant"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "ansi_term",
  "futures 0.3.19",
@@ -5841,7 +5839,7 @@ dependencies = [
 [[package]]
 name = "sc-keystore"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -5856,7 +5854,7 @@ dependencies = [
 [[package]]
 name = "sc-network"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-std",
  "async-trait",
@@ -5907,7 +5905,7 @@ dependencies = [
 [[package]]
 name = "sc-network-gossip"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "futures-timer 3.0.2",
@@ -5923,7 +5921,7 @@ dependencies = [
 [[package]]
 name = "sc-offchain"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "bytes 1.1.0",
  "fnv",
@@ -5951,7 +5949,7 @@ dependencies = [
 [[package]]
 name = "sc-peerset"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "libp2p",
@@ -5964,7 +5962,7 @@ dependencies = [
 [[package]]
 name = "sc-proposer-metrics"
 version = "0.9.0"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "log",
  "substrate-prometheus-endpoint",
@@ -5973,7 +5971,7 @@ dependencies = [
 [[package]]
 name = "sc-rpc"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "hash-db",
@@ -6004,7 +6002,7 @@ dependencies = [
 [[package]]
 name = "sc-rpc-api"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "jsonrpc-core",
@@ -6029,7 +6027,7 @@ dependencies = [
 [[package]]
 name = "sc-rpc-server"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "jsonrpc-core",
@@ -6046,7 +6044,7 @@ dependencies = [
 [[package]]
 name = "sc-service"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "directories",
@@ -6110,7 +6108,7 @@ dependencies = [
 [[package]]
 name = "sc-state-db"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "log",
  "parity-scale-codec",
@@ -6124,7 +6122,7 @@ dependencies = [
 [[package]]
 name = "sc-telemetry"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "chrono",
  "futures 0.3.19",
@@ -6142,7 +6140,7 @@ dependencies = [
 [[package]]
 name = "sc-tracing"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "ansi_term",
  "atty",
@@ -6173,7 +6171,7 @@ dependencies = [
 [[package]]
 name = "sc-tracing-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "proc-macro-crate 1.1.0",
  "proc-macro2",
@@ -6184,7 +6182,7 @@ dependencies = [
 [[package]]
 name = "sc-transaction-pool"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "intervalier",
@@ -6211,7 +6209,7 @@ dependencies = [
 [[package]]
 name = "sc-transaction-pool-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "derive_more",
  "futures 0.3.19",
@@ -6225,7 +6223,7 @@ dependencies = [
 [[package]]
 name = "sc-utils"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "futures-timer 3.0.2",
@@ -6460,9 +6458,9 @@ dependencies = [
 
 [[package]]
 name = "sha2"
-version = "0.9.8"
+version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b69f9a4c9740d74c5baa3fd2e547f9525fa8088a8a958e0ca2409a514e33f5fa"
+checksum = "4d58a1e1bf39749807d89cf2d98ac2dfa0ff1cb3faa38fbb64dd88ac8013d800"
 dependencies = [
  "block-buffer 0.9.0",
  "cfg-if 1.0.0",
@@ -6579,7 +6577,7 @@ dependencies = [
  "rand_core 0.6.3",
  "ring",
  "rustc_version 0.3.3",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "subtle",
  "x25519-dalek",
 ]
@@ -6624,7 +6622,7 @@ dependencies = [
 [[package]]
 name = "sp-api"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "hash-db",
  "log",
@@ -6641,7 +6639,7 @@ dependencies = [
 [[package]]
 name = "sp-api-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "blake2-rfc",
  "proc-macro-crate 1.1.0",
@@ -6653,7 +6651,7 @@ dependencies = [
 [[package]]
 name = "sp-application-crypto"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -6666,7 +6664,7 @@ dependencies = [
 [[package]]
 name = "sp-arithmetic"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "integer-sqrt",
  "num-traits",
@@ -6681,7 +6679,7 @@ dependencies = [
 [[package]]
 name = "sp-authorship"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "parity-scale-codec",
@@ -6693,7 +6691,7 @@ dependencies = [
 [[package]]
 name = "sp-block-builder"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "sp-api",
@@ -6705,7 +6703,7 @@ dependencies = [
 [[package]]
 name = "sp-blockchain"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "log",
@@ -6723,7 +6721,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "futures 0.3.19",
@@ -6742,7 +6740,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-aura"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "parity-scale-codec",
@@ -6760,7 +6758,7 @@ dependencies = [
 [[package]]
 name = "sp-consensus-slots"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -6771,7 +6769,7 @@ dependencies = [
 [[package]]
 name = "sp-core"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "base58",
  "bitflags",
@@ -6799,7 +6797,7 @@ dependencies = [
  "schnorrkel",
  "secrecy",
  "serde",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "sp-debug-derive",
  "sp-externalities",
  "sp-runtime-interface",
@@ -6818,7 +6816,7 @@ dependencies = [
 [[package]]
 name = "sp-database"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "kvdb",
  "parking_lot",
@@ -6827,7 +6825,7 @@ dependencies = [
 [[package]]
 name = "sp-debug-derive"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6837,7 +6835,7 @@ dependencies = [
 [[package]]
 name = "sp-externalities"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "environmental",
  "parity-scale-codec",
@@ -6848,7 +6846,7 @@ dependencies = [
 [[package]]
 name = "sp-finality-grandpa"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "finality-grandpa",
  "log",
@@ -6866,7 +6864,7 @@ dependencies = [
 [[package]]
 name = "sp-inherents"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "impl-trait-for-tuples",
@@ -6880,7 +6878,7 @@ dependencies = [
 [[package]]
 name = "sp-io"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "futures 0.3.19",
  "hash-db",
@@ -6904,7 +6902,7 @@ dependencies = [
 [[package]]
 name = "sp-keyring"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "lazy_static",
  "sp-core",
@@ -6915,7 +6913,7 @@ dependencies = [
 [[package]]
 name = "sp-keystore"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -6932,7 +6930,7 @@ dependencies = [
 [[package]]
 name = "sp-maybe-compressed-blob"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "zstd",
 ]
@@ -6940,7 +6938,7 @@ dependencies = [
 [[package]]
 name = "sp-offchain"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "sp-api",
  "sp-core",
@@ -6950,7 +6948,7 @@ dependencies = [
 [[package]]
 name = "sp-panic-handler"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "backtrace",
 ]
@@ -6958,7 +6956,7 @@ dependencies = [
 [[package]]
 name = "sp-rpc"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "rustc-hash",
  "serde",
@@ -6968,7 +6966,7 @@ dependencies = [
 [[package]]
 name = "sp-runtime"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "either",
  "hash256-std-hasher",
@@ -6990,7 +6988,7 @@ dependencies = [
 [[package]]
 name = "sp-runtime-interface"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
@@ -7007,7 +7005,7 @@ dependencies = [
 [[package]]
 name = "sp-runtime-interface-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "Inflector",
  "proc-macro-crate 1.1.0",
@@ -7019,7 +7017,7 @@ dependencies = [
 [[package]]
 name = "sp-serializer"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "serde",
  "serde_json",
@@ -7028,7 +7026,7 @@ dependencies = [
 [[package]]
 name = "sp-session"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -7042,7 +7040,7 @@ dependencies = [
 [[package]]
 name = "sp-staking"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -7053,7 +7051,7 @@ dependencies = [
 [[package]]
 name = "sp-state-machine"
 version = "0.10.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "hash-db",
  "log",
@@ -7076,12 +7074,12 @@ dependencies = [
 [[package]]
 name = "sp-std"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 
 [[package]]
 name = "sp-storage"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "impl-serde",
  "parity-scale-codec",
@@ -7094,7 +7092,7 @@ dependencies = [
 [[package]]
 name = "sp-tasks"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "log",
  "sp-core",
@@ -7107,7 +7105,7 @@ dependencies = [
 [[package]]
 name = "sp-timestamp"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "futures-timer 3.0.2",
@@ -7123,7 +7121,7 @@ dependencies = [
 [[package]]
 name = "sp-tracing"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "sp-std",
@@ -7135,7 +7133,7 @@ dependencies = [
 [[package]]
 name = "sp-transaction-pool"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "sp-api",
  "sp-runtime",
@@ -7144,7 +7142,7 @@ dependencies = [
 [[package]]
 name = "sp-transaction-storage-proof"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-trait",
  "log",
@@ -7160,7 +7158,7 @@ dependencies = [
 [[package]]
 name = "sp-trie"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "hash-db",
  "memory-db",
@@ -7175,7 +7173,7 @@ dependencies = [
 [[package]]
 name = "sp-version"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "impl-serde",
  "parity-scale-codec",
@@ -7191,7 +7189,7 @@ dependencies = [
 [[package]]
 name = "sp-version-proc-macro"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "parity-scale-codec",
  "proc-macro2",
@@ -7202,7 +7200,7 @@ dependencies = [
 [[package]]
 name = "sp-wasm-interface"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
@@ -7315,14 +7313,14 @@ dependencies = [
  "hmac 0.11.0",
  "pbkdf2 0.8.0",
  "schnorrkel",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "zeroize",
 ]
 
 [[package]]
 name = "substrate-build-script-utils"
 version = "3.0.0"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "platforms",
 ]
@@ -7330,7 +7328,7 @@ dependencies = [
 [[package]]
 name = "substrate-frame-rpc-system"
 version = "4.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "frame-system-rpc-runtime-api",
  "futures 0.3.19",
@@ -7352,7 +7350,7 @@ dependencies = [
 [[package]]
 name = "substrate-prometheus-endpoint"
 version = "0.9.0"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "async-std",
  "derive_more",
@@ -7366,7 +7364,7 @@ dependencies = [
 [[package]]
 name = "substrate-wasm-builder"
 version = "5.0.0-dev"
-source = "git+https://github.com/ultrastable-money/substrate?tag=monthly-2021-11-1#352c46a648a5f2d4526e790a184daa4a1ffdb3bf"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 dependencies = [
  "ansi_term",
  "build-helper",
@@ -7386,9 +7384,9 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
 name = "syn"
-version = "1.0.84"
+version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecb2e6da8ee5eb9a61068762a32fa9619cc591ceb055b3687f4cd4051ec2e06b"
+checksum = "a684ac3dcd8913827e18cd09a68384ee66c1de24157e3c556c9ab16d85695fb7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7512,7 +7510,7 @@ dependencies = [
  "pbkdf2 0.4.0",
  "rand 0.7.3",
  "rustc-hash",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "thiserror",
  "unicode-normalization",
  "wasm-bindgen",
@@ -8172,7 +8170,7 @@ dependencies = [
  "libc",
  "log",
  "serde",
- "sha2 0.9.8",
+ "sha2 0.9.9",
  "toml",
  "winapi 0.3.9",
  "zstd",
@@ -8417,21 +8415,21 @@ dependencies = [
 
 [[package]]
 name = "xcm"
-version = "0.9.12"
-source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.12#5feed981cf0fe671447eabaa9c0d235a8dd0003e"
+version = "0.9.13"
+source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.13#7d8f00b90cd6d87780123b3e08ca120cfb0c6e50"
 dependencies = [
  "derivative",
  "impl-trait-for-tuples",
  "log",
  "parity-scale-codec",
  "scale-info",
- "xcm-procedural 0.1.0 (git+https://github.com/paritytech/polkadot?branch=release-v0.9.12)",
+ "xcm-procedural 0.1.0 (git+https://github.com/paritytech/polkadot?branch=release-v0.9.13)",
 ]
 
 [[package]]
 name = "xcm"
 version = "0.9.13"
-source = "git+https://github.com/paritytech/polkadot#ed2ed6d93e10747106e6eda9bf485079b894205f"
+source = "git+https://github.com/paritytech/polkadot#8f094b57a7612804128370315bcefc133e5af724"
 dependencies = [
  "derivative",
  "impl-trait-for-tuples",
@@ -8444,7 +8442,7 @@ dependencies = [
 [[package]]
 name = "xcm-procedural"
 version = "0.1.0"
-source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.12#5feed981cf0fe671447eabaa9c0d235a8dd0003e"
+source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.13#7d8f00b90cd6d87780123b3e08ca120cfb0c6e50"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -8454,7 +8452,7 @@ dependencies = [
 [[package]]
 name = "xcm-procedural"
 version = "0.1.0"
-source = "git+https://github.com/paritytech/polkadot#ed2ed6d93e10747106e6eda9bf485079b894205f"
+source = "git+https://github.com/paritytech/polkadot#8f094b57a7612804128370315bcefc133e5af724"
 dependencies = [
  "Inflector",
  "proc-macro2",
@@ -8499,18 +8497,18 @@ dependencies = [
 
 [[package]]
 name = "zstd"
-version = "0.9.1+zstd.1.5.1"
+version = "0.9.2+zstd.1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "538b8347df9257b7fbce37677ef7535c00a3c7bf1f81023cc328ed7fe4b41de8"
+checksum = "2390ea1bf6c038c39674f22d95f0564725fc06034a47129179810b2fc58caa54"
 dependencies = [
  "zstd-safe",
 ]
 
 [[package]]
 name = "zstd-safe"
-version = "4.1.2+zstd.1.5.1"
+version = "4.1.3+zstd.1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9fb4cfe2f6e6d35c5d27ecd9d256c4b6f7933c4895654917460ec56c29336cc1"
+checksum = "e99d81b99fb3c2c2c794e3fe56c305c63d5173a16a46b5850b07c935ffc7db79"
 dependencies = [
  "libc",
  "zstd-sys",

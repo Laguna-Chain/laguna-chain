@@ -1,7 +1,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use evm::{Context, ExitSucceed};
-use fp_evm::{Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult};
+use fp_evm::{
+    Context, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult,
+};
 use frame_support::pallet_prelude::PhantomData;
 use frame_support::{
     dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},

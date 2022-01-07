@@ -3,6 +3,7 @@
 use fp_evm::{
     Context, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult,
 };
+
 use frame_support::{
     dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
     log,
@@ -105,8 +106,7 @@ where
 
         let amount: U256 = {
             // get account_id from H160
-            let target_account_id: Runtime::AccountId =
-                Runtime::AddressMapping::into_account_id(target_address);
+            let target_account_id = Runtime::AddressMapping::into_account_id(target_address);
 
             // get native balance from pallet_balances
             pallet_balances::Pallet::<Runtime>::usable_balance(&target_account_id).into()

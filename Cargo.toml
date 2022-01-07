@@ -12,31 +12,14 @@ members = [
   'primitives',
   'pallets/rando',
   'pallets/evm-hydro',
-  'pallets/reverse-evm-call',
   'pallets/fluent-fee',
   'precompiles/rando',
   'precompiles/utils',
   'precompiles/native-asset',
   'precompiles/erc20',
+  'pallets/reverse-evm-call',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution
 
-[patch.'https://github.com/paritytech/substrate']
-# patch dependency for orml
-frame-benchmarking = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-frame-support = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-frame-system = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-pallet-balances = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-pallet-timestamp = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-
-# replace direct dependency on parity mother repo, so CI and local modification can be tested first
-sp-api = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-sp-core = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-sp-io = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-
-sp-inherents = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-sp-runtime = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-sp-runtime-interface = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-sp-std = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-sp-storage = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
-sp-timestamp = {git = "https://github.com/ultrastable-money/substrate", tag = 'monthly-2021-11-1'}
+[patch.'https://github.com/ultrastable-money/frontier']
+ethereum = {version = "0.10.0"}
