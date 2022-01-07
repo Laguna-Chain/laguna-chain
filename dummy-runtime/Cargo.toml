@@ -7,8 +7,8 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies.substrate-wasm-builder]
+branch = "hydro-dep-2021-11-1"
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '5.0.0-dev'
 
 [dependencies]
@@ -20,41 +20,41 @@ package = 'parity-scale-codec'
 version = '2.0.0'
 
 [dependencies.frame-benchmarking]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
 optional = true
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.frame-executive]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.frame-support]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.frame-system]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.frame-system-benchmarking]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
 optional = true
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.frame-system-rpc-runtime-api]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.hex-literal]
@@ -62,51 +62,51 @@ optional = true
 version = '0.3.1'
 
 [dependencies.pallet-aura]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.pallet-balances]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.pallet-grandpa]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.pallet-randomness-collective-flip]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.pallet-sudo]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.pallet-timestamp]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.pallet-transaction-payment]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.pallet-transaction-payment-rpc-runtime-api]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.scale-info]
@@ -115,69 +115,69 @@ features = ['derive']
 version = '1.0'
 
 [dependencies.sp-api]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-block-builder]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-consensus-aura]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '0.10.0-dev'
 
 [dependencies.sp-core]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-inherents]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-offchain]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-runtime]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-session]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-std]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-transaction-pool]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [dependencies.sp-version]
+branch = "hydro-dep-2021-11-1"
 default-features = false
 git = 'https://github.com/ultrastable-money/substrate.git'
-tag = 'monthly-2021-11-1'
 version = '4.0.0-dev'
 
 [features]

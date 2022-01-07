@@ -11,22 +11,22 @@ log = "0.4.14"
 primitives = {path = "../../primitives", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '1.0'}
 
-frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
 
-pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-pallet-transaction-payment = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+pallet-transaction-payment = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
 
-sp-core = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-sp-io = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-core = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+sp-io = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
 
-orml-currencies = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, rev = "03fe5543968c3774738ab38c64323b1d1c7d58d4"}
-orml-tokens = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, rev = "03fe5543968c3774738ab38c64323b1d1c7d58d4"}
-orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, rev = "03fe5543968c3774738ab38c64323b1d1c7d58d4"}
+orml-currencies = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-master"}
+orml-tokens = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-master"}
+orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-master"}
 
-frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev', optional = true}
+frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev', optional = true}
 hex = {version = "0.4.3", default-features = false}
 hex-literal = "0.3.4"
 

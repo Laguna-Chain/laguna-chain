@@ -8,24 +8,24 @@ version = "0.1.0"
 [dependencies]
 codec = {package = "parity-scale-codec", version = "2.2.0", default-features = false}
 evm = {version = "0.33.0", default-features = false}
-fp-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
-frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+fp-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
+frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
 num_enum = {version = '0.5.3', default-features = false}
-pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
-pallet-evm-precompile-dispatch = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "master"}
-pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
+pallet-evm-precompile-dispatch = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
+pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
 
 pallet-rando = {path = "../../pallets/rando", default-features = false}
 
 precompile-utils = {path = "../utils", default-features = false}
 primitives = {path = "../../primitives", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '1.0'}
-sp-core = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-sp-io = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
-sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', tag = 'monthly-2021-11-1', version = '4.0.0-dev'}
+sp-core = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+sp-io = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
 
 [features]
 default = ["std"]
