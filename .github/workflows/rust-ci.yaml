@@ -1,0 +1,52 @@
+name: Rust-CI
+
+on: [pull_request]
+
+jobs:
+  Rust-CI-Linux:
+    name: Rust-CI-Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+      
+      - name: Install Clippy
+        run:  rustup component add clippy --toolchain nightly-x86_64-unknown-linux-gnu
+
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/
+            ./target/
+          key: cargo-${{ runner.os }}-${{ github.job }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-${{ github.job }}
+      - name: Build
+        run: cargo build --release
+
+      - name: List Artifacts
+        run: ls target/release
+
+      - name: Test
+        run: cargo test
+
+      - name: Lint
+        run: cargo clippy
+
+      - name: Verify & Generate Documentation
+        run: cargo doc --workspace --no-deps
+
+# NOTE: Mac & Windows CI is not currently possible, since GitHub Actions does not
+# use "Docker Enterprise". Docker Enterprise is required when running linux-based
+# containers.
+# In order to enable this, we can move to Circle CI, which supports Docker Enterprise.
