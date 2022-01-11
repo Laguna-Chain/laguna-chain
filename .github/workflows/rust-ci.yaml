@@ -32,10 +32,7 @@ jobs:
           restore-keys: |
             cargo-${{ runner.os }}-${{ github.job }}
       - name: Build
-        run: cargo build --release
-
-      - name: List Artifacts
-        run: ls target/release
+        run: cargo build
 
       - name: Test
         run: cargo test
