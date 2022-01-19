@@ -4,9 +4,9 @@
 
 pub use sp_runtime::traits::IdentifyAccount;
 use sp_runtime::{
-    generic,
-    traits::{BlakeTwo256, Verify},
-    MultiSignature,
+	generic,
+	traits::{BlakeTwo256, Verify},
+	MultiSignature,
 };
 
 pub(crate) mod currency;

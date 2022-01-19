@@ -23,8 +23,8 @@ use sp_runtime::scale_info::TypeInfo;
 #[derive(Encode, Decode, RuntimeDebug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum CurrencyId {
-    NativeToken(TokenId), // Currently only one native type is defined
-                          // TODO: Erc20, expose whitelisted evm token later
+	NativeToken(TokenId), /* Currently only one native type is defined
+	                       * TODO: Erc20, expose whitelisted evm token later */
 }
 
 #[derive(Encode, Decode, RuntimeDebug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, TypeInfo)]

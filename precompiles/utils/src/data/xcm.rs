@@ -38,20 +38,20 @@ pub(crate) fn network_id_to_bytes(network_id: NetworkId) -> Vec<u8> {
 		NetworkId::Any => {
 			encoded.push(0u8);
 			encoded
-		}
+		},
 		NetworkId::Named(mut name) => {
 			encoded.push(1u8);
 			encoded.append(&mut name);
 			encoded
-		}
+		},
 		NetworkId::Polkadot => {
 			encoded.push(2u8);
 			encoded
-		}
+		},
 		NetworkId::Kusama => {
 			encoded.push(3u8);
 			encoded
-		}
+		},
 	}
 }
 
@@ -64,9 +64,7 @@ pub(crate) fn network_id_from_bytes(encoded_bytes: Vec<u8>) -> Result<NetworkId,
 
 	match network_selector[0] {
 		0 => Ok(NetworkId::Any),
-		1 => Ok(NetworkId::Named(
-			encoded_network_id.read_till_end()?.to_vec(),
-		)),
+		1 => Ok(NetworkId::Named(encoded_network_id.read_till_end()?.to_vec())),
 		2 => Ok(NetworkId::Polkadot),
 		3 => Ok(NetworkId::Kusama),
 		_ => Err(error("Non-valid Network Id")),
@@ -94,7 +92,7 @@ impl EvmData for Junction {
 				data.copy_from_slice(&encoded_junction.read_raw_bytes(4)?);
 				let para_id = u32::from_be_bytes(data);
 				Ok(Junction::Parachain(para_id))
-			}
+			},
 			1 => {
 				// In the case of Junction::AccountId32, we need 32 additional bytes plus NetworkId
 				let mut account: [u8; 32] = Default::default();
@@ -104,9 +102,10 @@ impl EvmData for Junction {
 					network: network_id_from_bytes(encoded_junction.read_till_end()?.to_vec())?,
 					id: account,
 				})
-			}
+			},
 			2 => {
-				// In the case of Junction::AccountIndex64, we need 8 additional bytes plus NetworkId
+				// In the case of Junction::AccountIndex64, we need 8 additional bytes plus
+				// NetworkId
 				let mut index: [u8; 8] = Default::default();
 				index.copy_from_slice(&encoded_junction.read_raw_bytes(8)?);
 				// Now we read the network
@@ -114,7 +113,7 @@ impl EvmData for Junction {
 					network: network_id_from_bytes(encoded_junction.read_till_end()?.to_vec())?,
 					index: u64::from_be_bytes(index),
 				})
-			}
+			},
 			3 => {
 				// In the case of Junction::AccountKey20, we need 20 additional bytes plus NetworkId
 				let mut account: [u8; 20] = Default::default();
@@ -124,19 +123,15 @@ impl EvmData for Junction {
 					network: network_id_from_bytes(encoded_junction.read_till_end()?.to_vec())?,
 					key: account,
 				})
-			}
-			4 => Ok(Junction::PalletInstance(
-				encoded_junction.read_raw_bytes(1)?[0],
-			)),
+			},
+			4 => Ok(Junction::PalletInstance(encoded_junction.read_raw_bytes(1)?[0])),
 			5 => {
 				// In the case of Junction::GeneralIndex, we need 16 additional bytes
 				let mut general_index: [u8; 16] = Default::default();
 				general_index.copy_from_slice(&encoded_junction.read_raw_bytes(16)?);
 				Ok(Junction::GeneralIndex(u128::from_be_bytes(general_index)))
-			}
-			6 => Ok(Junction::GeneralKey(
-				encoded_junction.read_till_end()?.to_vec(),
-			)),
+			},
+			6 => Ok(Junction::GeneralKey(encoded_junction.read_till_end()?.to_vec())),
 			7 => Ok(Junction::OnlyChild),
 			_ => Err(error("No selector for this")),
 		}
@@ -149,44 +144,44 @@ impl EvmData for Junction {
 				encoded.push(0u8);
 				encoded.append(&mut para_id.to_be_bytes().to_vec());
 				encoded.as_slice().into()
-			}
+			},
 			Junction::AccountId32 { network, id } => {
 				encoded.push(1u8);
 				encoded.append(&mut id.to_vec());
 				encoded.append(&mut network_id_to_bytes(network));
 				encoded.as_slice().into()
-			}
+			},
 			Junction::AccountIndex64 { network, index } => {
 				encoded.push(2u8);
 				encoded.append(&mut index.to_be_bytes().to_vec());
 				encoded.append(&mut network_id_to_bytes(network));
 				encoded.as_slice().into()
-			}
+			},
 			Junction::AccountKey20 { network, key } => {
 				encoded.push(3u8);
 				encoded.append(&mut key.to_vec());
 				encoded.append(&mut network_id_to_bytes(network));
 				encoded.as_slice().into()
-			}
+			},
 			Junction::PalletInstance(intance) => {
 				encoded.push(4u8);
 				encoded.append(&mut intance.to_be_bytes().to_vec());
 				encoded.as_slice().into()
-			}
+			},
 			Junction::GeneralIndex(id) => {
 				encoded.push(5u8);
 				encoded.append(&mut id.to_be_bytes().to_vec());
 				encoded.as_slice().into()
-			}
+			},
 			Junction::GeneralKey(mut key) => {
 				encoded.push(6u8);
 				encoded.append(&mut key);
 				encoded.as_slice().into()
-			}
+			},
 			Junction::OnlyChild => {
 				encoded.push(7u8);
 				encoded.as_slice().into()
-			}
+			},
 			// TODO: The only missing item here is Junciton::Plurality. This is a complex encoded
 			// type that we need to evaluate how to support
 			_ => unreachable!("Junction::Plurality not supported yet"),
@@ -200,9 +195,7 @@ impl EvmData for Junctions {
 		let junctions_bytes: Vec<Junction> = reader.read()?;
 		let mut junctions = Junctions::Here;
 		for item in junctions_bytes {
-			junctions
-				.push(item)
-				.map_err(|_| error("overflow when reading junctions"))?;
+			junctions.push(item).map_err(|_| error("overflow when reading junctions"))?;
 		}
 
 		Ok(junctions)
@@ -222,17 +215,11 @@ impl EvmData for MultiLocation {
 
 		let junctions: Junctions = inner_reader.read()?;
 
-		Ok(MultiLocation {
-			parents: num_parents,
-			interior: junctions,
-		})
+		Ok(MultiLocation { parents: num_parents, interior: junctions })
 	}
 
 	fn write(writer: &mut EvmDataWriter, value: Self) {
-		let inner_writer = EvmDataWriter::new()
-			.write(value.parents)
-			.write(value.interior)
-			.build();
+		let inner_writer = EvmDataWriter::new().write(value.parents).write(value.interior).build();
 
 		EvmDataWriter::write_pointer(writer, inner_writer);
 	}

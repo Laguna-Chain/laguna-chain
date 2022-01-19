@@ -7,34 +7,34 @@ use primitives::{CurrencyId, TokenId};
 
 #[cfg(feature = "test_runtime")]
 use dummy_runtime::{
-    AuraConfig,
-    BalancesConfig,
-    GenesisConfig,
-    GrandpaConfig,
-    SudoConfig,
-    SystemConfig,
+	AuraConfig,
+	BalancesConfig,
+	GenesisConfig,
+	GrandpaConfig,
+	SudoConfig,
+	SystemConfig,
 
-    // wasm binary build by runtime's build.rs
-    WASM_BINARY,
+	// wasm binary build by runtime's build.rs
+	WASM_BINARY,
 };
 
 #[cfg(not(feature = "test_runtime"))]
 use hydro_runtime::{
-    // runtime constants, for setting up genesis
-    constants::HYDROS,
+	// runtime constants, for setting up genesis
+	constants::HYDROS,
 
-    // provided by construct_runtime! macro
-    AuraConfig,
-    BalancesConfig,
-    EvmConfig,
+	// provided by construct_runtime! macro
+	AuraConfig,
+	BalancesConfig,
+	EvmConfig,
 
-    GenesisConfig,
-    GrandpaConfig,
-    SudoConfig,
-    SystemConfig,
-    TokensConfig,
-    // wasm binary build by runtime's build.rs
-    WASM_BINARY,
+	GenesisConfig,
+	GrandpaConfig,
+	SudoConfig,
+	SystemConfig,
+	TokensConfig,
+	// wasm binary build by runtime's build.rs
+	WASM_BINARY,
 };
 
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -48,162 +48,145 @@ use sp_core::{sr25519, H160, U256};
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
 
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
-    let wasm_binary =
-        WASM_BINARY.ok_or_else(|| -> String { "dev runtime wasm blob missing".into() })?;
+	let wasm_binary =
+		WASM_BINARY.ok_or_else(|| -> String { "dev runtime wasm blob missing".into() })?;
 
-    // create genesis state from preconfigured accounts
-    Ok(ChainSpec::from_genesis(
-        // Name
-        "Local Testnet",
-        // ID
-        "local_testnet",
-        ChainType::Local,
-        move || {
-            testnet_genesis(
-                wasm_binary,
-                // Initial PoA authorities
-                vec![
-                    authority_keys_from_seed("Alice"),
-                    authority_keys_from_seed("Bob"),
-                ],
-                // Sudo account
-                get_account_id_from_seed::<sr25519::Public>("Alice"),
-                vec![
-                    get_account_id_from_seed::<sr25519::Public>("Alice"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob"),
-                    get_account_id_from_seed::<sr25519::Public>("Charlie"),
-                    get_account_id_from_seed::<sr25519::Public>("Dave"),
-                    get_account_id_from_seed::<sr25519::Public>("Eve"),
-                    get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-                    get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-                    get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-                ], // prefund accounts
-            )
-        },
-        // Bootnodes
-        vec![],
-        // Telemetry
-        None,
-        // Protocol ID
-        None,
-        // Properties
-        None,
-        // Extensions
-        None,
-    ))
+	// create genesis state from preconfigured accounts
+	Ok(ChainSpec::from_genesis(
+		// Name
+		"Local Testnet",
+		// ID
+		"local_testnet",
+		ChainType::Local,
+		move || {
+			testnet_genesis(
+				wasm_binary,
+				// Initial PoA authorities
+				vec![authority_keys_from_seed("Alice"), authority_keys_from_seed("Bob")],
+				// Sudo account
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				vec![
+					get_account_id_from_seed::<sr25519::Public>("Alice"),
+					get_account_id_from_seed::<sr25519::Public>("Bob"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie"),
+					get_account_id_from_seed::<sr25519::Public>("Dave"),
+					get_account_id_from_seed::<sr25519::Public>("Eve"),
+					get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+					get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
+					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+				], // prefund accounts
+			)
+		},
+		// Bootnodes
+		vec![],
+		// Telemetry
+		None,
+		// Protocol ID
+		None,
+		// Properties
+		None,
+		// Extensions
+		None,
+	))
 }
 
 pub fn devnet_config() -> Result<ChainSpec, String> {
-    unimplemented!()
+	unimplemented!()
 }
 
 // TODO: adjust when expanding runtime
 fn testnet_genesis(
-    wasm_binary: &[u8],
-    initial_authorities: Vec<(AuraId, GrandpaId)>,
-    root_key: AccountId,
-    endowed_accounts: Vec<AccountId>,
+	wasm_binary: &[u8],
+	initial_authorities: Vec<(AuraId, GrandpaId)>,
+	root_key: AccountId,
+	endowed_accounts: Vec<AccountId>,
 ) -> GenesisConfig {
-    // generated by construct_runtime! macro
+	// generated by construct_runtime! macro
 
-    #[cfg(not(feature = "test_runtime"))]
-    {
-        GenesisConfig {
-            system: SystemConfig {
-                // add Wasm runtime to storage.
-                code: wasm_binary.to_vec(),
-                changes_trie_config: Default::default(),
-            },
-            aura: AuraConfig {
-                // allowed sudo account to participate in PoA with AURA
-                authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
-            },
-            grandpa: GrandpaConfig {
-                // allowed sudo account to participate in block finalization with GRANDPA
-                authorities: initial_authorities
-                    .iter()
-                    .map(|x| (x.1.clone(), 1))
-                    .collect(),
-            },
-            balances: BalancesConfig {
-                // pre-fund test accounts
-                balances: endowed_accounts
-                    .iter()
-                    .cloned()
-                    .map(|k| (k, 1 << 60))
-                    .collect(),
-            },
-            transaction_payment: Default::default(),
-            sudo: SudoConfig {
-                // assign network admin rights.
-                key: root_key,
-            },
-            scheduler: Default::default(),
-            // tokens: TokensConfig {
-            //     balances: endowed_accounts
-            //         .iter()
-            //         .cloned()
-            //         .map(|acc| (acc, CurrencyId::NativeToken(TokenId::Hydro), HYDROS))
-            //         .collect(),
-            // },
-            tokens: Default::default(),
-            evm: EvmConfig {
-                accounts: {
-                    let mut accounts = std::collections::BTreeMap::new();
-                    accounts.insert(
-                        H160::from_slice(&hex_literal::hex!(
-                            "37C54011486B797FAA83c5CF6de88C567843a23F"
-                        )),
-                        GenesisAccount {
-                            nonce: U256::zero(),
-                            // Using a larger number, so I can tell the accounts apart by balance.
-                            balance: U256::from(1u64 << 61),
-                            code: vec![],
-                            storage: std::collections::BTreeMap::new(),
-                        },
-                    );
-                    accounts
-                },
-            },
-        }
-    }
+	#[cfg(not(feature = "test_runtime"))]
+	{
+		GenesisConfig {
+			system: SystemConfig {
+				// add Wasm runtime to storage.
+				code: wasm_binary.to_vec(),
+				changes_trie_config: Default::default(),
+			},
+			aura: AuraConfig {
+				// allowed sudo account to participate in PoA with AURA
+				authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
+			},
+			grandpa: GrandpaConfig {
+				// allowed sudo account to participate in block finalization with GRANDPA
+				authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
+			},
+			balances: BalancesConfig {
+				// pre-fund test accounts
+				balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
+			},
+			transaction_payment: Default::default(),
+			sudo: SudoConfig {
+				// assign network admin rights.
+				key: root_key,
+			},
+			scheduler: Default::default(),
+			// tokens: TokensConfig {
+			//     balances: endowed_accounts
+			//         .iter()
+			//         .cloned()
+			//         .map(|acc| (acc, CurrencyId::NativeToken(TokenId::Hydro), HYDROS))
+			//         .collect(),
+			// },
+			tokens: Default::default(),
+			evm: EvmConfig {
+				accounts: {
+					let mut accounts = std::collections::BTreeMap::new();
+					accounts.insert(
+						H160::from_slice(&hex_literal::hex!(
+							"37C54011486B797FAA83c5CF6de88C567843a23F"
+						)),
+						GenesisAccount {
+							nonce: U256::zero(),
+							// Using a larger number, so I can tell the accounts apart by balance.
+							balance: U256::from(1u64 << 61),
+							code: vec![],
+							storage: std::collections::BTreeMap::new(),
+						},
+					);
+					accounts
+				},
+			},
+		}
+	}
 
-    #[cfg(feature = "test_runtime")]
-    {
-        GenesisConfig {
-            system: SystemConfig {
-                // add Wasm runtime to storage.
-                code: wasm_binary.to_vec(),
-                changes_trie_config: Default::default(),
-            },
-            aura: AuraConfig {
-                // allowed sudo account to participate in PoA with AURA
-                authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
-            },
-            grandpa: GrandpaConfig {
-                // allowed sudo account to participate in block finalization with GRANDPA
-                authorities: initial_authorities
-                    .iter()
-                    .map(|x| (x.1.clone(), 1))
-                    .collect(),
-            },
-            balances: BalancesConfig {
-                // pre-fund test accounts
-                balances: endowed_accounts
-                    .iter()
-                    .cloned()
-                    .map(|k| (k, 1 << 60))
-                    .collect(),
-            },
-            transaction_payment: Default::default(),
-            sudo: SudoConfig {
-                // assign network admin rights.
-                key: root_key,
-            },
-        }
-    }
+	#[cfg(feature = "test_runtime")]
+	{
+		GenesisConfig {
+			system: SystemConfig {
+				// add Wasm runtime to storage.
+				code: wasm_binary.to_vec(),
+				changes_trie_config: Default::default(),
+			},
+			aura: AuraConfig {
+				// allowed sudo account to participate in PoA with AURA
+				authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
+			},
+			grandpa: GrandpaConfig {
+				// allowed sudo account to participate in block finalization with GRANDPA
+				authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
+			},
+			balances: BalancesConfig {
+				// pre-fund test accounts
+				balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
+			},
+			transaction_payment: Default::default(),
+			sudo: SudoConfig {
+				// assign network admin rights.
+				key: root_key,
+			},
+		}
+	}
 }
