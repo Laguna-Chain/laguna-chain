@@ -451,6 +451,7 @@ construct_runtime!(
 			// evm the bytecode execution environment, can preload precompiles
 			Evm: pallet_evm,
 			EvmHydro: evm_hydro,
+			ReverseEvmCall: pallet_reverse_evm_call,
 
 			// dummy pallet for testing interface coupling
 			Rando: pallet_rando ,
