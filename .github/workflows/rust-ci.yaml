@@ -3,6 +3,20 @@ name: Rust-CI
 on: [pull_request]
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+      - name: Install Deps
+        run: |
+          apt update
+          apt install -y git clang curl libssl-dev llvm libudev-dev
   build:
     runs-on: ubuntu-latest
     defaults:
