@@ -1,3 +1,7 @@
+//! native-asset-precompile
+//!
+//! allow solidity smart contract to interact with native currency through a erc20-compatible interface
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use fp_evm::{
@@ -21,7 +25,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-// interaface for query native currency, expected to be consumed by erc20 contracts
+// interaface for query native currency, expected to be consumed by erc20 contracts interface
 #[precompile_utils::generate_function_selector]
 #[derive(Debug, PartialEq)]
 pub enum Action {
@@ -35,6 +39,8 @@ pub enum Action {
 
 pub struct NativeCurrencyPrecompile<Runtime>(PhantomData<Runtime>);
 
+// Precompile requires the runtime to include `pallet_evm` and `pallet_balances`
+// also the amount should be able to convert from Balance -> U256 which solidity expects
 impl<Runtime> Precompile for NativeCurrencyPrecompile<Runtime>
 where
     Runtime: pallet_evm::Config + pallet_balances::Config,
@@ -48,6 +54,7 @@ where
         context: &Context,
         is_static: bool,
     ) -> fp_evm::PrecompileResult {
+        // parsing solidity calls into matching function selector
         let (input, selector) = EvmDataReader::new_with_selector::<Action>(input).map_err(|e| {
             log::debug!("parsing failed");
             PrecompileFailure::Error { exit_status: e }
@@ -77,6 +84,8 @@ where
     sp_core::U256: From<<Runtime as pallet_balances::Config>::Balance>,
 {
     fn get_name() -> EvmResult<PrecompileOutput> {
+        // TODO: use MetadataTrait for token instead of hardcoding it here
+
         let output = EvmDataWriter::new()
             .write::<Bytes>("HYDRO".into())
             .build()
