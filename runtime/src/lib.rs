@@ -286,7 +286,7 @@ orml_traits::parameter_type_with_key! {
             &CurrencyId::NativeToken(token) => {
                 match token {
                     TokenId::Hydro => MICRO_HYDRO,
-                    TokenId::GasToken => MICRO_HYDRO,
+                    TokenId::FeeToken => MICRO_HYDRO,
                 }
             },
             _ => Balance::max_value() // unreachable ED value for unverified currency type
@@ -399,11 +399,6 @@ impl pallet_fluent_fee::Config for Runtime {
 
     type MultiCurrency = Currencies;
     type NativeCurrencyId = NativeCurrencyId;
-}
-
-parameter_types! {
-    pub Caller: H160 = H160::from_slice(&hex_literal::hex!("37C54011486B797FAA83c5CF6de88C567843a23F"));
-    pub TargetAddress: (H160, Vec<u8>) = (H160::from_low_u64_be(9001), precompile_utils::EvmDataWriter::new_with_selector(pallet_rando_precompile::Action::CallRando).build());
 }
 
 // runtime as enum, can cross reference enum variants as pallet impl type associates
