@@ -131,4 +131,6 @@ mod tests {
 				assert_eq!(Currencies::reserved_balance(NATIVE_CURRENCY_ID, &ALICE), 0);
 			});
 	}
+
+	// TODO: add lock test for features requiring asset to have characteristic of liquidity
 }
