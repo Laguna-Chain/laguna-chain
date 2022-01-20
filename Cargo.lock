@@ -2513,6 +2513,57 @@ dependencies = [
 ]
 
 [[package]]
+name = "integration-tests"
+version = "0.1.0"
+dependencies = [
+ "evm-hydro",
+ "frame-benchmarking",
+ "frame-executive",
+ "frame-support",
+ "frame-system",
+ "frame-system-benchmarking",
+ "frame-system-rpc-runtime-api",
+ "hex-literal",
+ "hydro-runtime",
+ "orml-currencies",
+ "orml-tokens",
+ "orml-traits",
+ "pallet-aura",
+ "pallet-balances",
+ "pallet-evm",
+ "pallet-evm-precompile-dispatch",
+ "pallet-evm-precompile-modexp",
+ "pallet-evm-precompile-sha3fips",
+ "pallet-evm-precompile-simple",
+ "pallet-fluent-fee",
+ "pallet-grandpa",
+ "pallet-rando",
+ "pallet-rando-precompile",
+ "pallet-scheduler",
+ "pallet-sudo",
+ "pallet-timestamp",
+ "pallet-transaction-payment",
+ "pallet-transaction-payment-rpc-runtime-api",
+ "parity-scale-codec",
+ "precompile-utils",
+ "primitives",
+ "scale-info",
+ "sp-api",
+ "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-core",
+ "sp-inherents",
+ "sp-io",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-std",
+ "sp-transaction-pool",
+ "sp-version",
+ "substrate-wasm-builder",
+]
+
+[[package]]
 name = "intervalier"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

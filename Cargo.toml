@@ -8,6 +8,7 @@ split-debuginfo = "unpacked"
 members = [
   'node',
   'runtime',
+  'runtime/integration-tests',
   'dummy-runtime',
   'primitives',
   'pallets/rando',

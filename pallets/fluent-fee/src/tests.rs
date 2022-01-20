@@ -1,11 +1,9 @@
 //! Unit test for the fluent-fee pallet
 
-#![cfg(test)]
-
 use super::*;
 
-use frame_support::{assert_noop, assert_ok};
-use mock::{Event, *};
+use frame_support::assert_ok;
+use mock::*;
 
 #[test]
 fn add_fee_source() {
