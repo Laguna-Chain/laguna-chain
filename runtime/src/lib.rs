@@ -284,7 +284,7 @@ orml_traits::parameter_type_with_key! {
 			&CurrencyId::NativeToken(token) => {
 				match token {
 					TokenId::Hydro => MICRO_HYDRO,
-					TokenId::GasToken => MICRO_HYDRO,
+					TokenId::FeeToken => MICRO_HYDRO,
 				}
 			},
 			_ => Balance::max_value() // unreachable ED value for unverified currency type
