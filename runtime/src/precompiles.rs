@@ -4,15 +4,18 @@ use frame_support::{
 	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
 	log,
 };
-use native_asset_precompile::NativeCurrencyPrecompile;
 use pallet_evm::{Context, Precompile, PrecompileResult, PrecompileSet};
 use sp_core::H160;
 use sp_std::marker::PhantomData;
 
+// precompiles expected by solidity smart contract
 use pallet_evm_precompile_dispatch::Dispatch;
 use pallet_evm_precompile_modexp::Modexp;
 use pallet_evm_precompile_sha3fips::Sha3FIPS256;
 use pallet_evm_precompile_simple::{ECRecover, ECRecoverPublicKey, Identity, Ripemd160, Sha256};
+
+// custom precompiles calling native functions on chain
+use native_asset_precompile::NativeCurrencyPrecompile;
 use pallet_rando_precompile::RandoPrecompile;
 
 pub struct HydroPrecompiles<R>(PhantomData<R>);
@@ -25,7 +28,7 @@ where
 		Self(Default::default())
 	}
 	pub fn used_addresses() -> sp_std::vec::Vec<H160> {
-		sp_std::vec![1, 2, 3, 4, 5, 1024, 1025, 9001]
+		sp_std::vec![1, 2, 3, 4, 5, 1024, 1025, 9001, 9002]
 			.into_iter()
 			.map(|x| hash(x))
 			.collect()
@@ -35,8 +38,9 @@ where
 impl<Runtime> PrecompileSet for HydroPrecompiles<Runtime>
 where
 	Dispatch<Runtime>: Precompile,
-	RandoPrecompile<Runtime>: Precompile,
 	Runtime: pallet_evm::Config + pallet_rando::Config,
+	NativeCurrencyPrecompile<Runtime>: Precompile,
+	RandoPrecompile<Runtime>: Precompile,
 {
 	fn execute(
 		&self,
@@ -61,6 +65,9 @@ where
 				Some(ECRecoverPublicKey::execute(input, target_gas, context, is_static)),
 			a if a == hash(9001) =>
 				Some(RandoPrecompile::<Runtime>::execute(input, target_gas, context, is_static)),
+			a if a == hash(9002) => Some(NativeCurrencyPrecompile::<Runtime>::execute(
+				input, target_gas, context, is_static,
+			)),
 			_ => {
 				log::debug!("unmatched address: {:?}", address);
 				None
