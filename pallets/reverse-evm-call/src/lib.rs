@@ -24,6 +24,7 @@ pub use pallet::*;
 #[frame_support::pallet]
 mod pallet {
 	use sp_core::H160;
+	use sp_std::vec;
 
 	use super::*;
 

@@ -18,7 +18,7 @@ use frame_support::{
 
 use sp_core::H160;
 
-mod precompiles;
+pub mod precompiles;
 use pallet_transaction_payment::CurrencyAdapter;
 use precompiles::HydroPrecompiles;
 
@@ -445,8 +445,6 @@ construct_runtime!(
 			// conseus mechanism
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
-
-
 
 			// evm the bytecode execution environment, can preload precompiles
 			Evm: pallet_evm,

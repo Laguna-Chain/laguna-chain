@@ -1,5 +1,3 @@
-use std::borrow::Borrow;
-
 use fp_evm::PrecompileSet;
 use frame_support::assert_ok;
 use precompile_utils::EvmDataWriter;

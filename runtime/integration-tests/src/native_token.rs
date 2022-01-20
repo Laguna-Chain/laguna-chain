@@ -1,3 +1,8 @@
+//! native-token test
+//!
+//! test basic utilities of a multi-token system, where native or added token are abled to be
+//! consumed by free, reserved and locked balance accounting system
+
 #[cfg(test)]
 mod tests {
 
