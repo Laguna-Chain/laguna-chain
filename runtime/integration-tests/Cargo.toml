@@ -79,4 +79,5 @@ version = '5.0.0-dev'
 
 [features]
 default = ["std"]
+evm = []
 std = []
