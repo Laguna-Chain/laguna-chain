@@ -2,7 +2,7 @@ use fp_evm::PrecompileSet;
 use frame_support::assert_ok;
 use precompile_utils::EvmDataWriter;
 
-use pallet_evm::Call as EvmCall;
+use pallet_evm::{Call as EvmCall, Runner};
 use sp_core::U256;
 
 use crate::mock::*;
@@ -85,6 +85,44 @@ fn precompile_get_balance() {
 
 			let amount = res.unwrap();
 
+			assert!(amount == U256::from(init_amount));
+		});
+}
+
+#[test]
+fn precompile_get_balance_evm() {
+	let init_amount = 1000;
+	ExtBuilder::default()
+		.balances_evm(vec![(alice(), init_amount)]) // prefund account_id mapped to H160(alice)
+		.build()
+		.execute_with(|| {
+			// query balance of H160(alice)
+			let selector = EvmDataWriter::new_with_selector(Action::BalanceOf)
+				.write(Address(alice()))
+				.build();
+
+			// raw evm execution using T::Runner, for inspecting evm function output
+			let result = <Runtime as pallet_evm::Config>::Runner::call(
+				alice(),
+				hash(1),
+				selector,
+				0_u64.into(),
+				u64::MAX,
+				None,
+				None,
+				None,
+				vec![],
+				<Runtime as pallet_evm::Config>::config(),
+			);
+
+			assert_ok!(&result);
+			let info = result.unwrap();
+
+			// read output bytes as evm::U256
+			let res: Result<U256, _> = EvmDataReader::new(&info.value).read();
+			assert_ok!(&res);
+
+			let amount = res.unwrap();
 			assert!(amount == U256::from(init_amount));
 		});
 }

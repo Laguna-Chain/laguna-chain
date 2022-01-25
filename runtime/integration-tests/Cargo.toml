@@ -37,6 +37,7 @@ pallet-evm-precompile-sha3fips = {git = 'https://github.com/ultrastable-money/fr
 pallet-evm-precompile-simple = {git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
 pallet-rando-precompile = {path = "../../precompiles/rando", default-features = false}
 
+num_enum = {version = '0.5.3', default-features = false}
 precompile-utils = {path = "../../precompiles/utils", default-features = false}
 
 # interface for pallet build with frame
