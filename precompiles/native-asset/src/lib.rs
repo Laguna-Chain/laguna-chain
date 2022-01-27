@@ -6,7 +6,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use fp_evm::{
-	Context, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput, PrecompileResult,
+	Context, ExitError, ExitSucceed, Precompile, PrecompileFailure, PrecompileOutput,
+	PrecompileResult,
 };
 
 use frame_support::{
@@ -48,6 +49,7 @@ where
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	sp_core::U256: From<<Runtime as pallet_balances::Config>::Balance>,
+	u128: Into<<Runtime as pallet_balances::Config>::Balance>,
 {
 	fn execute(
 		input: &[u8],
@@ -67,7 +69,7 @@ where
 			Action::GetDecimals => todo!(),
 			Action::TotalSupply => todo!(),
 			Action::BalanceOf => Self::balance_of(&context, input, target_gas),
-			Action::Transfer => todo!(),
+			Action::Transfer => Self::transfer(&context, input, target_gas),
 		}
 		.map_err(|e| PrecompileFailure::Error { exit_status: e });
 
@@ -83,6 +85,7 @@ where
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	sp_core::U256: From<<Runtime as pallet_balances::Config>::Balance>,
+	u128: Into<<Runtime as pallet_balances::Config>::Balance>,
 {
 	fn get_name() -> EvmResult<PrecompileOutput> {
 		// TODO: use MetadataTrait for token instead of hardcoding it here
@@ -92,6 +95,50 @@ where
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,
 			cost: Default::default(),
+			output,
+			logs: Default::default(),
+		})
+	}
+
+	fn transfer(
+		context: &Context,
+		mut input: EvmDataReader,
+		target_gas: Option<u64>,
+	) -> EvmResult<PrecompileOutput> {
+		// create a gasometer to convert and calculate gas usage of this Pallet::Call
+		let mut gasometer = Gasometer::new(target_gas);
+
+		// check input length
+		input.expect_arguments(3)?;
+
+		// read H160 from input
+		let sender_address: H160 = input.read::<Address>()?.into();
+		let target_address: H160 = input.read::<Address>()?.into();
+		let amount = input.read::<U256>()?.as_u128();
+
+		let sender_account_id =
+			<Runtime as pallet_evm::Config>::AddressMapping::into_account_id(sender_address);
+
+		let target_account_id =
+			<Runtime as pallet_evm::Config>::AddressMapping::into_account_id(target_address);
+
+		<pallet_balances::Pallet<Runtime> as frame_support::traits::tokens::currency::Currency<
+			Runtime::AccountId,
+		>>::transfer(
+			&sender_account_id,
+			&target_account_id,
+			amount.into(),
+			frame_support::traits::ExistenceRequirement::AllowDeath,
+		)
+		.map_err(|e| ExitError::Other(format!("{:?}", e).into()))?;
+
+		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
+
+		let output = EvmDataWriter::new().write(true).build();
+
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
 			output,
 			logs: Default::default(),
 		})

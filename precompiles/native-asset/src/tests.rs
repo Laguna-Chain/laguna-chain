@@ -126,3 +126,45 @@ fn precompile_get_balance_evm() {
 			assert!(amount == U256::from(init_amount));
 		});
 }
+
+#[test]
+fn precompile_transfer() {
+	let init_amount = 1000;
+	ExtBuilder::default()
+		.balances_evm(vec![(alice(), init_amount), (bob(), init_amount)]) // prefund account_id mapped to H160(alice)
+		.build()
+		.execute_with(|| {
+			// send balance of 100 from H160(alice) to H160(bob)
+			let selector = EvmDataWriter::new_with_selector(Action::Transfer)
+				.write(Address(alice()))
+				.write(Address(bob()))
+				.write(U256::from(100_u64))
+				.build();
+
+			let rs =
+				Precompiles::<Runtime>::new().execute(hash(1), &selector, None, &context(), false);
+
+			// should have result from precoimpleset
+			assert!(rs.is_some());
+			let out = rs.unwrap();
+
+			// execution should be done without error
+			assert!(out.is_ok());
+			let out: PrecompileOutput = out.unwrap();
+
+			let res: Result<bool, _> = EvmDataReader::new(&out.output).read();
+			assert_ok!(&res);
+
+			assert!(res.unwrap_or(false));
+
+			assert_eq!(
+				pallet_balances::Pallet::<Runtime>::free_balance(mapped_alice()),
+				init_amount - 100
+			);
+
+			assert_eq!(
+				pallet_balances::Pallet::<Runtime>::free_balance(mapped_bob()),
+				init_amount + 100
+			);
+		});
+}

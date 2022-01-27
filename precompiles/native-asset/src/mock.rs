@@ -106,6 +106,7 @@ where
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 	<Runtime::Call as Dispatchable>::Origin: From<Option<Runtime::AccountId>>,
 	sp_core::U256: From<<Runtime as pallet_balances::Config>::Balance>,
+	u128: Into<<Runtime as pallet_balances::Config>::Balance>,
 {
 	fn execute(
 		&self,
@@ -212,7 +213,7 @@ pub fn mapped_alice() -> AccountId {
 }
 
 pub fn mapped_bob() -> AccountId {
-	HashedAddressMapping::<BlakeTwo256>::into_account_id(alice())
+	HashedAddressMapping::<BlakeTwo256>::into_account_id(bob())
 }
 
 pub struct ExtBuilder {
