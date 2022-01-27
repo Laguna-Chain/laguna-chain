@@ -130,7 +130,7 @@ where
 			amount.into(),
 			frame_support::traits::ExistenceRequirement::AllowDeath,
 		)
-		.map_err(|e| ExitError::Other(format!("{:?}", e).into()))?;
+		.map_err(|e| ExitError::Other("UNABLE_TO_WITHDRAW"))?;
 
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
