@@ -19,6 +19,7 @@ use pallet_evm::AddressMapping;
 use precompile_utils::{
 	Address, Bytes, EvmDataReader, EvmDataWriter, EvmResult, Gasometer, RuntimeHelper,
 };
+use primitives::{CurrencyId, TokenId, TokenMetadata};
 use sp_core::{H160, U256};
 
 #[cfg(test)]
@@ -65,8 +66,8 @@ where
 
 		let rs = match selector {
 			Action::GetName => Self::get_name(),
-			Action::GetSymbol => todo!(),
-			Action::GetDecimals => todo!(),
+			Action::GetSymbol => Self::get_symbol(),
+			Action::GetDecimals => Self::get_decimals(),
 			Action::TotalSupply => Self::total_supply(&context, input, target_gas),
 			Action::BalanceOf => Self::balance_of(&context, input, target_gas),
 			Action::Transfer => Self::transfer(&context, input, target_gas),
@@ -88,9 +89,38 @@ where
 	u128: Into<<Runtime as pallet_balances::Config>::Balance>,
 {
 	fn get_name() -> EvmResult<PrecompileOutput> {
-		// TODO: use MetadataTrait for token instead of hardcoding it here
+		let output = EvmDataWriter::new()
+			.write::<Bytes>(CurrencyId::NativeToken(TokenId::Hydro).name().into())
+			.build()
+			.into();
 
-		let output = EvmDataWriter::new().write::<Bytes>("HYDRO".into()).build().into();
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: Default::default(),
+			output,
+			logs: Default::default(),
+		})
+	}
+
+	fn get_symbol() -> EvmResult<PrecompileOutput> {
+		let output = EvmDataWriter::new()
+			.write::<Bytes>(CurrencyId::NativeToken(TokenId::Hydro).symbol().into())
+			.build()
+			.into();
+
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: Default::default(),
+			output,
+			logs: Default::default(),
+		})
+	}
+
+	fn get_decimals() -> EvmResult<PrecompileOutput> {
+		let output = EvmDataWriter::new()
+			.write::<u8>(CurrencyId::NativeToken(TokenId::Hydro).decimals())
+			.build()
+			.into();
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,

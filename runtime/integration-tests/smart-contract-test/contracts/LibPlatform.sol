@@ -20,6 +20,33 @@ library NativeCurrency {
         return abi.decode(returnData, (string));
     }
 
+    function symbol() internal view returns (string memory) {
+        (bool success, bytes memory returnData) = precompile.staticcall(
+            abi.encodeWithSignature("symbol()")
+        );
+
+        assembly {
+            if eq(success, 0) {
+                revert(add(returnData, 0x20), returndatasize())
+            }
+        }
+
+        return abi.decode(returnData, (string));
+    }
+
+    function decimals() internal view returns (uint8) {
+        (bool success, bytes memory returnData) = precompile.staticcall(
+            abi.encodeWithSignature("decimals()")
+        );
+        assembly {
+            if eq(success, 0) {
+                revert(add(returnData, 0x20), returndatasize())
+            }
+        }
+
+        return abi.decode(returnData, (uint8));
+    }
+
     function balanceOf(address account) internal view returns (uint256) {
         (bool success, bytes memory returnData) = precompile.staticcall(
             abi.encodeWithSignature("balanceOf(address)", account)

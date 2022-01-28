@@ -57,6 +57,54 @@ fn precompile_get_name() {
 }
 
 #[test]
+fn precompile_get_symbol() {
+	ExtBuilder::default().balances(vec![(ALICE, 1000)]).build().execute_with(|| {
+		let selector = EvmDataWriter::new_with_selector(Action::GetSymbol).build();
+
+		// run the selector on the precompiled address of the wrapped module
+		let rs = Precompiles::<Runtime>::new().execute(hash(1), &selector, None, &context(), false);
+
+		// should have result from precoimpleset
+		assert!(rs.is_some());
+		let out = rs.unwrap();
+
+		// execution should be done without error
+		assert!(out.is_ok());
+		let out: PrecompileOutput = out.unwrap();
+
+		let expected = EvmDataWriter::new().write(Bytes::from("HYDRO")).build();
+		assert_eq!(out.output, expected);
+
+		let unexpected = EvmDataWriter::new().write(Bytes::from("NOT_HYDRO")).build();
+		assert!(out.output != unexpected);
+	});
+}
+
+#[test]
+fn precompile_get_decimals() {
+	ExtBuilder::default().balances(vec![(ALICE, 1000)]).build().execute_with(|| {
+		let selector = EvmDataWriter::new_with_selector(Action::GetDecimals).build();
+
+		// run the selector on the precompiled address of the wrapped module
+		let rs = Precompiles::<Runtime>::new().execute(hash(1), &selector, None, &context(), false);
+
+		// should have result from precoimpleset
+		assert!(rs.is_some());
+		let out = rs.unwrap();
+
+		// execution should be done without error
+		assert!(out.is_ok());
+		let out: PrecompileOutput = out.unwrap();
+
+		let expected = EvmDataWriter::new().write(18_u8).build();
+		assert_eq!(out.output, expected);
+
+		let unexpected = EvmDataWriter::new().write(123_u8).build();
+		assert!(out.output != unexpected);
+	});
+}
+
+#[test]
 fn precompile_get_balance() {
 	let init_amount = 1000;
 	ExtBuilder::default()

@@ -1,6 +1,6 @@
 use frame_support::assert_ok;
 use hydro_runtime::{
-	constants::HYDROS, Call, Currencies, Event, Evm, Origin, Runtime, Sudo, System,
+	constants::HYDROS, Balances, Call, Currencies, Event, Evm, Origin, Runtime, Sudo, System,
 };
 use orml_traits::MultiCurrency;
 use pallet_evm::{AddressMapping, Runner};
@@ -163,7 +163,33 @@ fn native_as_erc20() {
 					let value: Result<u64, _> = EvmDataReader::new(&info.value).read();
 					assert_ok!(&value);
 
-					assert!(value.ok().filter(|v| { *v == 17 }).is_some());
+					assert!(value.ok().filter(|v| { *v == 18 }).is_some());
+
+					let input = EvmDataWriter::new_with_selector(IERC20Action::Symbol).build();
+					// raw evm execution using T::Runner so we can inspect output
+					let rs = <Runtime as pallet_evm::Config>::Runner::call(
+						evm_address,
+						*deployed_address,
+						input,
+						0_u64.into(),
+						u64::MAX,
+						None,
+						None,
+						None,
+						vec![],
+						<Runtime as pallet_evm::Config>::config(),
+					);
+
+					assert_ok!(&rs);
+					let info = rs.unwrap();
+
+					// extract evm output value from raw bytes
+					let value =
+						EvmDataReader::new(&info.value).read::<precompile_utils::Bytes>().ok();
+
+					assert!(value
+						.filter(|v| if let Ok(out) = v.as_str() { out == "HYDRO" } else { false })
+						.is_some());
 
 					let input = EvmDataWriter::new_with_selector(IERC20Action::TotalSupply).build();
 					// raw evm execution using T::Runner so we can inspect output
@@ -187,7 +213,10 @@ fn native_as_erc20() {
 					let value: Result<U256, _> = EvmDataReader::new(&info.value).read();
 					assert_ok!(&value);
 
-					assert!(value.ok().filter(|v| { *v == U256::from(1000000) }).is_some());
+					assert!(value
+						.ok()
+						.filter(|v| { *v == U256::from(Balances::total_issuance()) })
+						.is_some());
 				},
 				_ => {
 					panic!("shouldn't be of any other type");

@@ -27,16 +27,14 @@ contract NativeToken is IERC20 {
      * name.
      */
     function symbol() public view returns (string memory) {
-        // return MultiCurrency.symbol();
-        return "symbol";
+        return NativeCurrency.symbol();
     }
 
     /**
      * @dev Returns the number of decimals used to get its user representation.
      */
     function decimals() public view returns (uint8) {
-        // return MultiCurrency.decimals();
-        return 17;
+        return NativeCurrency.decimals();
     }
 
     /**

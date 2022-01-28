@@ -33,3 +33,37 @@ pub enum TokenId {
 	Hydro, // Native token of the hydro-chain
 	FeeToken,
 }
+
+/// metadata about a issued token, provide additional info about token issued on substrate to evm
+pub trait TokenMetadata {
+	fn symbol(self) -> &'static str;
+
+	fn name(self) -> &'static str;
+
+	fn decimals(self) -> u8;
+}
+
+impl TokenMetadata for CurrencyId {
+	fn symbol(self) -> &'static str {
+		match self {
+			CurrencyId::NativeToken(token) => match token {
+				TokenId::Hydro => "HYDRO",
+				TokenId::FeeToken => todo!(),
+			},
+		}
+	}
+
+	fn name(self) -> &'static str {
+		match self {
+			CurrencyId::NativeToken(token) => match token {
+				TokenId::Hydro => "HYDRO",
+				TokenId::FeeToken => todo!(),
+			},
+		}
+	}
+
+	fn decimals(self) -> u8 {
+		// TODO: correct mapping between substrate issued tokens and tokens issued within evm
+		return 18
+	}
+}
