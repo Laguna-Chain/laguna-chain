@@ -67,7 +67,7 @@ where
 			Action::GetName => Self::get_name(),
 			Action::GetSymbol => todo!(),
 			Action::GetDecimals => todo!(),
-			Action::TotalSupply => todo!(),
+			Action::TotalSupply => Self::total_supply(&context, input, target_gas),
 			Action::BalanceOf => Self::balance_of(&context, input, target_gas),
 			Action::Transfer => Self::transfer(&context, input, target_gas),
 		}
@@ -169,6 +169,33 @@ where
 		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
 
 		let output = EvmDataWriter::new().write(amount).build();
+
+		Ok(PrecompileOutput {
+			exit_status: ExitSucceed::Returned,
+			cost: gasometer.used_gas(),
+			output,
+			logs: Default::default(),
+		})
+	}
+
+	fn total_supply(
+		context: &Context,
+		mut input: EvmDataReader,
+		target_gas: Option<u64>,
+	) -> EvmResult<PrecompileOutput> {
+		// create a gasometer to convert and calculate gas usage of this Pallet::Call
+		let mut gasometer = Gasometer::new(target_gas);
+
+		// check input length
+		input.expect_arguments(0)?;
+
+		// read H160 from input
+
+		let total_supply: U256 = pallet_balances::Pallet::<Runtime>::total_issuance().into();
+
+		gasometer.record_cost(RuntimeHelper::<Runtime>::db_read_gas_cost())?;
+
+		let output = EvmDataWriter::new().write(total_supply).build();
 
 		Ok(PrecompileOutput {
 			exit_status: ExitSucceed::Returned,

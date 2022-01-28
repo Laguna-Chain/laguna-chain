@@ -168,3 +168,34 @@ fn precompile_transfer() {
 			);
 		});
 }
+
+#[test]
+fn precompile_total_supply() {
+	let init_amount = 1000;
+	ExtBuilder::default()
+		.balances_evm(vec![(alice(), init_amount), (bob(), init_amount)]) // prefund account_id mapped to H160(alice)
+		.build()
+		.execute_with(|| {
+			// send balance of 100 from H160(alice) to H160(bob)
+			let selector = EvmDataWriter::new_with_selector(Action::TotalSupply).build();
+
+			let rs =
+				Precompiles::<Runtime>::new().execute(hash(1), &selector, None, &context(), false);
+
+			// should have result from precoimpleset
+			assert!(rs.is_some());
+			let out = rs.unwrap();
+
+			// execution should be done without error
+			assert!(out.is_ok());
+			let out: PrecompileOutput = out.unwrap();
+
+			let res: Result<U256, _> = EvmDataReader::new(&out.output).read();
+			assert_ok!(&res);
+
+			assert!(res
+				.ok()
+				.filter(|v| *v == pallet_balances::Pallet::<Runtime>::total_issuance().into())
+				.is_some());
+		});
+}

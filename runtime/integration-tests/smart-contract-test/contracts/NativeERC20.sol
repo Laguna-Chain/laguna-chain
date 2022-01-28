@@ -43,7 +43,7 @@ contract NativeToken is IERC20 {
      * @dev See {IERC20-totalSupply}.
      */
     function totalSupply() public view override returns (uint256) {
-        return 1000000;
+        return NativeCurrency.totalSupply();
     }
 
     /**
@@ -66,7 +66,7 @@ contract NativeToken is IERC20 {
         override
         returns (bool)
     {
-        // _transfer(msg.sender, recipient, amount);
+        _transfer(msg.sender, recipient, amount);
         return true;
     }
 
@@ -94,7 +94,7 @@ contract NativeToken is IERC20 {
         override
         returns (bool)
     {
-        // _approve(msg.sender, spender, amount);
+        _approve(msg.sender, spender, amount);
         return true;
     }
 
@@ -202,7 +202,7 @@ contract NativeToken is IERC20 {
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
-        // MultiCurrency.transfer(sender, recipient, amount);
+        NativeCurrency.transfer(recipient, amount);
 
         emit Transfer(sender, recipient, amount);
     }

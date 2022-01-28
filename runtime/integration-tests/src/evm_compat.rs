@@ -23,11 +23,13 @@ mod tests {
 		let contracts_dir = std::option_env!("CONTRACTS_DIR").expect("path not specified");
 
 		// compile the smart contract using hardhat
-		process::Command::new("bash")
+		let compile_output = process::Command::new("bash")
 			.current_dir(contracts_dir)
 			.args(["-c", "npx hardhat compile"])
 			.output()
 			.expect("unable to compile using hardhat");
+
+		assert!(compile_output.stderr.len() == 0);
 
 		let artifact_path = format!(
 			"{}/artifacts/contracts/{}.sol/{}.json",

@@ -32,4 +32,39 @@ library NativeCurrency {
 
         return abi.decode(returnData, (uint256));
     }
+
+    function transfer(address recipient, uint256 amount)
+        internal
+        view
+        returns (bool)
+    {
+        (bool success, bytes memory returnData) = precompile.staticcall(
+            abi.encodeWithSignature(
+                "transfer(address,address,uint256)",
+                msg.sender,
+                recipient,
+                amount
+            )
+        );
+        assembly {
+            if eq(success, 0) {
+                revert(add(returnData, 0x20), returndatasize())
+            }
+        }
+
+        return abi.decode(returnData, (bool));
+    }
+
+    function totalSupply() internal view returns (uint256) {
+        (bool success, bytes memory returnData) = precompile.staticcall(
+            abi.encodeWithSignature("totalSupply()")
+        );
+        assembly {
+            if eq(success, 0) {
+                revert(add(returnData, 0x20), returndatasize())
+            }
+        }
+
+        return abi.decode(returnData, (uint256));
+    }
 }
