@@ -16,8 +16,10 @@ members = [
   'pallets/fluent-fee',
   'precompiles/rando',
   'precompiles/utils',
-]
-
+  'precompiles/native-asset',
+  'precompiles/erc20',
+  'pallets/reverse-evm-call',
+] 
 resolver = "2" # use the new resolver for better dependency resolution
 
 [patch.'https://github.com/ultrastable-money/frontier']

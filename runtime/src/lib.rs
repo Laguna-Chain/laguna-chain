@@ -18,7 +18,7 @@ use frame_support::{
 
 use sp_core::H160;
 
-mod precompiles;
+pub mod precompiles;
 use pallet_transaction_payment::CurrencyAdapter;
 use precompiles::HydroPrecompiles;
 
@@ -406,6 +406,14 @@ parameter_types! {
 	pub TargetAddress: (H160, Vec<u8>) = (H160::from_low_u64_be(9001), precompile_utils::EvmDataWriter::new_with_selector(pallet_rando_precompile::Action::CallRando).build());
 }
 
+impl pallet_reverse_evm_call::Config for Runtime {
+	type Event = Event;
+
+	type Caller = Caller;
+
+	type TargetAddress = TargetAddress;
+}
+
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
 // be cautious that compile error arise if the pallet and construct_runtime can't be build at the
@@ -438,11 +446,10 @@ construct_runtime!(
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
 
-
-
 			// evm the bytecode execution environment, can preload precompiles
 			Evm: pallet_evm,
 			EvmHydro: evm_hydro,
+			ReverseEvmCall: pallet_reverse_evm_call,
 
 			// dummy pallet for testing interface coupling
 			Rando: pallet_rando ,

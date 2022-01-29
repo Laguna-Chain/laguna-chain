@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "pallet-rando-precompile"
+name = "native-asset-precompile"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -15,8 +15,6 @@ pallet-balances = {default-features = false, git = 'https://github.com/ultrastab
 pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
 pallet-evm-precompile-dispatch = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
 pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-
-pallet-rando = {path = "../../pallets/rando", default-features = false}
 
 precompile-utils = {path = "../utils", default-features = false}
 primitives = {path = "../../primitives", default-features = false}
@@ -37,7 +35,6 @@ std = [
   "pallet-balances/std",
   "pallet-timestamp/std",
   "precompile-utils/std",
-  "pallet-rando/std",
   "fp-evm/std",
   "num_enum/std",
   "sp-core/std",
