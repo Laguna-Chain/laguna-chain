@@ -1,5 +1,3 @@
-use std::collections::BTreeMap;
-
 use frame_support::traits::GenesisBuild;
 use hydro_runtime::{Runtime, System};
 use pallet_evm::AddressMapping;
