@@ -392,6 +392,12 @@ checksum = "6107fe1be6682a68940da878d9e9f5e90ca5745b3dec9fd1bb393c8777d4f581"
 
 [[package]]
 name = "base64"
+version = "0.12.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
+
+[[package]]
+name = "base64"
 version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "904dfeac50f3cdaba28fc6f57fdcddb75f49ed61346676a78c4ffe55877802fd"
@@ -1332,10 +1338,10 @@ dependencies = [
  "precompile-utils",
  "primitives",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -1474,8 +1480,8 @@ dependencies = [
  "pallet-evm",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -1618,8 +1624,8 @@ dependencies = [
  "evm",
  "parity-scale-codec",
  "serde",
- "sp-core",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -1634,13 +1640,13 @@ dependencies = [
  "parity-scale-codec",
  "paste",
  "scale-info",
- "sp-api",
- "sp-application-crypto",
- "sp-io",
- "sp-runtime",
- "sp-runtime-interface",
- "sp-std",
- "sp-storage",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-application-crypto 4.0.0",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-runtime-interface 4.1.0-dev",
+ "sp-std 4.0.0",
+ "sp-storage 4.0.0",
 ]
 
 [[package]]
@@ -1661,11 +1667,11 @@ dependencies = [
  "sc-executor",
  "sc-service",
  "serde",
- "sp-core",
- "sp-externalities",
- "sp-keystore",
- "sp-runtime",
- "sp-state-machine",
+ "sp-core 4.1.0-dev",
+ "sp-externalities 0.10.0",
+ "sp-keystore 0.10.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
  "structopt",
 ]
 
@@ -1678,11 +1684,11 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "sp-tracing",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+ "sp-tracing 4.0.0",
 ]
 
 [[package]]
@@ -1713,16 +1719,16 @@ dependencies = [
  "scale-info",
  "serde",
  "smallvec",
- "sp-arithmetic",
- "sp-core",
+ "sp-arithmetic 4.0.0",
+ "sp-core 4.1.0-dev",
  "sp-core-hashing-proc-macro",
- "sp-inherents",
- "sp-io",
- "sp-runtime",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
  "sp-staking",
- "sp-state-machine",
- "sp-std",
- "sp-tracing",
+ "sp-state-machine 0.10.0",
+ "sp-std 4.0.0",
+ "sp-tracing 4.0.0",
  "tt-call",
 ]
 
@@ -1770,11 +1776,11 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "sp-version",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
 ]
 
 [[package]]
@@ -1787,9 +1793,9 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -1798,7 +1804,7 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "parity-scale-codec",
- "sp-api",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
 ]
 
 [[package]]
@@ -2262,6 +2268,7 @@ dependencies = [
  "hex-literal",
  "hydro-runtime",
  "jsonrpc-core",
+ "pallet-contracts-rpc",
  "pallet-evm",
  "pallet-transaction-payment-rpc",
  "primitives",
@@ -2278,12 +2285,12 @@ dependencies = [
  "sc-telemetry",
  "sc-transaction-pool",
  "sc-transaction-pool-api",
- "sp-api",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-block-builder",
- "sp-blockchain",
- "sp-consensus",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-consensus-aura",
- "sp-core",
+ "sp-core 4.1.0-dev",
  "sp-finality-grandpa",
  "sp-timestamp",
  "structopt",
@@ -2309,6 +2316,9 @@ dependencies = [
  "orml-traits",
  "pallet-aura",
  "pallet-balances",
+ "pallet-contracts",
+ "pallet-contracts-primitives 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "pallet-contracts-rpc-runtime-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "pallet-evm",
  "pallet-evm-precompile-dispatch",
  "pallet-evm-precompile-modexp",
@@ -2318,6 +2328,7 @@ dependencies = [
  "pallet-grandpa",
  "pallet-rando",
  "pallet-rando-precompile",
+ "pallet-randomness-collective-flip",
  "pallet-reverse-evm-call",
  "pallet-scheduler",
  "pallet-sudo",
@@ -2328,17 +2339,17 @@ dependencies = [
  "precompile-utils",
  "primitives",
  "scale-info",
- "sp-api",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-block-builder",
  "sp-consensus-aura",
- "sp-core",
- "sp-inherents",
+ "sp-core 4.1.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-offchain",
- "sp-runtime",
+ "sp-runtime 4.1.0-dev",
  "sp-session",
- "sp-std",
+ "sp-std 4.0.0",
  "sp-transaction-pool",
- "sp-version",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "substrate-wasm-builder",
 ]
 
@@ -2547,18 +2558,18 @@ dependencies = [
  "precompile-utils",
  "primitives",
  "scale-info",
- "sp-api",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-block-builder",
  "sp-consensus-aura",
- "sp-core",
- "sp-inherents",
- "sp-io",
+ "sp-core 4.1.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-io 4.0.0",
  "sp-offchain",
- "sp-runtime",
+ "sp-runtime 4.1.0-dev",
  "sp-session",
- "sp-std",
+ "sp-std 4.0.0",
  "sp-transaction-pool",
- "sp-version",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "substrate-wasm-builder",
 ]
 
@@ -2939,7 +2950,7 @@ dependencies = [
  "futures-timer",
  "instant",
  "lazy_static",
- "libsecp256k1",
+ "libsecp256k1 0.7.0",
  "log",
  "multiaddr",
  "multihash 0.14.0",
@@ -3009,7 +3020,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfeead619eb5dac46e65acc78c535a60aaec803d1428cca6407c3a4fc74d698d"
 dependencies = [
  "asynchronous-codec 0.6.0",
- "base64",
+ "base64 0.13.0",
  "byteorder",
  "bytes 1.1.0",
  "fnv",
@@ -3370,21 +3381,51 @@ dependencies = [
 
 [[package]]
 name = "libsecp256k1"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9d220bc1feda2ac231cb78c3d26f27676b8cf82c96971f7aeef3d0cf2797c73"
+dependencies = [
+ "arrayref",
+ "base64 0.12.3",
+ "digest 0.9.0",
+ "hmac-drbg",
+ "libsecp256k1-core 0.2.2",
+ "libsecp256k1-gen-ecmult 0.2.1",
+ "libsecp256k1-gen-genmult 0.2.1",
+ "rand 0.7.3",
+ "serde",
+ "sha2 0.9.9",
+ "typenum",
+]
+
+[[package]]
+name = "libsecp256k1"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0452aac8bab02242429380e9b2f94ea20cea2b37e2c1777a1358799bbe97f37"
 dependencies = [
  "arrayref",
- "base64",
+ "base64 0.13.0",
  "digest 0.9.0",
  "hmac-drbg",
- "libsecp256k1-core",
- "libsecp256k1-gen-ecmult",
- "libsecp256k1-gen-genmult",
+ "libsecp256k1-core 0.3.0",
+ "libsecp256k1-gen-ecmult 0.3.0",
+ "libsecp256k1-gen-genmult 0.3.0",
  "rand 0.8.5",
  "serde",
  "sha2 0.9.9",
  "typenum",
+]
+
+[[package]]
+name = "libsecp256k1-core"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d0f6ab710cec28cef759c5f18671a27dae2a5f952cdaaee1d8e2908cb2478a80"
+dependencies = [
+ "crunchy",
+ "digest 0.9.0",
+ "subtle",
 ]
 
 [[package]]
@@ -3400,11 +3441,29 @@ dependencies = [
 
 [[package]]
 name = "libsecp256k1-gen-ecmult"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ccab96b584d38fac86a83f07e659f0deafd0253dc096dab5a36d53efe653c5c3"
+dependencies = [
+ "libsecp256k1-core 0.2.2",
+]
+
+[[package]]
+name = "libsecp256k1-gen-ecmult"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3038c808c55c87e8a172643a7d87187fc6c4174468159cb3090659d55bcb4809"
 dependencies = [
- "libsecp256k1-core",
+ "libsecp256k1-core 0.3.0",
+]
+
+[[package]]
+name = "libsecp256k1-gen-genmult"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "67abfe149395e3aa1c48a2beb32b068e2334402df8181f818d3aee2b304c4f5d"
+dependencies = [
+ "libsecp256k1-core 0.2.2",
 ]
 
 [[package]]
@@ -3413,7 +3472,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3db8d6ba2cec9eacc40e6e8ccc98931840301f1006e95647ceb2dd5c3aa06f7c"
 dependencies = [
- "libsecp256k1-core",
+ "libsecp256k1-core 0.3.0",
 ]
 
 [[package]]
@@ -3600,6 +3659,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5aa361d4faea93603064a027415f07bd8e1d5c88c9fbf68bf56a285428fd79ce"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "memory-db"
+version = "0.27.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "de006e09d04fc301a5f7e817b75aa49801c4479a8af753764416b085337ddcc5"
+dependencies = [
+ "hash-db",
+ "hashbrown 0.11.2",
+ "parity-util-mem",
 ]
 
 [[package]]
@@ -3865,10 +3935,10 @@ dependencies = [
  "precompile-utils",
  "primitives",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4115,9 +4185,9 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4131,8 +4201,8 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-runtime",
- "sp-std",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4147,9 +4217,9 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
  "xcm 0.9.16",
 ]
 
@@ -4162,9 +4232,9 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4186,10 +4256,10 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "scale-info",
- "sp-application-crypto",
+ "sp-application-crypto 4.0.0",
  "sp-consensus-aura",
- "sp-runtime",
- "sp-std",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4203,8 +4273,8 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "sp-authorship",
- "sp-runtime",
- "sp-std",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4218,8 +4288,119 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "scale-info",
- "sp-runtime",
- "sp-std",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+]
+
+[[package]]
+name = "pallet-contracts"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
+dependencies = [
+ "bitflags",
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "libsecp256k1 0.7.0",
+ "log",
+ "pallet-contracts-primitives 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "pallet-contracts-proc-macro",
+ "parity-scale-codec",
+ "rand 0.8.5",
+ "scale-info",
+ "serde",
+ "smallvec",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-sandbox",
+ "sp-std 4.0.0",
+ "wasm-instrument",
+ "wasmi-validation",
+]
+
+[[package]]
+name = "pallet-contracts-primitives"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "bitflags",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core 4.0.0-dev",
+ "sp-runtime 4.0.0-dev",
+ "sp-std 4.0.0-dev",
+]
+
+[[package]]
+name = "pallet-contracts-primitives"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
+dependencies = [
+ "bitflags",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core 4.1.0-dev",
+ "sp-rpc 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+]
+
+[[package]]
+name = "pallet-contracts-proc-macro"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "pallet-contracts-rpc"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "jsonrpc-core",
+ "jsonrpc-core-client",
+ "jsonrpc-derive",
+ "pallet-contracts-primitives 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "pallet-contracts-rpc-runtime-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "parity-scale-codec",
+ "serde",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-core 4.0.0-dev",
+ "sp-rpc 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-runtime 4.0.0-dev",
+]
+
+[[package]]
+name = "pallet-contracts-rpc-runtime-api"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "pallet-contracts-primitives 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-runtime 4.0.0-dev",
+ "sp-std 4.0.0-dev",
+]
+
+[[package]]
+name = "pallet-contracts-rpc-runtime-api"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
+dependencies = [
+ "pallet-contracts-primitives 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4242,10 +4423,10 @@ dependencies = [
  "scale-info",
  "serde",
  "sha3 0.8.2",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4283,7 +4464,7 @@ source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep
 dependencies = [
  "fp-evm",
  "ripemd",
- "sp-io",
+ "sp-io 4.0.0",
 ]
 
 [[package]]
@@ -4304,10 +4485,10 @@ dependencies = [
  "parity-scale-codec",
  "primitives",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4323,14 +4504,14 @@ dependencies = [
  "pallet-session",
  "parity-scale-codec",
  "scale-info",
- "sp-application-crypto",
- "sp-core",
+ "sp-application-crypto 4.0.0",
+ "sp-core 4.1.0-dev",
  "sp-finality-grandpa",
- "sp-io",
- "sp-runtime",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
  "sp-session",
  "sp-staking",
- "sp-std",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4362,10 +4543,24 @@ dependencies = [
  "precompile-utils",
  "primitives",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+]
+
+[[package]]
+name = "pallet-randomness-collective-flip"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "safe-mix",
+ "scale-info",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4381,8 +4576,8 @@ dependencies = [
  "pallet-evm",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4396,9 +4591,9 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "scale-info",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4413,13 +4608,13 @@ dependencies = [
  "pallet-timestamp",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
  "sp-session",
  "sp-staking",
- "sp-std",
- "sp-trie",
+ "sp-std 4.0.0",
+ "sp-trie 4.0.0",
 ]
 
 [[package]]
@@ -4431,9 +4626,9 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "scale-info",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4447,10 +4642,10 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "scale-info",
- "sp-inherents",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
  "sp-timestamp",
 ]
 
@@ -4465,10 +4660,10 @@ dependencies = [
  "scale-info",
  "serde",
  "smallvec",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -4481,11 +4676,11 @@ dependencies = [
  "jsonrpc-derive",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-scale-codec",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-rpc",
- "sp-runtime",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-rpc 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
 ]
 
 [[package]]
@@ -4495,8 +4690,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "pallet-transaction-payment",
  "parity-scale-codec",
- "sp-api",
- "sp-runtime",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
 ]
 
 [[package]]
@@ -4876,9 +5071,9 @@ dependencies = [
  "parity-scale-codec",
  "precompile-utils-macro",
  "sha3 0.9.1",
- "sp-core",
- "sp-io",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-std 4.0.0",
  "xcm 0.9.17",
 ]
 
@@ -4914,9 +5109,9 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-core",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -5405,6 +5600,15 @@ checksum = "3e75f6a532d0fd9f7f13144f392b6ad56a32696bfcd9c78f797f16bbb6f072d6"
 
 [[package]]
 name = "rustc_version"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
+dependencies = [
+ "semver 0.9.0",
+]
+
+[[package]]
+name = "rustc_version"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0dfe2087c51c460008730de8b57e6a320782fbfb312e1f4d520e6c6fae155ee"
@@ -5441,7 +5645,7 @@ version = "0.19.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35edb675feee39aec9c99fa5ff985081995a06d594114ae14cbe797ad7b7a6d7"
 dependencies = [
- "base64",
+ "base64 0.13.0",
  "log",
  "ring",
  "sct",
@@ -5478,6 +5682,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "73b4b750c782965c211b42f022f59af1fbceabdd026623714f104152f1ec149f"
 
 [[package]]
+name = "safe-mix"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d3d055a2582e6b00ed7a31c1524040aa391092bf636328350813f3a0605215c"
+dependencies = [
+ "rustc_version 0.2.3",
+]
+
+[[package]]
 name = "salsa20"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5501,8 +5714,8 @@ version = "4.1.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "log",
- "sp-core",
- "sp-wasm-interface",
+ "sp-core 4.1.0-dev",
+ "sp-wasm-interface 4.1.0-dev",
  "thiserror",
 ]
 
@@ -5520,12 +5733,12 @@ dependencies = [
  "sc-proposer-metrics",
  "sc-telemetry",
  "sc-transaction-pool-api",
- "sp-api",
- "sp-blockchain",
- "sp-consensus",
- "sp-core",
- "sp-inherents",
- "sp-runtime",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
  "substrate-prometheus-endpoint",
 ]
 
@@ -5536,13 +5749,13 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "parity-scale-codec",
  "sc-client-api",
- "sp-api",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-block-builder",
- "sp-blockchain",
- "sp-core",
- "sp-inherents",
- "sp-runtime",
- "sp-state-machine",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
 ]
 
 [[package]]
@@ -5558,8 +5771,8 @@ dependencies = [
  "sc-telemetry",
  "serde",
  "serde_json",
- "sp-core",
- "sp-runtime",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
 ]
 
 [[package]]
@@ -5598,13 +5811,13 @@ dependencies = [
  "sc-utils",
  "serde",
  "serde_json",
- "sp-blockchain",
- "sp-core",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
  "sp-keyring",
- "sp-keystore",
- "sp-panic-handler",
- "sp-runtime",
- "sp-version",
+ "sp-keystore 0.10.0",
+ "sp-panic-handler 4.0.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "structopt",
  "thiserror",
  "tiny-bip39",
@@ -5625,17 +5838,17 @@ dependencies = [
  "sc-executor",
  "sc-transaction-pool-api",
  "sc-utils",
- "sp-api",
- "sp-blockchain",
- "sp-consensus",
- "sp-core",
- "sp-database",
- "sp-externalities",
- "sp-keystore",
- "sp-runtime",
- "sp-state-machine",
- "sp-storage",
- "sp-trie",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-database 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-externalities 0.10.0",
+ "sp-keystore 0.10.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
+ "sp-storage 4.0.0",
+ "sp-trie 4.0.0",
  "substrate-prometheus-endpoint",
 ]
 
@@ -5655,13 +5868,13 @@ dependencies = [
  "parking_lot",
  "sc-client-api",
  "sc-state-db",
- "sp-arithmetic",
- "sp-blockchain",
- "sp-core",
- "sp-database",
- "sp-runtime",
- "sp-state-machine",
- "sp-trie",
+ "sp-arithmetic 4.0.0",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-database 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
+ "sp-trie 4.0.0",
 ]
 
 [[package]]
@@ -5678,12 +5891,12 @@ dependencies = [
  "sc-client-api",
  "sc-utils",
  "serde",
- "sp-api",
- "sp-blockchain",
- "sp-consensus",
- "sp-core",
- "sp-runtime",
- "sp-state-machine",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
  "substrate-prometheus-endpoint",
  "thiserror",
 ]
@@ -5703,17 +5916,17 @@ dependencies = [
  "sc-consensus",
  "sc-consensus-slots",
  "sc-telemetry",
- "sp-api",
- "sp-application-crypto",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-application-crypto 4.0.0",
  "sp-block-builder",
- "sp-blockchain",
- "sp-consensus",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-consensus-aura",
  "sp-consensus-slots",
- "sp-core",
- "sp-inherents",
- "sp-keystore",
- "sp-runtime",
+ "sp-core 4.1.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-keystore 0.10.0",
+ "sp-runtime 4.1.0-dev",
  "substrate-prometheus-endpoint",
 ]
 
@@ -5730,14 +5943,14 @@ dependencies = [
  "sc-client-api",
  "sc-consensus",
  "sc-telemetry",
- "sp-arithmetic",
- "sp-blockchain",
- "sp-consensus",
+ "sp-arithmetic 4.0.0",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-consensus-slots",
- "sp-core",
- "sp-inherents",
- "sp-runtime",
- "sp-state-machine",
+ "sp-core 4.1.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
  "sp-timestamp",
  "thiserror",
 ]
@@ -5748,7 +5961,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "lazy_static",
- "libsecp256k1",
+ "libsecp256k1 0.7.0",
  "log",
  "lru 0.6.6",
  "parity-scale-codec",
@@ -5756,17 +5969,17 @@ dependencies = [
  "sc-executor-common",
  "sc-executor-wasmi",
  "sc-executor-wasmtime",
- "sp-api",
- "sp-core",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
  "sp-core-hashing-proc-macro",
- "sp-externalities",
- "sp-io",
- "sp-panic-handler",
- "sp-runtime-interface",
+ "sp-externalities 0.10.0",
+ "sp-io 4.0.0",
+ "sp-panic-handler 4.0.0",
+ "sp-runtime-interface 4.1.0-dev",
  "sp-tasks",
- "sp-trie",
- "sp-version",
- "sp-wasm-interface",
+ "sp-trie 4.0.0",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-wasm-interface 4.1.0-dev",
  "wasmi",
 ]
 
@@ -5779,10 +5992,10 @@ dependencies = [
  "environmental",
  "parity-scale-codec",
  "sc-allocator",
- "sp-core",
+ "sp-core 4.1.0-dev",
  "sp-maybe-compressed-blob",
  "sp-serializer",
- "sp-wasm-interface",
+ "sp-wasm-interface 4.1.0-dev",
  "thiserror",
  "wasm-instrument",
  "wasmi",
@@ -5798,9 +6011,9 @@ dependencies = [
  "sc-allocator",
  "sc-executor-common",
  "scoped-tls",
- "sp-core",
- "sp-runtime-interface",
- "sp-wasm-interface",
+ "sp-core 4.1.0-dev",
+ "sp-runtime-interface 4.1.0-dev",
+ "sp-wasm-interface 4.1.0-dev",
  "wasmi",
 ]
 
@@ -5816,9 +6029,9 @@ dependencies = [
  "parity-wasm 0.42.2",
  "sc-allocator",
  "sc-executor-common",
- "sp-core",
- "sp-runtime-interface",
- "sp-wasm-interface",
+ "sp-core 4.1.0-dev",
+ "sp-runtime-interface 4.1.0-dev",
+ "sp-wasm-interface 4.1.0-dev",
  "wasmtime",
 ]
 
@@ -5848,15 +6061,15 @@ dependencies = [
  "sc-telemetry",
  "sc-utils",
  "serde_json",
- "sp-api",
- "sp-application-crypto",
- "sp-arithmetic",
- "sp-blockchain",
- "sp-consensus",
- "sp-core",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-application-crypto 4.0.0",
+ "sp-arithmetic 4.0.0",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
  "sp-finality-grandpa",
- "sp-keystore",
- "sp-runtime",
+ "sp-keystore 0.10.0",
+ "sp-runtime 4.1.0-dev",
  "substrate-prometheus-endpoint",
 ]
 
@@ -5873,8 +6086,8 @@ dependencies = [
  "sc-client-api",
  "sc-network",
  "sc-transaction-pool-api",
- "sp-blockchain",
- "sp-runtime",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
 ]
 
 [[package]]
@@ -5887,9 +6100,9 @@ dependencies = [
  "hex",
  "parking_lot",
  "serde_json",
- "sp-application-crypto",
- "sp-core",
- "sp-keystore",
+ "sp-application-crypto 4.0.0",
+ "sp-core 4.1.0-dev",
+ "sp-keystore 0.10.0",
 ]
 
 [[package]]
@@ -5930,12 +6143,12 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec",
- "sp-arithmetic",
- "sp-blockchain",
- "sp-consensus",
- "sp-core",
+ "sp-arithmetic 4.0.0",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
  "sp-finality-grandpa",
- "sp-runtime",
+ "sp-runtime 4.1.0-dev",
  "substrate-prometheus-endpoint",
  "thiserror",
  "unsigned-varint 0.6.0",
@@ -5954,7 +6167,7 @@ dependencies = [
  "log",
  "lru 0.7.2",
  "sc-network",
- "sp-runtime",
+ "sp-runtime 4.1.0-dev",
  "substrate-prometheus-endpoint",
  "tracing",
 ]
@@ -5979,10 +6192,10 @@ dependencies = [
  "sc-client-api",
  "sc-network",
  "sc-utils",
- "sp-api",
- "sp-core",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
  "sp-offchain",
- "sp-runtime",
+ "sp-runtime 4.1.0-dev",
  "threadpool",
  "tracing",
 ]
@@ -6029,15 +6242,15 @@ dependencies = [
  "sc-transaction-pool-api",
  "sc-utils",
  "serde_json",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-keystore",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-keystore 0.10.0",
  "sp-offchain",
- "sp-rpc",
- "sp-runtime",
+ "sp-rpc 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
  "sp-session",
- "sp-version",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
 ]
 
 [[package]]
@@ -6057,11 +6270,11 @@ dependencies = [
  "sc-transaction-pool-api",
  "serde",
  "serde_json",
- "sp-core",
- "sp-rpc",
- "sp-runtime",
- "sp-tracing",
- "sp-version",
+ "sp-core 4.1.0-dev",
+ "sp-rpc 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-tracing 4.0.0",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "thiserror",
 ]
 
@@ -6120,24 +6333,24 @@ dependencies = [
  "sc-utils",
  "serde",
  "serde_json",
- "sp-api",
- "sp-application-crypto",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-application-crypto 4.0.0",
  "sp-block-builder",
- "sp-blockchain",
- "sp-consensus",
- "sp-core",
- "sp-externalities",
- "sp-inherents",
- "sp-keystore",
- "sp-runtime",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-externalities 0.10.0",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-keystore 0.10.0",
+ "sp-runtime 4.1.0-dev",
  "sp-session",
- "sp-state-machine",
- "sp-storage",
- "sp-tracing",
+ "sp-state-machine 0.10.0",
+ "sp-storage 4.0.0",
+ "sp-tracing 4.0.0",
  "sp-transaction-pool",
  "sp-transaction-storage-proof",
- "sp-trie",
- "sp-version",
+ "sp-trie 4.0.0",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "substrate-prometheus-endpoint",
  "tempfile",
  "thiserror",
@@ -6157,7 +6370,7 @@ dependencies = [
  "parity-util-mem-derive",
  "parking_lot",
  "sc-client-api",
- "sp-core",
+ "sp-core 4.1.0-dev",
 ]
 
 [[package]]
@@ -6197,12 +6410,12 @@ dependencies = [
  "sc-rpc-server",
  "sc-tracing-proc-macro",
  "serde",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-rpc",
- "sp-runtime",
- "sp-tracing",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-rpc 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-tracing 4.0.0",
  "thiserror",
  "tracing",
  "tracing-log",
@@ -6237,11 +6450,11 @@ dependencies = [
  "sc-transaction-pool-api",
  "sc-utils",
  "serde",
- "sp-api",
- "sp-blockchain",
- "sp-core",
- "sp-runtime",
- "sp-tracing",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
+ "sp-tracing 4.0.0",
  "sp-transaction-pool",
  "substrate-prometheus-endpoint",
  "thiserror",
@@ -6256,8 +6469,8 @@ dependencies = [
  "futures 0.3.21",
  "log",
  "serde",
- "sp-blockchain",
- "sp-runtime",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
  "thiserror",
 ]
 
@@ -6386,6 +6599,15 @@ name = "semver"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a3186ec9e65071a2095434b1f5bb24838d4e8e130f584c790f6033c79943537"
+dependencies = [
+ "semver-parser 0.7.0",
+]
+
+[[package]]
+name = "semver"
+version = "0.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1d7eb9ef2c18661902cc47e535f9bc51b78acd254da71d375c2f6720d9a40403"
 dependencies = [
  "semver-parser 0.7.0",
 ]
@@ -6655,7 +6877,7 @@ version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41d1c5305e39e09653383c2c7244f2f78b3bcae37cf50c64cb4789c9f5096ec2"
 dependencies = [
- "base64",
+ "base64 0.13.0",
  "bytes 1.1.0",
  "flate2",
  "futures 0.3.21",
@@ -6668,18 +6890,47 @@ dependencies = [
 [[package]]
 name = "sp-api"
 version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "hash-db",
+ "log",
+ "parity-scale-codec",
+ "sp-api-proc-macro 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-core 4.0.0-dev",
+ "sp-runtime 4.0.0-dev",
+ "sp-state-machine 0.10.0-dev",
+ "sp-std 4.0.0-dev",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "thiserror",
+]
+
+[[package]]
+name = "sp-api"
+version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "hash-db",
  "log",
  "parity-scale-codec",
- "sp-api-proc-macro",
- "sp-core",
- "sp-runtime",
- "sp-state-machine",
- "sp-std",
- "sp-version",
+ "sp-api-proc-macro 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
+ "sp-std 4.0.0",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "thiserror",
+]
+
+[[package]]
+name = "sp-api-proc-macro"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "blake2-rfc",
+ "proc-macro-crate 1.1.3",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -6696,15 +6947,43 @@ dependencies = [
 
 [[package]]
 name = "sp-application-crypto"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core 4.0.0-dev",
+ "sp-io 4.0.0-dev",
+ "sp-std 4.0.0-dev",
+]
+
+[[package]]
+name = "sp-application-crypto"
 version = "4.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-core",
- "sp-io",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-std 4.0.0",
+]
+
+[[package]]
+name = "sp-arithmetic"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "integer-sqrt",
+ "num-traits",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-debug-derive 3.0.0",
+ "sp-std 4.0.0-dev",
+ "static_assertions",
 ]
 
 [[package]]
@@ -6717,8 +6996,8 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-debug-derive",
- "sp-std",
+ "sp-debug-derive 4.0.0",
+ "sp-std 4.0.0",
  "static_assertions",
 ]
 
@@ -6729,9 +7008,9 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "async-trait",
  "parity-scale-codec",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -6740,10 +7019,28 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "parity-scale-codec",
- "sp-api",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+]
+
+[[package]]
+name = "sp-blockchain"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "futures 0.3.21",
+ "log",
+ "lru 0.6.6",
+ "parity-scale-codec",
+ "parking_lot",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-database 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-runtime 4.0.0-dev",
+ "sp-state-machine 0.10.0-dev",
+ "thiserror",
 ]
 
 [[package]]
@@ -6756,11 +7053,30 @@ dependencies = [
  "lru 0.7.2",
  "parity-scale-codec",
  "parking_lot",
- "sp-api",
- "sp-consensus",
- "sp-database",
- "sp-runtime",
- "sp-state-machine",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-database 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
+ "thiserror",
+]
+
+[[package]]
+name = "sp-consensus"
+version = "0.10.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "async-trait",
+ "futures 0.3.21",
+ "futures-timer",
+ "log",
+ "parity-scale-codec",
+ "sp-core 4.0.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "sp-runtime 4.0.0-dev",
+ "sp-state-machine 0.10.0-dev",
+ "sp-std 4.0.0-dev",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
  "thiserror",
 ]
 
@@ -6774,12 +7090,12 @@ dependencies = [
  "futures-timer",
  "log",
  "parity-scale-codec",
- "sp-core",
- "sp-inherents",
- "sp-runtime",
- "sp-state-machine",
- "sp-std",
- "sp-version",
+ "sp-core 4.1.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-state-machine 0.10.0",
+ "sp-std 4.0.0",
+ "sp-version 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "thiserror",
 ]
 
@@ -6791,13 +7107,13 @@ dependencies = [
  "async-trait",
  "parity-scale-codec",
  "scale-info",
- "sp-api",
- "sp-application-crypto",
- "sp-consensus",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-application-crypto 4.0.0",
+ "sp-consensus 0.10.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-consensus-slots",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
  "sp-timestamp",
 ]
 
@@ -6809,8 +7125,55 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-arithmetic",
- "sp-runtime",
+ "sp-arithmetic 4.0.0",
+ "sp-runtime 4.1.0-dev",
+]
+
+[[package]]
+name = "sp-core"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "base58",
+ "bitflags",
+ "blake2-rfc",
+ "byteorder",
+ "dyn-clonable",
+ "ed25519-dalek",
+ "futures 0.3.21",
+ "hash-db",
+ "hash256-std-hasher",
+ "hex",
+ "impl-serde",
+ "lazy_static",
+ "libsecp256k1 0.6.0",
+ "log",
+ "merlin",
+ "num-traits",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "parking_lot",
+ "primitive-types",
+ "rand 0.7.3",
+ "regex",
+ "scale-info",
+ "schnorrkel",
+ "secrecy",
+ "serde",
+ "sha2 0.9.9",
+ "sp-debug-derive 3.0.0",
+ "sp-externalities 0.10.0-dev",
+ "sp-runtime-interface 4.0.0-dev",
+ "sp-std 4.0.0-dev",
+ "sp-storage 4.0.0-dev",
+ "ss58-registry",
+ "substrate-bip39",
+ "thiserror",
+ "tiny-bip39",
+ "tiny-keccak",
+ "twox-hash",
+ "wasmi",
+ "zeroize",
 ]
 
 [[package]]
@@ -6830,7 +7193,7 @@ dependencies = [
  "hex",
  "impl-serde",
  "lazy_static",
- "libsecp256k1",
+ "libsecp256k1 0.7.0",
  "log",
  "merlin",
  "num-traits",
@@ -6846,11 +7209,11 @@ dependencies = [
  "serde",
  "sha2 0.10.2",
  "sp-core-hashing",
- "sp-debug-derive",
- "sp-externalities",
- "sp-runtime-interface",
- "sp-std",
- "sp-storage",
+ "sp-debug-derive 4.0.0",
+ "sp-externalities 0.10.0",
+ "sp-runtime-interface 4.1.0-dev",
+ "sp-std 4.0.0",
+ "sp-storage 4.0.0",
  "ss58-registry",
  "substrate-bip39",
  "thiserror",
@@ -6869,7 +7232,7 @@ dependencies = [
  "blake2-rfc",
  "byteorder",
  "sha2 0.10.2",
- "sp-std",
+ "sp-std 4.0.0",
  "tiny-keccak",
  "twox-hash",
 ]
@@ -6888,10 +7251,29 @@ dependencies = [
 [[package]]
 name = "sp-database"
 version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "kvdb",
+ "parking_lot",
+]
+
+[[package]]
+name = "sp-database"
+version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "kvdb",
  "parking_lot",
+]
+
+[[package]]
+name = "sp-debug-derive"
+version = "3.0.0"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -6906,13 +7288,24 @@ dependencies = [
 
 [[package]]
 name = "sp-externalities"
+version = "0.10.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "environmental",
+ "parity-scale-codec",
+ "sp-std 4.0.0-dev",
+ "sp-storage 4.0.0-dev",
+]
+
+[[package]]
+name = "sp-externalities"
 version = "0.10.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "environmental",
  "parity-scale-codec",
- "sp-std",
- "sp-storage",
+ "sp-std 4.0.0",
+ "sp-storage 4.0.0",
 ]
 
 [[package]]
@@ -6925,12 +7318,26 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
- "sp-api",
- "sp-application-crypto",
- "sp-core",
- "sp-keystore",
- "sp-runtime",
- "sp-std",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-application-crypto 4.0.0",
+ "sp-core 4.1.0-dev",
+ "sp-keystore 0.10.0",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+]
+
+[[package]]
+name = "sp-inherents"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "async-trait",
+ "impl-trait-for-tuples",
+ "parity-scale-codec",
+ "sp-core 4.0.0-dev",
+ "sp-runtime 4.0.0-dev",
+ "sp-std 4.0.0-dev",
+ "thiserror",
 ]
 
 [[package]]
@@ -6941,10 +7348,34 @@ dependencies = [
  "async-trait",
  "impl-trait-for-tuples",
  "parity-scale-codec",
- "sp-core",
- "sp-runtime",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
  "thiserror",
+]
+
+[[package]]
+name = "sp-io"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "futures 0.3.21",
+ "hash-db",
+ "libsecp256k1 0.6.0",
+ "log",
+ "parity-scale-codec",
+ "parking_lot",
+ "sp-core 4.0.0-dev",
+ "sp-externalities 0.10.0-dev",
+ "sp-keystore 0.10.0-dev",
+ "sp-runtime-interface 4.0.0-dev",
+ "sp-state-machine 0.10.0-dev",
+ "sp-std 4.0.0-dev",
+ "sp-tracing 4.0.0-dev",
+ "sp-trie 4.0.0-dev",
+ "sp-wasm-interface 4.0.0-dev",
+ "tracing",
+ "tracing-core",
 ]
 
 [[package]]
@@ -6954,19 +7385,19 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "futures 0.3.21",
  "hash-db",
- "libsecp256k1",
+ "libsecp256k1 0.7.0",
  "log",
  "parity-scale-codec",
  "parking_lot",
- "sp-core",
- "sp-externalities",
- "sp-keystore",
- "sp-runtime-interface",
- "sp-state-machine",
- "sp-std",
- "sp-tracing",
- "sp-trie",
- "sp-wasm-interface",
+ "sp-core 4.1.0-dev",
+ "sp-externalities 0.10.0",
+ "sp-keystore 0.10.0",
+ "sp-runtime-interface 4.1.0-dev",
+ "sp-state-machine 0.10.0",
+ "sp-std 4.0.0",
+ "sp-tracing 4.0.0",
+ "sp-trie 4.0.0",
+ "sp-wasm-interface 4.1.0-dev",
  "tracing",
  "tracing-core",
 ]
@@ -6977,9 +7408,25 @@ version = "4.1.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "lazy_static",
- "sp-core",
- "sp-runtime",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
  "strum",
+]
+
+[[package]]
+name = "sp-keystore"
+version = "0.10.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "async-trait",
+ "derive_more",
+ "futures 0.3.21",
+ "merlin",
+ "parity-scale-codec",
+ "parking_lot",
+ "schnorrkel",
+ "sp-core 4.0.0-dev",
+ "sp-externalities 0.10.0-dev",
 ]
 
 [[package]]
@@ -6995,8 +7442,8 @@ dependencies = [
  "parking_lot",
  "schnorrkel",
  "serde",
- "sp-core",
- "sp-externalities",
+ "sp-core 4.1.0-dev",
+ "sp-externalities 0.10.0",
 ]
 
 [[package]]
@@ -7012,9 +7459,17 @@ name = "sp-offchain"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "sp-api",
- "sp-core",
- "sp-runtime",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
+]
+
+[[package]]
+name = "sp-panic-handler"
+version = "3.0.0"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "backtrace",
 ]
 
 [[package]]
@@ -7030,11 +7485,43 @@ dependencies = [
 [[package]]
 name = "sp-rpc"
 version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "rustc-hash",
+ "serde",
+ "sp-core 4.0.0-dev",
+]
+
+[[package]]
+name = "sp-rpc"
+version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "rustc-hash",
  "serde",
- "sp-core",
+ "sp-core 4.1.0-dev",
+]
+
+[[package]]
+name = "sp-runtime"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "either",
+ "hash256-std-hasher",
+ "impl-trait-for-tuples",
+ "log",
+ "parity-scale-codec",
+ "parity-util-mem",
+ "paste",
+ "rand 0.7.3",
+ "scale-info",
+ "serde",
+ "sp-application-crypto 4.0.0-dev",
+ "sp-arithmetic 4.0.0-dev",
+ "sp-core 4.0.0-dev",
+ "sp-io 4.0.0-dev",
+ "sp-std 4.0.0-dev",
 ]
 
 [[package]]
@@ -7052,11 +7539,28 @@ dependencies = [
  "rand 0.7.3",
  "scale-info",
  "serde",
- "sp-application-crypto",
- "sp-arithmetic",
- "sp-core",
- "sp-io",
- "sp-std",
+ "sp-application-crypto 4.0.0",
+ "sp-arithmetic 4.0.0",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-std 4.0.0",
+]
+
+[[package]]
+name = "sp-runtime-interface"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "impl-trait-for-tuples",
+ "parity-scale-codec",
+ "primitive-types",
+ "sp-externalities 0.10.0-dev",
+ "sp-runtime-interface-proc-macro 4.0.0-dev",
+ "sp-std 4.0.0-dev",
+ "sp-storage 4.0.0-dev",
+ "sp-tracing 4.0.0-dev",
+ "sp-wasm-interface 4.0.0-dev",
+ "static_assertions",
 ]
 
 [[package]]
@@ -7067,13 +7571,25 @@ dependencies = [
  "impl-trait-for-tuples",
  "parity-scale-codec",
  "primitive-types",
- "sp-externalities",
- "sp-runtime-interface-proc-macro",
- "sp-std",
- "sp-storage",
- "sp-tracing",
- "sp-wasm-interface",
+ "sp-externalities 0.10.0",
+ "sp-runtime-interface-proc-macro 4.0.0",
+ "sp-std 4.0.0",
+ "sp-storage 4.0.0",
+ "sp-tracing 4.0.0",
+ "sp-wasm-interface 4.1.0-dev",
  "static_assertions",
+]
+
+[[package]]
+name = "sp-runtime-interface-proc-macro"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "Inflector",
+ "proc-macro-crate 1.1.3",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -7086,6 +7602,20 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "sp-sandbox"
+version = "0.10.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
+dependencies = [
+ "log",
+ "parity-scale-codec",
+ "sp-core 4.1.0-dev",
+ "sp-io 4.0.0",
+ "sp-std 4.0.0",
+ "sp-wasm-interface 4.1.0-dev",
+ "wasmi",
 ]
 
 [[package]]
@@ -7104,11 +7634,11 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "parity-scale-codec",
  "scale-info",
- "sp-api",
- "sp-core",
- "sp-runtime",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
  "sp-staking",
- "sp-std",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -7118,8 +7648,31 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "parity-scale-codec",
  "scale-info",
- "sp-runtime",
- "sp-std",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+]
+
+[[package]]
+name = "sp-state-machine"
+version = "0.10.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "hash-db",
+ "log",
+ "num-traits",
+ "parity-scale-codec",
+ "parking_lot",
+ "rand 0.7.3",
+ "smallvec",
+ "sp-core 4.0.0-dev",
+ "sp-externalities 0.10.0-dev",
+ "sp-panic-handler 3.0.0",
+ "sp-std 4.0.0-dev",
+ "sp-trie 4.0.0-dev",
+ "thiserror",
+ "tracing",
+ "trie-db 0.22.6",
+ "trie-root 0.16.0",
 ]
 
 [[package]]
@@ -7134,21 +7687,39 @@ dependencies = [
  "parking_lot",
  "rand 0.7.3",
  "smallvec",
- "sp-core",
- "sp-externalities",
- "sp-panic-handler",
- "sp-std",
- "sp-trie",
+ "sp-core 4.1.0-dev",
+ "sp-externalities 0.10.0",
+ "sp-panic-handler 4.0.0",
+ "sp-std 4.0.0",
+ "sp-trie 4.0.0",
  "thiserror",
  "tracing",
- "trie-db",
- "trie-root",
+ "trie-db 0.23.1",
+ "trie-root 0.17.0",
 ]
+
+[[package]]
+name = "sp-std"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
 
 [[package]]
 name = "sp-std"
 version = "4.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
+
+[[package]]
+name = "sp-storage"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "impl-serde",
+ "parity-scale-codec",
+ "ref-cast",
+ "serde",
+ "sp-debug-derive 3.0.0",
+ "sp-std 4.0.0-dev",
+]
 
 [[package]]
 name = "sp-storage"
@@ -7159,8 +7730,8 @@ dependencies = [
  "parity-scale-codec",
  "ref-cast",
  "serde",
- "sp-debug-derive",
- "sp-std",
+ "sp-debug-derive 4.0.0",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -7169,11 +7740,11 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "log",
- "sp-core",
- "sp-externalities",
- "sp-io",
- "sp-runtime-interface",
- "sp-std",
+ "sp-core 4.1.0-dev",
+ "sp-externalities 0.10.0",
+ "sp-io 4.0.0",
+ "sp-runtime-interface 4.1.0-dev",
+ "sp-std 4.0.0",
 ]
 
 [[package]]
@@ -7185,11 +7756,23 @@ dependencies = [
  "futures-timer",
  "log",
  "parity-scale-codec",
- "sp-api",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
  "thiserror",
+]
+
+[[package]]
+name = "sp-tracing"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "parity-scale-codec",
+ "sp-std 4.0.0-dev",
+ "tracing",
+ "tracing-core",
+ "tracing-subscriber",
 ]
 
 [[package]]
@@ -7198,7 +7781,7 @@ version = "4.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "parity-scale-codec",
- "sp-std",
+ "sp-std 4.0.0",
  "tracing",
  "tracing-core",
  "tracing-subscriber",
@@ -7209,8 +7792,8 @@ name = "sp-transaction-pool"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "sp-api",
- "sp-runtime",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
 ]
 
 [[package]]
@@ -7222,11 +7805,26 @@ dependencies = [
  "log",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-inherents",
- "sp-runtime",
- "sp-std",
- "sp-trie",
+ "sp-core 4.1.0-dev",
+ "sp-inherents 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+ "sp-trie 4.0.0",
+]
+
+[[package]]
+name = "sp-trie"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "hash-db",
+ "memory-db 0.27.0",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core 4.0.0-dev",
+ "sp-std 4.0.0-dev",
+ "trie-db 0.22.6",
+ "trie-root 0.16.0",
 ]
 
 [[package]]
@@ -7235,13 +7833,29 @@ version = "4.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "hash-db",
- "memory-db",
+ "memory-db 0.28.0",
  "parity-scale-codec",
  "scale-info",
- "sp-core",
- "sp-std",
- "trie-db",
- "trie-root",
+ "sp-core 4.1.0-dev",
+ "sp-std 4.0.0",
+ "trie-db 0.23.1",
+ "trie-root 0.17.0",
+]
+
+[[package]]
+name = "sp-version"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "impl-serde",
+ "parity-scale-codec",
+ "parity-wasm 0.42.2",
+ "scale-info",
+ "serde",
+ "sp-runtime 4.0.0-dev",
+ "sp-std 4.0.0-dev",
+ "sp-version-proc-macro 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1)",
+ "thiserror",
 ]
 
 [[package]]
@@ -7255,10 +7869,21 @@ dependencies = [
  "scale-info",
  "serde",
  "sp-core-hashing-proc-macro",
- "sp-runtime",
- "sp-std",
- "sp-version-proc-macro",
+ "sp-runtime 4.1.0-dev",
+ "sp-std 4.0.0",
+ "sp-version-proc-macro 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "thiserror",
+]
+
+[[package]]
+name = "sp-version-proc-macro"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "parity-scale-codec",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -7274,13 +7899,24 @@ dependencies = [
 
 [[package]]
 name = "sp-wasm-interface"
+version = "4.0.0-dev"
+source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-2021-11-1#3f495af04488ea9c1b9145f1e5e63f4469054376"
+dependencies = [
+ "impl-trait-for-tuples",
+ "parity-scale-codec",
+ "sp-std 4.0.0-dev",
+ "wasmi",
+]
+
+[[package]]
+name = "sp-wasm-interface"
 version = "4.1.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "impl-trait-for-tuples",
  "log",
  "parity-scale-codec",
- "sp-std",
+ "sp-std 4.0.0",
  "wasmi",
  "wasmtime",
 ]
@@ -7417,11 +8053,11 @@ dependencies = [
  "sc-client-api",
  "sc-rpc-api",
  "sc-transaction-pool-api",
- "sp-api",
+ "sp-api 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
  "sp-block-builder",
- "sp-blockchain",
- "sp-core",
- "sp-runtime",
+ "sp-blockchain 4.0.0-dev (git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16)",
+ "sp-core 4.1.0-dev",
+ "sp-runtime 4.1.0-dev",
 ]
 
 [[package]]
@@ -7776,6 +8412,19 @@ dependencies = [
 
 [[package]]
 name = "trie-db"
+version = "0.22.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9eac131e334e81b6b3be07399482042838adcd7957aa0010231d0813e39e02fa"
+dependencies = [
+ "hash-db",
+ "hashbrown 0.11.2",
+ "log",
+ "rustc-hex",
+ "smallvec",
+]
+
+[[package]]
+name = "trie-db"
 version = "0.23.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d32d034c0d3db64b43c31de38e945f15b40cd4ca6d2dcfc26d4798ce8de4ab83"
@@ -7785,6 +8434,15 @@ dependencies = [
  "log",
  "rustc-hex",
  "smallvec",
+]
+
+[[package]]
+name = "trie-root"
+version = "0.16.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "652931506d2c1244d7217a70b99f56718a7b4161b37f04e7cd868072a99f68cd"
+dependencies = [
+ "hash-db",
 ]
 
 [[package]]
@@ -8195,6 +8853,7 @@ checksum = "ca00c5147c319a8ec91ec1a0edbec31e566ce2c9cc93b3f9bb86a9efd0eb795d"
 dependencies = [
  "downcast-rs",
  "libc",
+ "libm",
  "memory_units",
  "num-rational 0.2.4",
  "num-traits",
@@ -8256,7 +8915,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da4439d99100298344567c0eb6916ad5864e99e54760b8177c427e529077fb30"
 dependencies = [
  "anyhow",
- "base64",
+ "base64 0.13.0",
  "bincode",
  "directories-next",
  "file-per-thread-logger",
