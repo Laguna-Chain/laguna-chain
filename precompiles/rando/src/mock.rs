@@ -117,9 +117,8 @@ where
 		is_static: bool,
 	) -> Option<PrecompileResult> {
 		match address {
-			a if a == hash(1) => {
-				Some(RandoPrecompile::<Runtime>::execute(input, target_gas, context, is_static))
-			},
+			a if a == hash(1) =>
+				Some(RandoPrecompile::<Runtime>::execute(input, target_gas, context, is_static)),
 			_ => None,
 		}
 	}

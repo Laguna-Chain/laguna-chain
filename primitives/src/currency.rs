@@ -89,6 +89,6 @@ impl TokenMetadata for CurrencyId {
 
 	fn decimals(self) -> u8 {
 		// TODO: correct mapping between substrate issued tokens and tokens issued within evm
-		return 18;
+		18
 	}
 }
