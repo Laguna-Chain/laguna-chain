@@ -12,7 +12,7 @@ name = "hydro-node"
 targets = ['x86_64-unknown-linux-gnu']
 
 [build-dependencies.substrate-build-script-utils]
-branch = "hydro-dep-2021-11-1"
+branch = "hydro-dep-polkadot-v0.9.16"
 git = 'https://github.com/ultrastable-money/substrate.git'
 version = '3.0.0'
 
@@ -21,48 +21,46 @@ version = '3.0.0'
 primitives = {path = "../primitives"}
 
 # hydro chain runtime
-hydro-runtime = {path = "../runtime", optional = true}
+hydro-runtime = {path = "../runtime"}
 
-sc-basic-authorship = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sc-cli = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sc-client-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sc-consensus = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sc-consensus-aura = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sc-executor = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sc-finality-grandpa = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sc-rpc = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sc-rpc-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sc-service = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sc-telemetry = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sc-transaction-pool = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sc-transaction-pool-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+sc-basic-authorship = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sc-cli = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sc-client-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sc-consensus = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sc-consensus-aura = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sc-executor = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sc-finality-grandpa = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sc-rpc = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sc-rpc-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sc-service = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sc-telemetry = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sc-transaction-pool = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sc-transaction-pool-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
 # substrate primitives
-sp-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sp-block-builder = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sp-blockchain = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sp-consensus = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sp-consensus-aura = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '0.10.0-dev'}
-sp-core = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sp-finality-grandpa = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-sp-timestamp = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+sp-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sp-block-builder = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sp-blockchain = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sp-consensus = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sp-consensus-aura = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
+sp-core = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.1.0-dev'}
+sp-finality-grandpa = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sp-timestamp = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
-substrate-frame-rpc-system = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+substrate-frame-rpc-system = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
-pallet-transaction-payment-rpc = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+pallet-transaction-payment-rpc = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
 pallet-evm = {git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
 
 # requird for benchmark cli-parsing and conduct runtime-benchmark
-frame-benchmarking = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
-frame-benchmarking-cli = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-2021-11-1", version = '4.0.0-dev'}
+frame-benchmarking = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+frame-benchmarking-cli = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
-dummy-runtime = {path = "../dummy-runtime", optional = true}
 hex-literal = "0.3.4"
 jsonrpc-core = "18.0.0"
 structopt = "0.3.25"
 
 [features]
-default = ["hydro-runtime"]
+default = []
 runtime-benchmarks = ["hydro-runtime/runtime-benchmarks"]
-test_runtime = ["dummy-runtime"]

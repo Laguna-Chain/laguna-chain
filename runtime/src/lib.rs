@@ -9,7 +9,7 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	traits::{Contains, EqualPrivilegeOnly, KeyOwnerProofSystem},
+	traits::{ConstU32, Contains, EqualPrivilegeOnly, KeyOwnerProofSystem},
 	weights::{
 		constants::{RocksDbWeight, WEIGHT_PER_SECOND},
 		IdentityFee,
@@ -83,16 +83,16 @@ pub mod opaque {
 // TODO: include all needed const as well
 use constants::*;
 
-// version declaration for wasm runtime copy from substrate-node-template
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("hydro-runtime-placeholder"),
 	impl_name: create_runtime_str!("hydro-runtime-placeholder"),
 	authoring_version: 1,
-	spec_version: 100, // set to 100 to help polkadot.js recognizing this custom runtime
+	spec_version: 100,
 	impl_version: 1,
-	apis: RUNTIME_API_VERSIONS, // constructed by impl_runtime_api! macro
+	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
+	state_version: 1,
 };
 
 // version declaration for native runtime
@@ -166,6 +166,8 @@ impl frame_system::Config for Runtime {
 	type SS58Prefix = SS58Prefix;
 	/// The set code logic, just the default since we're not a parachain.
 	type OnSetCode = ();
+
+	type MaxConsumers = ConstU32<1>;
 }
 
 pub const MILLISECS_PER_BLOCK: u64 = 6000;
@@ -251,6 +253,7 @@ parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
 		BlockWeights::get().max_block;
 	pub const MaxScheduledPerBlock: u32 = 50;
+	pub const SchedulerDelay: Option<BlockNumber> = None;
 }
 
 impl pallet_scheduler::Config for Runtime {
@@ -266,6 +269,10 @@ impl pallet_scheduler::Config for Runtime {
 	type MaximumWeight = MaximumSchedulerWeight;
 	type MaxScheduledPerBlock = MaxScheduledPerBlock;
 	type WeightInfo = ();
+
+	type PreimageProvider = ();
+
+	type NoPreimagePostponement = SchedulerDelay;
 }
 
 pub struct DustRemovalWhitelist;
@@ -484,7 +491,7 @@ pub type Executive = frame_executive::Executive<
 	Block,
 	frame_system::ChainContext<Runtime>,
 	Runtime,
-	AllPallets,
+	AllPalletsWithSystem,
 >;
 
 // expose runtime apis, required by node services

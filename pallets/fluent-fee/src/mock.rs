@@ -65,6 +65,8 @@ impl frame_system::Config for Runtime {
 	type SS58Prefix = ();
 
 	type OnSetCode = ();
+
+	type MaxConsumers = ConstU32<1>;
 }
 
 parameter_types! {

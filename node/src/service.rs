@@ -7,7 +7,7 @@ use hydro_runtime::{self, opaque::Block, RuntimeApi};
 #[cfg(feature = "test_runtime")]
 use dummy_runtime::{self, opaque::Block, RuntimeApi};
 
-use sc_client_api::ExecutorProvider;
+use sc_client_api::{BlockBackend, ExecutorProvider};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
 use sc_executor::NativeElseWasmExecutor;
 use sc_finality_grandpa::SharedVoterState;
@@ -99,6 +99,7 @@ pub fn new_partial(
 		config.wasm_method,
 		config.default_heap_pages,
 		config.max_runtime_instances,
+		config.runtime_cache_size,
 	);
 
 	// setup components parts
@@ -113,7 +114,7 @@ pub fn new_partial(
 
 	let telemetry = telemetry.map(|(worker, telemetry)| {
 		// spawn and run start telemetry worker with task_manager
-		task_manager.spawn_handle().spawn("telemetry", worker.run());
+		task_manager.spawn_handle().spawn("telemetry", None, worker.run());
 
 		telemetry
 	});
@@ -201,8 +202,16 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 	// if let Some(url) = &config.keystore_remote {
 	// }
 
+	let grandpa_protocol_name = sc_finality_grandpa::protocol_standard_name(
+		&client.block_hash(0).ok().flatten().expect("Genesis block exists; qed"),
+		&config.chain_spec,
+	);
+
 	// push grandpa peers to network sets
-	config.network.extra_sets.push(sc_finality_grandpa::grandpa_peers_set_config());
+	config
+		.network
+		.extra_sets
+		.push(sc_finality_grandpa::grandpa_peers_set_config(grandpa_protocol_name.clone()));
 
 	// grandpa WRAP proof verification
 	let warp_sync = Arc::new(sc_finality_grandpa::warp_proof::NetworkProvider::new(
@@ -218,7 +227,6 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			transaction_pool: transaction_pool.clone(),
 			spawn_handle: task_manager.spawn_handle(),
 			import_queue,
-			on_demand: None,
 			block_announce_validator_builder: None,
 			warp_sync: Some(warp_sync),
 		})?;
@@ -264,8 +272,6 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		task_manager: &mut task_manager,
 		transaction_pool: transaction_pool.clone(),
 		rpc_extensions_builder,
-		on_demand: None,
-		remote_blockchain: None,
 		backend,
 		system_rpc_tx,
 		config,
@@ -320,7 +326,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 
 		// the AURA authoring task is considered essential, i.e. if it
 		// fails we take down the service with it.
-		task_manager.spawn_essential_handle().spawn_blocking("aura", aura);
+		task_manager.spawn_essential_handle().spawn_blocking("aura", None, aura);
 	}
 
 	// TODO: keystore is not enabled correctly, need testing
@@ -328,7 +334,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		if role.is_authority() { Some(keystore_container.sync_keystore()) } else { None };
 
 	let grandpa_config = sc_finality_grandpa::Config {
-		// FIXME #1578 make this available through chainspec
+		protocol_name: grandpa_protocol_name,
 		gossip_duration: Duration::from_millis(333),
 		justification_period: 512,
 		name: Some(name),
@@ -359,6 +365,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		// if it fails we take down the service with it.
 		task_manager.spawn_essential_handle().spawn_blocking(
 			"grandpa-voter",
+			None,
 			sc_finality_grandpa::run_grandpa_voter(grandpa_config)?,
 		);
 	}
