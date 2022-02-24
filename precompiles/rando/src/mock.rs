@@ -4,7 +4,7 @@ use fp_evm::PrecompileSet;
 use frame_support::{
 	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::Everything,
+	traits::{ConstU32, Everything},
 };
 
 use pallet_evm::{
@@ -68,6 +68,8 @@ impl frame_system::Config for Runtime {
 	type SS58Prefix = ();
 
 	type OnSetCode = ();
+
+	type MaxConsumers = ConstU32<1>;
 }
 
 parameter_types! {
@@ -115,8 +117,9 @@ where
 		is_static: bool,
 	) -> Option<PrecompileResult> {
 		match address {
-			a if a == hash(1) =>
-				Some(RandoPrecompile::<Runtime>::execute(input, target_gas, context, is_static)),
+			a if a == hash(1) => {
+				Some(RandoPrecompile::<Runtime>::execute(input, target_gas, context, is_static))
+			},
 			_ => None,
 		}
 	}

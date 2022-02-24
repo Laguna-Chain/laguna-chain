@@ -53,7 +53,7 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	/// customize reduction fee when paid via the specified token
-	#[derive(Encode, Decode, TypeInfo, Debug, Clone, PartialEq)]
+	#[derive(Encode, Decode, TypeInfo, Debug, Clone, PartialEq, MaxEncodedLen)]
 	pub struct FeeRatePoint {
 		pub base: i32,
 		pub point: i32,

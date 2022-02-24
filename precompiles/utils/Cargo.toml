@@ -15,11 +15,11 @@ precompile-utils-macro = {path = "macro"}
 
 # Substrate
 codec = {package = "parity-scale-codec", version = "2.2", default-features = false}
-frame-support = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-2021-11-1", version = "4.0.0-dev", default-features = false}
-frame-system = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-2021-11-1", default-features = false, version = "4.0.0-dev"}
-sp-core = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-2021-11-1", default-features = false, version = "4.0.0-dev"}
-sp-io = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-2021-11-1", default-features = false, version = "4.0.0-dev"}
-sp-std = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-2021-11-1", default-features = false, version = "4.0.0-dev"}
+frame-support = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-polkadot-v0.9.16", version = "4.0.0-dev", default-features = false}
+frame-system = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-polkadot-v0.9.16", default-features = false, version = "4.0.0-dev"}
+sp-core = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-polkadot-v0.9.16", default-features = false, version = "4.1.0-dev"}
+sp-io = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-polkadot-v0.9.16", default-features = false, version = "4.0.0-dev"}
+sp-std = {git = "https://github.com/ultrastable-money/substrate", branch = "hydro-dep-polkadot-v0.9.16", default-features = false, version = "4.0.0-dev"}
 
 # Frontier
 fp-evm = {git = "https://github.com/ultrastable-money/frontier", branch = "hydro-dep-master", default-features = false}

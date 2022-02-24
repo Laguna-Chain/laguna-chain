@@ -90,7 +90,8 @@ impl ExtBuilder {
 
 		// setup sudo account
 		if let Some(key) = self.sudo {
-			pallet_sudo::GenesisConfig::<Runtime> { key }
+			// FIXME #1578 make this available through chainspec
+			pallet_sudo::GenesisConfig::<Runtime> { key: Some(key) }
 				.assimilate_storage(&mut t)
 				.unwrap();
 		}

@@ -148,7 +148,7 @@ pub struct RuntimeHelper<Runtime>(PhantomData<Runtime>);
 
 impl<Runtime> RuntimeHelper<Runtime>
 where
-	Runtime: pallet_evm::Config,
+	Runtime: pallet_evm::Config + frame_system::Config,
 	Runtime::Call: Dispatchable<PostInfo = PostDispatchInfo> + GetDispatchInfo,
 {
 	/// Try to dispatch a Substrate call.
@@ -190,7 +190,7 @@ where
 
 impl<Runtime> RuntimeHelper<Runtime>
 where
-	Runtime: pallet_evm::Config,
+	Runtime: pallet_evm::Config + frame_system::Config,
 {
 	/// Cost of a Substrate DB write in gas.
 	pub fn db_write_gas_cost() -> u64 {
