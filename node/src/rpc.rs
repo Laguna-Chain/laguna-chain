@@ -1,23 +1,17 @@
 // expose rpc, derived from substrate-node-template
 
+use hydro_runtime::opaque::Block;
+use primitives::{AccountId, Balance, BlockNumber, Hash, Index};
+use std::sync::Arc;
+
 use pallet_contracts_rpc::{Contracts, ContractsApi};
 use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
-use primitives::{AccountId, Balance, BlockNumber, Hash, Index};
-
-#[cfg(not(feature = "test_runtime"))]
-use hydro_runtime::opaque::Block;
-
-#[cfg(feature = "test_runtime")]
-use dummy_runtime::opaque::Block;
-
-use std::sync::Arc;
-use substrate_frame_rpc_system::{FullSystem, SystemApi};
-
-pub use sc_rpc_api::DenyUnsafe;
+use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
+use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
 // TODO: light client before deprecation require additional dependencies
 

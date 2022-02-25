@@ -15,7 +15,7 @@ use frame_support::{
 		IdentityFee,
 	},
 };
-use pallet_contracts::weights::WeightInfo;
+use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator};
 use pallet_contracts_primitives::{
 	Code, ContractExecResult, ContractInstantiateResult, GetStorageResult,
 };
@@ -78,7 +78,6 @@ pub mod opaque {
 		pub struct SessionKeys {
 			pub aura: Aura,
 			pub grandpa: Grandpa,
-
 		}
 	}
 }
@@ -455,6 +454,8 @@ parameter_types! {
 		schedule
 	};
 
+
+
 }
 
 impl pallet_contracts::Config for Runtime {
@@ -477,7 +478,12 @@ impl pallet_contracts::Config for Runtime {
 	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
-	type ContractDeposit = ();
+
+	type DepositPerByte = DepositPerByte;
+
+	type DepositPerItem = DepositPerItem;
+
+	type AddressGenerator = DefaultAddressGenerator;
 }
 
 // runtime as enum, can cross reference enum variants as pallet impl type associates
@@ -561,11 +567,12 @@ pub type Executive = frame_executive::Executive<
 // this allow software outside of the wasm blob to access internal functionalities
 // often referred to as breaking the "wasm boundary" within substrate ecosystem
 
+const CONTRACTS_DEBUG_OUTPUT: bool = true;
+
 // TODO: common api impl are derived from substrate-node-template, add custom runtime-api later
 impl_runtime_apis! {
 
 	// provide generic api required by the node client
-
 	impl sp_api::Core<Block> for Runtime {
 		fn version() -> RuntimeVersion {
 			VERSION
@@ -711,36 +718,41 @@ impl_runtime_apis! {
 			dest: AccountId,
 			value: Balance,
 			gas_limit: u64,
+			storage_deposit_limit: Option<Balance>,
 			input_data: Vec<u8>,
-		) -> ContractExecResult {
-			Contracts::bare_call(origin, dest, value, gas_limit, input_data, true)
+		) -> pallet_contracts_primitives::ContractExecResult<Balance> {
+			Contracts::bare_call(origin, dest, value, gas_limit, storage_deposit_limit, input_data, CONTRACTS_DEBUG_OUTPUT)
 		}
 
-		/// Instantiate a new contract.
-		///
-		/// See `pallet_contracts::Pallet::instantiate`.
 		fn instantiate(
 			origin: AccountId,
-			endowment: Balance,
+			value: Balance,
 			gas_limit: u64,
-			code: Code<Hash>,
+			storage_deposit_limit: Option<Balance>,
+			code: pallet_contracts_primitives::Code<Hash>,
 			data: Vec<u8>,
 			salt: Vec<u8>,
-		) -> ContractInstantiateResult<AccountId> {
-			Contracts::bare_instantiate(origin, endowment, gas_limit, code, data, salt, true)
+		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance>
+		{
+			Contracts::bare_instantiate(origin, value, gas_limit, storage_deposit_limit, code, data, salt, CONTRACTS_DEBUG_OUTPUT)
 		}
 
-		/// Query a given storage key in a given contract.
-		///
-		/// Returns `Ok(Some(Vec<u8>))` if the storage value exists under the given key in the
-		/// specified account and `Ok(None)` if it doesn't. If the account specified by the address
-		/// doesn't exist, or doesn't have a contract then `Err` is returned.
+		fn upload_code(
+			origin: AccountId,
+			code: Vec<u8>,
+			storage_deposit_limit: Option<Balance>,
+		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance>
+		{
+			Contracts::bare_upload_code(origin, code, storage_deposit_limit)
+		}
+
 		fn get_storage(
 			address: AccountId,
 			key: [u8; 32],
-		) -> GetStorageResult {
+		) -> pallet_contracts_primitives::GetStorageResult {
 			Contracts::get_storage(address, key)
 		}
+
 
 	}
 
