@@ -13,6 +13,7 @@ members = [
   'pallets/rando',
   'pallets/evm-hydro',
   'pallets/fluent-fee',
+  'pallets/gratitude',
   'precompiles/rando',
   'precompiles/utils',
   'precompiles/native-asset',

@@ -292,6 +292,7 @@ orml_traits::parameter_type_with_key! {
 				match token {
 					TokenId::Hydro => MICRO_HYDRO,
 					TokenId::FeeToken => MICRO_HYDRO,
+					TokenId::GratitudeToken => MICRO_HYDRO,
 				}
 			},
 			_ => Balance::max_value() // unreachable ED value for unverified currency type
@@ -409,6 +410,21 @@ impl pallet_fluent_fee::Config for Runtime {
 }
 
 parameter_types! {
+	pub GratitudeAccountId: AccountId = hex_literal::hex!["d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d"].into();  // Alice, as per https://docs.substrate.io/v3/tools/subkey/#well-known-keys
+	pub GratitudeCurrency: CurrencyId = CurrencyId::NativeToken(TokenId::GratitudeToken);
+	pub MaxReasonLength: u32 = 128;
+}
+
+impl pallet_gratitude::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type MultiCurrency = Currencies;
+	type GratitudeAccountId = GratitudeAccountId;
+	type GratitudeCurrency = GratitudeCurrency;
+	type MaxReasonLength = MaxReasonLength;
+}
+
+parameter_types! {
 	pub Caller: H160 = H160::from_slice(&hex_literal::hex!("37C54011486B797FAA83c5CF6de88C567843a23F"));
 	pub TargetAddress: (H160, Vec<u8>) = (H160::from_low_u64_be(9001), precompile_utils::EvmDataWriter::new_with_selector(pallet_rando_precompile::Action::CallRando).build());
 }
@@ -448,6 +464,7 @@ construct_runtime!(
 			// weight and fee management
 			TransactionPayment: pallet_transaction_payment ,
 			FluentFee: pallet_fluent_fee,
+			Gratitude: pallet_gratitude ,
 
 			// conseus mechanism
 			Aura: pallet_aura ,

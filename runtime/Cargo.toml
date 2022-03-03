@@ -13,6 +13,7 @@ primitives = {path = "../primitives", default-features = false}
 pallet-aura = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
+pallet-gratitude = {path = "../pallets/gratitude", default-features = false}
 
 pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-rando = {default-features = false, version = "0.1.0", path = "../pallets/rando"}
@@ -124,6 +125,7 @@ std = [
   "native-asset-precompile/std",
   "pallet-rando-precompile/std",
   "pallet-fluent-fee/std",
+  "pallet-gratitude/std",
   "precompile-utils/std",
   "evm-hydro/std",
 ]
