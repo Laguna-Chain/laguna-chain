@@ -3,10 +3,7 @@
 use crate::cli::{HydroCli, Subcommand};
 use hydro_node::{chain_spec, service};
 
-#[cfg(feature = "test_runtime")]
-use dummy_runtime::Block;
 
-#[cfg(not(feature = "test_runtime"))]
 use hydro_runtime::Block;
 
 use sc_cli::{ChainSpec, RuntimeVersion, SubstrateCli};
@@ -47,15 +44,7 @@ impl SubstrateCli for HydroCli {
 	}
 
 	fn native_runtime_version(_: &Box<dyn ChainSpec>) -> &'static RuntimeVersion {
-		#[cfg(feature = "test_runtime")]
-		{
-			&dummy_runtime::VERSION
-		}
-
-		#[cfg(not(feature = "test_runtime"))]
-		{
 			&hydro_runtime::VERSION
-		}
 	}
 }
 
