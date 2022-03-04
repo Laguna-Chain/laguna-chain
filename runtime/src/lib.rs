@@ -7,6 +7,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use contract_extensions::DemoExtension;
 use frame_support::{
 	construct_runtime, parameter_types,
 	traits::{ConstU32, Contains, EqualPrivilegeOnly, KeyOwnerProofSystem},
@@ -41,6 +42,8 @@ use sp_runtime::{
 	ApplyExtrinsicResult, KeyTypeId, Perbill,
 };
 use sp_std::prelude::*;
+
+pub mod contract_extensions;
 
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
@@ -473,7 +476,7 @@ impl pallet_contracts::Config for Runtime {
 	type CallFilter = frame_support::traits::Nothing;
 	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-	type ChainExtension = ();
+	type ChainExtension = DemoExtension;
 	type DeletionQueueDepth = DeletionQueueDepth;
 	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;

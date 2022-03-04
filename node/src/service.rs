@@ -1,11 +1,7 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 //! Derived from substrate-node-template
 
-#[cfg(not(feature = "test_runtime"))]
 use hydro_runtime::{self, opaque::Block, RuntimeApi};
-
-#[cfg(feature = "test_runtime")]
-use dummy_runtime::{self, opaque::Block, RuntimeApi};
 
 use sc_client_api::{BlockBackend, ExecutorProvider};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
@@ -28,27 +24,11 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-		#[cfg(feature = "test_runtime")]
-		{
-			dummy_runtime::api::dispatch(method, data)
-		}
-
-		#[cfg(not(feature = "test_runtime"))]
-		{
-			hydro_runtime::api::dispatch(method, data)
-		}
+		hydro_runtime::api::dispatch(method, data)
 	}
 
 	fn native_version() -> sc_executor::NativeVersion {
-		#[cfg(feature = "test_runtime")]
-		{
-			dummy_runtime::native_version()
-		}
-
-		#[cfg(not(feature = "test_runtime"))]
-		{
-			hydro_runtime::native_version()
-		}
+		hydro_runtime::native_version()
 	}
 }
 
