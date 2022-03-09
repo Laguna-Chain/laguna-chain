@@ -5,8 +5,6 @@ use primitives::{AccountId, Balance, Index};
 
 use hydro_runtime::opaque::Block;
 
-
-
 use std::sync::Arc;
 use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
