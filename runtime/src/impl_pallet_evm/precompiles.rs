@@ -1,9 +1,8 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
 // this is copied from frontier-workshop, we'll add our own later on
 
-use frame_support::{
-	dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
-	log,
-};
+use frame_support::{dispatch, log};
 use pallet_evm::{Context, Precompile, PrecompileResult, PrecompileSet};
 use sp_core::H160;
 use sp_std::marker::PhantomData;
