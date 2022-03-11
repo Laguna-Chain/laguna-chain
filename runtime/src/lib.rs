@@ -7,40 +7,18 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use contract_extensions::DemoExtension;
-use frame_support::{
-	construct_runtime, parameter_types,
-	traits::{ConstU32, Contains, EqualPrivilegeOnly, KeyOwnerProofSystem},
-	weights::{
-		constants::{RocksDbWeight, WEIGHT_PER_SECOND},
-		IdentityFee,
-	},
-};
-use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator};
-use pallet_contracts_primitives::{
-	Code, ContractExecResult, ContractInstantiateResult, GetStorageResult,
-};
-use sp_core::H160;
-
-pub mod precompiles;
-use pallet_transaction_payment::CurrencyAdapter;
-use precompiles::HydroPrecompiles;
-
-use frame_system::EnsureRoot;
-use orml_currencies::BasicCurrencyAdapter;
-use pallet_evm::{
-	EnsureAddressRoot, EnsureAddressTruncated, HashedAddressMapping, SubstrateBlockHashMapping,
-};
+use frame_support::{self, construct_runtime};
 
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::{
-	app_crypto::sp_core::{OpaqueMetadata, U256},
+	app_crypto::sp_core::OpaqueMetadata,
 	create_runtime_str, generic, impl_opaque_keys,
-	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, NumberFor},
+	traits::{BlakeTwo256, Block as BlockT, NumberFor},
 	transaction_validity::{TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, KeyTypeId, Perbill,
+	ApplyExtrinsicResult, KeyTypeId,
 };
+
 use sp_std::prelude::*;
 
 pub mod contract_extensions;
@@ -48,7 +26,6 @@ pub mod contract_extensions;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-
 // include all needed pallets and their impl below
 
 use pallet_grandpa::{
@@ -56,7 +33,27 @@ use pallet_grandpa::{
 };
 
 use frame_support::weights::Weight;
-use primitives::*;
+use primitives::{AccountId, Address, Balance, BlockNumber, Hash, Header, Index, Signature};
+
+// we put palelt implementation code in a separate module to enhahce readability
+pub mod impl_frame_system;
+pub mod impl_orml_currencies;
+pub mod impl_orml_tokens;
+pub mod impl_pallet_balances;
+pub mod impl_pallet_contracts;
+pub mod impl_pallet_evm;
+pub mod impl_pallet_fluent_fee;
+pub mod impl_pallet_granda;
+pub mod impl_pallet_gratitude;
+pub mod impl_pallet_hydro_evm;
+pub mod impl_pallet_rando;
+pub mod impl_pallet_scheduler;
+pub mod impl_pallet_sudo;
+pub mod impl_pallet_timestamp;
+pub mod impl_pallet_transaction_payment;
+pub mod impl_reverse_evm_call;
+
+impl pallet_randomness_collective_flip::Config for Runtime {}
 
 pub mod constants;
 
@@ -85,9 +82,6 @@ pub mod opaque {
 	}
 }
 
-// TODO: include all needed const as well
-use constants::*;
-
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("hydro-runtime-placeholder"),
@@ -104,389 +98,6 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 #[cfg(feature = "std")]
 pub fn native_version() -> NativeVersion {
 	NativeVersion { runtime_version: VERSION, can_author_with: Default::default() }
-}
-
-const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
-
-// TODO: copied from substrate-node-template for now, plug our pallet impl later
-// define const variable for frame_system::Config
-parameter_types! {
-	pub const Version: RuntimeVersion = VERSION;
-	pub const BlockHashCount: BlockNumber = 2400;
-	/// We allow for 2 seconds of compute with a 6 second average block time.
-	pub BlockWeights: frame_system::limits::BlockWeights = frame_system::limits::BlockWeights
-	::with_sensible_defaults(2 * WEIGHT_PER_SECOND, NORMAL_DISPATCH_RATIO);
-	pub BlockLength: frame_system::limits::BlockLength = frame_system::limits::BlockLength
-	::max_with_normal_ratio(5 * 1024 * 1024, NORMAL_DISPATCH_RATIO);
-	pub const SS58Prefix: u8 = 42;
-}
-
-// TODO: copied from substrate-node-template for now, plug our pallet impl later
-impl frame_system::Config for Runtime {
-	/// The basic call filter to use in dispatchable.
-	type BaseCallFilter = frame_support::traits::Everything;
-	/// Block & extrinsics weights: base values and limits.
-	type BlockWeights = BlockWeights;
-	/// The maximum length of a block (in bytes).
-	type BlockLength = BlockLength;
-	/// The identifier used to distinguish between accounts.
-	type AccountId = AccountId;
-	/// The aggregated dispatch type that is available for extrinsics.
-	type Call = Call;
-	/// The lookup mechanism to get account ID from whatever is passed in dispatchers.
-	type Lookup = AccountIdLookup<AccountId, ()>;
-	/// The index type for storing how many extrinsics an account has signed.
-	type Index = Index;
-	/// The index type for blocks.
-	type BlockNumber = BlockNumber;
-	/// The type for hashing blocks and tries.
-	type Hash = Hash;
-	/// The hashing algorithm used.
-	type Hashing = BlakeTwo256;
-	/// The header type.
-	type Header = generic::Header<BlockNumber, BlakeTwo256>;
-	/// The ubiquitous event type.
-	type Event = Event;
-	/// The ubiquitous origin type.
-	type Origin = Origin;
-	/// Maximum number of block number to block hash mappings to keep (oldest pruned first).
-	type BlockHashCount = BlockHashCount;
-	/// The weight of database operations that the runtime can invoke.
-	type DbWeight = RocksDbWeight;
-	/// Version of the runtime.
-	type Version = Version;
-	/// Converts a module to the index of the module in `construct_runtime!`.
-	///
-	/// This type is being generated by `construct_runtime!`.
-	type PalletInfo = PalletInfo;
-	/// What to do if a new account is created.
-	type OnNewAccount = ();
-	/// What to do if an account is fully reaped from the system.
-	type OnKilledAccount = ();
-	/// The data to be stored in an account.
-	type AccountData = pallet_balances::AccountData<Balance>;
-	/// Weight information for the extrinsics of this pallet.
-	type SystemWeightInfo = ();
-	/// This is used as an identifier of the chain. 42 is the generic substrate prefix.
-	type SS58Prefix = SS58Prefix;
-	/// The set code logic, just the default since we're not a parachain.
-	type OnSetCode = ();
-
-	type MaxConsumers = ConstU32<1>;
-}
-
-pub const MILLISECS_PER_BLOCK: u64 = 6000;
-pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
-
-parameter_types! {
-	pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
-}
-
-impl pallet_timestamp::Config for Runtime {
-	/// A timestamp: milliseconds since the unix epoch.
-	type Moment = u64;
-	type OnTimestampSet = Aura;
-	type MinimumPeriod = MinimumPeriod;
-	type WeightInfo = ();
-}
-
-impl pallet_sudo::Config for Runtime {
-	type Event = Event;
-	type Call = Call;
-}
-
-// borderline aura and grandpa impl from substrate-node-template
-parameter_types! {
-	pub const MaxAuthorities: u32 = 32;
-}
-
-impl pallet_aura::Config for Runtime {
-	type AuthorityId = AuraId;
-	type DisabledValidators = ();
-	type MaxAuthorities = MaxAuthorities;
-}
-
-impl pallet_grandpa::Config for Runtime {
-	type Event = Event;
-	type Call = Call;
-
-	type KeyOwnerProofSystem = ();
-
-	type KeyOwnerProof =
-		<Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(KeyTypeId, GrandpaId)>>::Proof;
-
-	type KeyOwnerIdentification = <Self::KeyOwnerProofSystem as KeyOwnerProofSystem<(
-		KeyTypeId,
-		GrandpaId,
-	)>>::IdentificationTuple;
-
-	type HandleEquivocation = ();
-
-	type WeightInfo = ();
-	type MaxAuthorities = MaxAuthorities;
-}
-
-impl pallet_rando::Config for Runtime {
-	type Event = Event;
-	type WeightInfo = ();
-}
-
-parameter_types! {
-	pub const ExistentialDeposit: u128 = 500;
-	pub const MaxLocks: u32 = 50;
-}
-
-impl pallet_balances::Config for Runtime {
-	type MaxLocks = MaxLocks;
-	type MaxReserves = ();
-	type ReserveIdentifier = [u8; 8];
-	/// The type for recording an account's balance.
-	type Balance = Balance;
-	/// The ubiquitous event type.
-	type Event = Event;
-	type DustRemoval = ();
-	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = System;
-
-	// we can either:
-	// 1. use SubstrateWeight recomended by substrate on standard hardware
-	// 2. use WeightInfo generated by benchmark running on our target hardware
-	type WeightInfo = weights::pallet_balances::WeightInfo<Runtime>;
-}
-
-parameter_types! {
-	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
-		BlockWeights::get().max_block;
-	pub const MaxScheduledPerBlock: u32 = 50;
-	pub const SchedulerDelay: Option<BlockNumber> = None;
-}
-
-impl pallet_scheduler::Config for Runtime {
-	// allow to invoke runtime::Call on behalf of the underlyding pallets
-	type Call = Call;
-	type Event = Event;
-	type Origin = Origin;
-	type PalletsOrigin = OriginCaller;
-	// only root account can invoke the scheduler
-	type ScheduleOrigin = EnsureRoot<AccountId>;
-	// set priviledge required to cancel scheduler
-	type OriginPrivilegeCmp = EqualPrivilegeOnly;
-	type MaximumWeight = MaximumSchedulerWeight;
-	type MaxScheduledPerBlock = MaxScheduledPerBlock;
-	type WeightInfo = ();
-
-	type PreimageProvider = ();
-
-	type NoPreimagePostponement = SchedulerDelay;
-}
-
-pub struct DustRemovalWhitelist;
-
-impl Contains<AccountId> for DustRemovalWhitelist {
-	fn contains(t: &AccountId) -> bool {
-		// TODO: all account are possible to be dust-removed now
-		false
-	}
-}
-
-orml_traits::parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
-
-		match currency_id {
-			&CurrencyId::NativeToken(token) => {
-				match token {
-					TokenId::Hydro => MICRO_HYDRO,
-					TokenId::FeeToken => MICRO_HYDRO,
-				}
-			},
-			_ => Balance::max_value() // unreachable ED value for unverified currency type
-		}
-	};
-}
-
-// use orml's token to represent both native and other tokens
-impl orml_tokens::Config for Runtime {
-	type Event = Event;
-	// how tokens are measured
-	type Balance = Balance;
-	type Amount = Amount;
-
-	// how's tokens represented
-	type CurrencyId = primitives::CurrencyId;
-	type WeightInfo = ();
-	type ExistentialDeposits = ExistentialDeposits;
-	type OnDust = ();
-	type MaxLocks = MaxLocks;
-	type DustRemovalWhitelist = DustRemovalWhitelist;
-}
-
-parameter_types! {
-	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(NATIVE_TOKEN);
-}
-
-impl orml_currencies::Config for Runtime {
-	type Event = Event;
-
-	type MultiCurrency = Tokens;
-
-	// Native transfer will trigger the underlying mechanism via the underlying `Balances` module
-	type NativeCurrency = BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
-
-	type GetNativeCurrencyId = NativeCurrencyId;
-	type WeightInfo = ();
-}
-
-parameter_types! {
-	// TODO: setup correct rule for chain_id
-	pub const ChainId: u64 = 1234;
-	pub BlockGasLimit: U256 = U256::from(u32::max_value());
-	pub PrecompilesValue: HydroPrecompiles<Runtime> = HydroPrecompiles::<_>::new();
-}
-
-impl pallet_evm::Config for Runtime {
-	type Event = Event;
-
-	// Use platform native token as evm's native token as well
-	// type Currency = orml_tokens::CurrencyAdapter<Runtime, NativeCurrencyId>;
-	type Currency = Balances;
-
-	// limit the max op allowed in a block
-	type BlockGasLimit = BlockGasLimit;
-
-	// will limit min gas needed, combined with gas reduction for finer gas control, default at
-	// min=0
-	type FeeCalculator = ();
-
-	// TODO: decide which identity should be executing evm
-	type CallOrigin = EnsureAddressRoot<AccountId>;
-
-	// specify Origin allowed to receive evm balance
-	type WithdrawOrigin = EnsureAddressTruncated;
-	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
-
-	// eth.gas <=> substrate.weight mapping, default is 1:1
-	type GasWeightMapping = ();
-
-	// maintain block order of substrate
-	// TODO: evaluate whether we do custom block mapping for external tooling, may at the cost of
-	// bigger block-size
-	type BlockHashMapping = SubstrateBlockHashMapping<Self>;
-
-	// expose functionalities to evm
-	// TODO: include platform specific pallet features to assist solidity developers
-	type PrecompilesType = HydroPrecompiles<Self>;
-	type PrecompilesValue = PrecompilesValue;
-
-	type ChainId = ChainId;
-	type Runner = pallet_evm::runner::stack::Runner<Self>;
-
-	// for evm gas `gas(op) = max(gas) - reduced`
-	// we can specify gas reduction if certain criteria is met, e.g, early return
-	type OnChargeTransaction = ();
-
-	// finding the block author in H160 format
-	type FindAuthor = ();
-}
-
-impl evm_hydro::Config for Runtime {
-	type Event = Event;
-}
-
-parameter_types! {
-	pub const TransactionByteFee: Balance = 1;
-	pub OperationalFeeMultiplier: u8 = 5;
-}
-
-impl pallet_transaction_payment::Config for Runtime {
-	// TODO: add benchmark around cross pallet interaction between fee
-	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
-	type TransactionByteFee = TransactionByteFee;
-	type OperationalFeeMultiplier = OperationalFeeMultiplier;
-	type WeightToFee = IdentityFee<Balance>;
-	type FeeMultiplierUpdate = ();
-}
-
-impl pallet_fluent_fee::Config for Runtime {
-	type Event = Event;
-
-	type MultiCurrency = Currencies;
-	type NativeCurrencyId = NativeCurrencyId;
-}
-
-parameter_types! {
-	pub Caller: H160 = H160::from_slice(&hex_literal::hex!("37C54011486B797FAA83c5CF6de88C567843a23F"));
-	pub TargetAddress: (H160, Vec<u8>) = (H160::from_low_u64_be(9001), precompile_utils::EvmDataWriter::new_with_selector(pallet_rando_precompile::Action::CallRando).build());
-}
-
-impl pallet_reverse_evm_call::Config for Runtime {
-	type Event = Event;
-
-	type Caller = Caller;
-
-	type TargetAddress = TargetAddress;
-}
-
-impl pallet_randomness_collective_flip::Config for Runtime {}
-
-const fn deposit(items: u32, bytes: u32) -> Balance {
-	(items as Balance * HYDROS + (bytes as Balance) * (5 * MILLI_HYDRO / 100)) / 10
-}
-
-const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
-
-parameter_types! {
-	pub const DepositPerItem: Balance = deposit(1, 0);
-	pub const DepositPerByte: Balance = deposit(0, 1);
-	// The lazy deletion runs inside on_initialize.
-	pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
-		BlockWeights::get().max_block;
-	pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get() / (
-			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
-			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
-		)) / 5) as u32;
-	pub Schedule: pallet_contracts::Schedule<Runtime> = {
-		let mut schedule = pallet_contracts::Schedule::<Runtime>::default();
-		// We decided to **temporarily* increase the default allowed contract size here
-		// (the default is `128 * 1024`).
-		//
-		// Our reasoning is that a number of people ran into `CodeTooLarge` when trying
-		// to deploy their contracts. We are currently introducing a number of optimizations
-		// into ink! which should bring the contract sizes lower. In the meantime we don't
-		// want to pose additional friction on developers.
-		schedule.limits.code_len = 256 * 1024;
-		schedule
-	};
-
-
-
-}
-
-impl pallet_contracts::Config for Runtime {
-	type Time = Timestamp;
-	type Randomness = RandomnessCollectiveFlip;
-	type Currency = Balances;
-	type Event = Event;
-	type Call = Call;
-	/// The safest default is to allow no calls at all.
-	///
-	/// Runtimes should whitelist dispatchables that are allowed to be called from contracts
-	/// and make sure they are stable. Dispatchables exposed to contracts are not allowed to
-	/// change because that would break already deployed contracts. The `Call` structure itself
-	/// is not allowed to change the indices of existing pallets, too.
-	type CallFilter = frame_support::traits::Nothing;
-	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
-	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
-	type ChainExtension = DemoExtension;
-	type DeletionQueueDepth = DeletionQueueDepth;
-	type DeletionWeightLimit = DeletionWeightLimit;
-	type Schedule = Schedule;
-	type CallStack = [pallet_contracts::Frame<Self>; 31];
-
-	type DepositPerByte = DepositPerByte;
-
-	type DepositPerItem = DepositPerItem;
-
-	type AddressGenerator = DefaultAddressGenerator;
 }
 
 // runtime as enum, can cross reference enum variants as pallet impl type associates
@@ -516,6 +127,7 @@ construct_runtime!(
 			// weight and fee management
 			TransactionPayment: pallet_transaction_payment ,
 			FluentFee: pallet_fluent_fee,
+			Gratitude: pallet_gratitude ,
 
 			// conseus mechanism
 			Aura: pallet_aura ,
@@ -527,7 +139,6 @@ construct_runtime!(
 			ReverseEvmCall: pallet_reverse_evm_call,
 
 			Contracts: pallet_contracts,
-
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 
 			// dummy pallet for testing interface coupling

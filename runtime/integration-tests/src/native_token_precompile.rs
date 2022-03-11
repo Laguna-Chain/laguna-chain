@@ -5,7 +5,9 @@
 #[cfg(test)]
 mod tests {
 	use frame_support::assert_ok;
-	use hydro_runtime::{constants::HYDROS, precompiles::HydroPrecompiles, Currencies, Runtime};
+	use hydro_runtime::{
+		constants::HYDROS, impl_pallet_evm::precompiles::HydroPrecompiles, Currencies, Runtime,
+	};
 	use precompile_utils::{Address, Bytes, EvmDataReader, EvmDataWriter};
 	use sp_core::{H160, U256};
 

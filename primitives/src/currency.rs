@@ -57,38 +57,55 @@ pub enum CurrencyId {
 pub enum TokenId {
 	Hydro, // Native token of the hydro-chain
 	FeeToken,
+	GratitudeToken,
 }
 
 /// metadata about a issued token, provide additional info about token issued on substrate to evm
 pub trait TokenMetadata {
-	fn symbol(self) -> &'static str;
+	fn symbol(&self) -> &'static str;
 
-	fn name(self) -> &'static str;
+	fn name(&self) -> &'static str;
 
-	fn decimals(self) -> u8;
+	fn decimals(&self) -> u8;
+
+	fn is_native(&self) -> bool;
 }
 
+// FIXME: consider implementing macros as in Acala's primitives/currency.rs
 impl TokenMetadata for CurrencyId {
-	fn symbol(self) -> &'static str {
+	fn symbol(&self) -> &'static str {
 		match self {
 			CurrencyId::NativeToken(token) => match token {
 				TokenId::Hydro => "HYDRO",
-				TokenId::FeeToken => todo!(),
+				TokenId::FeeToken => "HFEE",
+				TokenId::GratitudeToken => "HGRAT",
 			},
 		}
 	}
 
-	fn name(self) -> &'static str {
+	fn name(&self) -> &'static str {
 		match self {
 			CurrencyId::NativeToken(token) => match token {
 				TokenId::Hydro => "HYDRO",
-				TokenId::FeeToken => todo!(),
+				TokenId::FeeToken => "HYDRO fee",
+				TokenId::GratitudeToken => "HYDRO gratitude",
 			},
 		}
 	}
 
-	fn decimals(self) -> u8 {
-		// TODO: correct mapping between substrate issued tokens and tokens issued within evm
-		18
+	fn decimals(&self) -> u8 {
+		match self {
+			CurrencyId::NativeToken(token) => match token {
+				TokenId::Hydro => 18,
+				TokenId::FeeToken => 18,
+				TokenId::GratitudeToken => 18,
+			},
+		}
+	}
+
+	fn is_native(&self) -> bool {
+		match self {
+			CurrencyId::NativeToken(_) => true,
+		}
 	}
 }
