@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 use crate::{AuraId, Call, Event, Runtime};
 use frame_support::{parameter_types, traits::KeyOwnerProofSystem};
 use pallet_grandpa::AuthorityId as GrandpaId;

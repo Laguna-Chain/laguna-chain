@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 // this is copied from frontier-workshop, we'll add our own later on
 
 use frame_support::{dispatch, log};

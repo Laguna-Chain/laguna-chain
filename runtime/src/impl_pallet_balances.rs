@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 use crate::{weights::pallet_balances::WeightInfo, Event, Runtime, System};
 use frame_support::parameter_types;
 

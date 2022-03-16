@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 use crate::{Event, Runtime};
 use frame_support::parameter_types;
 use sp_core::H160;

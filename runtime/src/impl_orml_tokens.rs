@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 use crate::{
 	constants::{currency::NATIVE_TOKEN, MICRO_HYDRO},
 	impl_pallet_balances::MaxLocks,
