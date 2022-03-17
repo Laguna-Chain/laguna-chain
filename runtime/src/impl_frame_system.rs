@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 use crate::{Call, Event, Origin, PalletInfo, Runtime, VERSION};
 use frame_support::{
 	parameter_types,

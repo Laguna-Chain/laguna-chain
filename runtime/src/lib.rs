@@ -26,7 +26,6 @@ pub mod contract_extensions;
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
-// include all needed pallets and their impl below
 
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
@@ -35,6 +34,7 @@ use pallet_grandpa::{
 use frame_support::weights::Weight;
 use primitives::{AccountId, Address, Balance, BlockNumber, Hash, Header, Index, Signature};
 
+// include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
 pub mod impl_frame_system;
 pub mod impl_orml_currencies;

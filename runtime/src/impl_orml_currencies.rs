@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 use crate::{impl_orml_tokens::NativeCurrencyId, Balances, Event, Runtime, Tokens};
 use orml_currencies::BasicCurrencyAdapter;
 use primitives::{Amount, BlockNumber};

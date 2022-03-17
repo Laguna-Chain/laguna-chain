@@ -1,5 +1,3 @@
-#![cfg_attr(not(feature = "std"), no_std)]
-
 use crate::{impl_frame_system::BlockWeights, Call, Event, Origin, OriginCaller, Runtime, Weight};
 use frame_support::{parameter_types, traits::EqualPrivilegeOnly};
 use frame_system::EnsureRoot;
