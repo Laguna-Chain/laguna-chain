@@ -3,7 +3,8 @@
 use crate::{
 	constants::{HYDROS, MILLI_HYDRO},
 	impl_frame_system::BlockWeights,
-	Balances, Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, Weight,
+	Balances, Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment,
+	Weight,
 };
 use frame_support::parameter_types;
 use pallet_contracts::DefaultAddressGenerator;
@@ -57,7 +58,7 @@ impl pallet_contracts::Config for Runtime {
 	/// change because that would break already deployed contracts. The `Call` structure itself
 	/// is not allowed to change the indices of existing pallets, too.
 	type CallFilter = frame_support::traits::Nothing;
-	type WeightPrice = pallet_transaction_payment::Pallet<Self>;
+	type WeightPrice = TransactionPayment;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
 	type ChainExtension = DemoExtension;
 	type DeletionQueueDepth = DeletionQueueDepth;
