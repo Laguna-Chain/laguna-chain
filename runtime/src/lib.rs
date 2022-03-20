@@ -37,6 +37,7 @@ use primitives::{AccountId, Address, Balance, BlockNumber, Header, Index, Signat
 pub mod impl_frame_system;
 pub mod impl_orml_currencies;
 pub mod impl_orml_tokens;
+pub mod impl_pallet_aura;
 pub mod impl_pallet_balances;
 pub mod impl_pallet_evm;
 pub mod impl_pallet_fluent_fee;
