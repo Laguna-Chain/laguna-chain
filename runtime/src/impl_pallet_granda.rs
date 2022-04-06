@@ -1,4 +1,4 @@
-use crate::{AuraId, Call, Event, Runtime};
+use crate::{Call, Event, Runtime};
 use frame_support::{parameter_types, traits::KeyOwnerProofSystem};
 use pallet_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::KeyTypeId;
@@ -6,12 +6,6 @@ use sp_runtime::KeyTypeId;
 // borderline aura and grandpa impl from substrate-node-template
 parameter_types! {
 	pub const MaxAuthorities: u32 = 32;
-}
-
-impl pallet_aura::Config for Runtime {
-	type AuthorityId = AuraId;
-	type DisabledValidators = ();
-	type MaxAuthorities = MaxAuthorities;
 }
 
 impl pallet_grandpa::Config for Runtime {
