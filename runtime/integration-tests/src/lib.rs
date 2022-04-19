@@ -5,11 +5,6 @@ use primitives::{AccountId, Balance, CurrencyId, TokenId};
 use sp_core::H160;
 
 pub mod native_token;
-pub mod native_token_precompile;
-
-// only enable this branch of testing if required solidity tooling is present
-#[cfg(feature = "evm")]
-pub mod evm_compat;
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
