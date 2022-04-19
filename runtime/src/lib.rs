@@ -42,17 +42,15 @@ pub mod impl_orml_tokens;
 pub mod impl_pallet_aura;
 pub mod impl_pallet_balances;
 pub mod impl_pallet_contracts;
-pub mod impl_pallet_evm;
+
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
 pub mod impl_pallet_gratitude;
-pub mod impl_pallet_hydro_evm;
 pub mod impl_pallet_rando;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
 pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
-pub mod impl_reverse_evm_call;
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
@@ -135,9 +133,9 @@ construct_runtime!(
 			Grandpa: pallet_grandpa ,
 
 			// evm the bytecode execution environment, can preload precompiles
-			Evm: pallet_evm,
-			EvmHydro: evm_hydro,
-			ReverseEvmCall: pallet_reverse_evm_call,
+			// Evm: pallet_evm,
+			// EvmHydro: evm_hydro,
+			// ReverseEvmCall: pallet_reverse_evm_call,
 
 			Contracts: pallet_contracts,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,

@@ -18,10 +18,10 @@ pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://git
 pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
-pallet-gratitude = {path = "../pallets/gratitude", default-features = false}
+# pallet-gratitude = {path = "../pallets/gratitude", default-features = false}
 
 pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-rando = {default-features = false, version = "0.1.0", path = "../pallets/rando"}
+# pallet-rando = {default-features = false, version = "0.1.0", path = "../pallets/rando"}
 pallet-scheduler = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-sudo = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
@@ -32,19 +32,6 @@ pallet-transaction-payment-rpc-runtime-api = {default-features = false, git = 'h
 orml-currencies = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-polkadot-v0.9.16"}
 orml-tokens = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-polkadot-v0.9.16"}
 orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-polkadot-v0.9.16"}
-
-# evm related
-evm-hydro = {path = "../pallets/evm-hydro", default-features = false}
-native-asset-precompile = {path = "../precompiles/native-asset", default-features = false}
-pallet-reverse-evm-call = {path = "../pallets/reverse-evm-call", default-features = false}
-
-pallet-evm = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-evm-precompile-dispatch = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-evm-precompile-modexp = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-evm-precompile-sha3fips = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-evm-precompile-simple = {default-features = false, git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-rando-precompile = {path = "../precompiles/rando", default-features = false}
-precompile-utils = {path = "../precompiles/utils", default-features = false}
 
 # interface for pallet build with frame
 frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev', optional = true}
@@ -89,7 +76,6 @@ runtime-benchmarks = [
   'pallet-balances/runtime-benchmarks',
   'pallet-timestamp/runtime-benchmarks',
   'sp-runtime/runtime-benchmarks',
-  "pallet-rando/runtime-benchmarks",
 ]
 std = [
   "orml-tokens/std",
@@ -118,23 +104,12 @@ std = [
   "pallet-sudo/std",
   "pallet-balances/std",
   "pallet-timestamp/std",
-  'pallet-rando/std',
   'pallet-scheduler/std',
   'pallet-transaction-payment/std',
   'pallet-transaction-payment-rpc-runtime-api/std',
-  'pallet-evm/std',
-  'pallet-evm-precompile-simple/std',
-  'pallet-evm-precompile-modexp/std',
-  'pallet-evm-precompile-sha3fips/std',
-  'pallet-evm-precompile-dispatch/std',
-  "native-asset-precompile/std",
-  "pallet-rando-precompile/std",
   "pallet-fluent-fee/std",
   'pallet-contracts/std',
   'pallet-contracts-primitives/std',
   'pallet-contracts-rpc-runtime-api/std',
   'pallet-randomness-collective-flip/std',
-  "pallet-gratitude/std",
-  "precompile-utils/std",
-  "evm-hydro/std",
 ]

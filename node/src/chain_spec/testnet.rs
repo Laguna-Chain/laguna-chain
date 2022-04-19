@@ -1,12 +1,12 @@
 // chain-wise primitives and modules
-use pallet_evm::GenesisAccount;
+// use pallet_evm::GenesisAccount;
 use primitives::AccountId;
 
 use primitives::{CurrencyId, TokenId};
 
 use hydro_runtime::{
-	constants::HYDROS, AuraConfig, BalancesConfig, EvmConfig, GenesisConfig, GrandpaConfig,
-	SudoConfig, SystemConfig, TokensConfig, WASM_BINARY,
+	constants::HYDROS, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig,
+	SystemConfig, TokensConfig, WASM_BINARY,
 };
 
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -103,23 +103,5 @@ fn testnet_genesis(
 			key: Some(root_key),
 		},
 		tokens: Default::default(),
-		evm: EvmConfig {
-			accounts: {
-				let mut accounts = std::collections::BTreeMap::new();
-				accounts.insert(
-					H160::from_slice(&hex_literal::hex!(
-						"37C54011486B797FAA83c5CF6de88C567843a23F"
-					)),
-					GenesisAccount {
-						nonce: U256::zero(),
-						// Using a larger number, so I can tell the accounts apart by balance.
-						balance: U256::from(1u64 << 61),
-						code: vec![],
-						storage: std::collections::BTreeMap::new(),
-					},
-				);
-				accounts
-			},
-		},
 	}
 }

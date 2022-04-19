@@ -346,18 +346,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "auto_impl"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7862e21c893d65a1650125d157eaeec691439379a1cee17ee49031b79236ada4"
-dependencies = [
- "proc-macro-error",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1318,28 +1306,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68b91989ae21441195d7d9b9993a2f9295c7e1a8c96255d8b729accddc124797"
 
 [[package]]
-name = "erc20-precompile"
-version = "0.1.0"
-dependencies = [
- "fp-evm",
- "frame-support",
- "frame-system",
- "num_enum",
- "pallet-balances",
- "pallet-evm",
- "pallet-evm-precompile-dispatch",
- "pallet-timestamp",
- "parity-scale-codec 2.3.1",
- "precompile-utils",
- "primitives",
- "scale-info 1.0.0",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "errno"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1361,135 +1327,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "ethbloom"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfb684ac8fa8f6c5759f788862bb22ec6fe3cb392f6bfd08e3c64b603661e3f8"
-dependencies = [
- "crunchy",
- "fixed-hash",
- "impl-codec",
- "impl-rlp",
- "impl-serde",
- "scale-info 1.0.0",
- "tiny-keccak",
-]
-
-[[package]]
-name = "ethereum"
-version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34c90e0a755da706ce0970ec0fa8cc48aabcc8e8efa1245336acf718dab06ffe"
-dependencies = [
- "bytes 1.1.0",
- "ethereum-types",
- "hash-db",
- "hash256-std-hasher",
- "parity-scale-codec 2.3.1",
- "rlp",
- "rlp-derive",
- "scale-info 1.0.0",
- "serde",
- "sha3 0.9.1",
- "triehash",
-]
-
-[[package]]
-name = "ethereum-types"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05136f7057fe789f06e6d41d07b34e6f70d8c86e5693b60f97aaa6553553bdaf"
-dependencies = [
- "ethbloom",
- "fixed-hash",
- "impl-codec",
- "impl-rlp",
- "impl-serde",
- "primitive-types",
- "scale-info 1.0.0",
- "uint",
-]
-
-[[package]]
 name = "event-listener"
 version = "2.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77f3309417938f28bf8228fcff79a4a37103981e3e186d2ccd19c74b38f4eb71"
-
-[[package]]
-name = "evm"
-version = "0.33.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "408ffdd509e16de15ea9b51f5333748f6086601f29d445d2ba53dd7e95565574"
-dependencies = [
- "auto_impl",
- "environmental",
- "ethereum",
- "evm-core",
- "evm-gasometer",
- "evm-runtime",
- "log",
- "parity-scale-codec 2.3.1",
- "primitive-types",
- "rlp",
- "scale-info 1.0.0",
- "serde",
- "sha3 0.8.2",
-]
-
-[[package]]
-name = "evm-core"
-version = "0.33.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dfe4f2a56c4c05a8107b8596380e2332fc2019ffcf56b8f2d01971393a30c4d"
-dependencies = [
- "funty",
- "parity-scale-codec 2.3.1",
- "primitive-types",
- "scale-info 1.0.0",
- "serde",
-]
-
-[[package]]
-name = "evm-gasometer"
-version = "0.33.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c446679607eacac4e8c8738e20c97ea9b3c86eddd8b43666744b05f416037bd9"
-dependencies = [
- "environmental",
- "evm-core",
- "evm-runtime",
- "primitive-types",
-]
-
-[[package]]
-name = "evm-hydro"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "hex",
- "hex-literal",
- "log",
- "pallet-evm",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
- "sp-core",
- "sp-std",
-]
-
-[[package]]
-name = "evm-runtime"
-version = "0.33.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "419e8434ac6e850a8a4bc09a19406264582d1940913b2920be2af948f4ffc49b"
-dependencies = [
- "environmental",
- "evm-core",
- "primitive-types",
- "sha3 0.8.2",
-]
 
 [[package]]
 name = "exit-future"
@@ -1551,9 +1392,9 @@ dependencies = [
  "futures-timer",
  "log",
  "num-traits",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
- "scale-info 1.0.0",
+ "scale-info",
 ]
 
 [[package]]
@@ -1598,7 +1439,7 @@ name = "fork-tree"
 version = "3.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
 ]
 
 [[package]]
@@ -1612,18 +1453,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fp-evm"
-version = "3.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#820699af996b06d2a06910aed76e3c281ac4eacb"
-dependencies = [
- "evm",
- "parity-scale-codec 2.3.1",
- "serde",
- "sp-core",
- "sp-std",
-]
-
-[[package]]
 name = "frame-benchmarking"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
@@ -1632,9 +1461,9 @@ dependencies = [
  "frame-system",
  "linregress",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "paste",
- "scale-info 1.0.0",
+ "scale-info",
  "sp-api",
  "sp-application-crypto",
  "sp-io",
@@ -1656,7 +1485,7 @@ dependencies = [
  "handlebars",
  "linked-hash-map",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-cli",
  "sc-client-db",
  "sc-executor",
@@ -1677,8 +1506,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -1693,8 +1522,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37ed5e5c346de62ca5c184b4325a6600d1eaca210666e4606fe4e449574978d0"
 dependencies = [
  "cfg-if 1.0.0",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
 ]
 
@@ -1709,9 +1538,9 @@ dependencies = [
  "impl-trait-for-tuples",
  "log",
  "once_cell",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "paste",
- "scale-info 1.0.0",
+ "scale-info",
  "serde",
  "smallvec",
  "sp-arithmetic",
@@ -1768,8 +1597,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "frame-support",
  "log",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-core",
  "sp-io",
@@ -1786,8 +1615,8 @@ dependencies = [
  "frame-benchmarking",
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-core",
  "sp-runtime",
  "sp-std",
@@ -1798,7 +1627,7 @@ name = "frame-system-rpc-runtime-api"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-api",
 ]
 
@@ -2270,7 +2099,6 @@ dependencies = [
  "hydro-runtime",
  "jsonrpc-core",
  "pallet-contracts-rpc",
- "pallet-evm",
  "pallet-transaction-payment-rpc",
  "primitives",
  "sc-basic-authorship",
@@ -2303,7 +2131,6 @@ dependencies = [
 name = "hydro-runtime"
 version = "0.1.0"
 dependencies = [
- "evm-hydro",
  "frame-benchmarking",
  "frame-executive",
  "frame-support",
@@ -2311,7 +2138,6 @@ dependencies = [
  "frame-system-benchmarking",
  "frame-system-rpc-runtime-api",
  "hex-literal",
- "native-asset-precompile",
  "orml-currencies",
  "orml-tokens",
  "orml-traits",
@@ -2320,27 +2146,17 @@ dependencies = [
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
- "pallet-evm",
- "pallet-evm-precompile-dispatch",
- "pallet-evm-precompile-modexp",
- "pallet-evm-precompile-sha3fips",
- "pallet-evm-precompile-simple",
  "pallet-fluent-fee",
  "pallet-grandpa",
- "pallet-gratitude",
- "pallet-rando",
- "pallet-rando-precompile",
  "pallet-randomness-collective-flip",
- "pallet-reverse-evm-call",
  "pallet-scheduler",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
- "parity-scale-codec 2.3.1",
- "precompile-utils",
+ "parity-scale-codec",
  "primitives",
- "scale-info 1.0.0",
+ "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-aura",
@@ -2461,16 +2277,7 @@ version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "161ebdfec3c8e3b52bf61c4f3550a1eea4f9579d10dc1b936f3171ebdcd6c443"
 dependencies = [
- "parity-scale-codec 2.3.1",
-]
-
-[[package]]
-name = "impl-rlp"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f28220f89297a075ddc7245cd538076ee98b01f2a9c23a53a4f1105d5a322808"
-dependencies = [
- "rlp",
+ "parity-scale-codec",
 ]
 
 [[package]]
@@ -2526,7 +2333,6 @@ dependencies = [
 name = "integration-tests"
 version = "0.1.0"
 dependencies = [
- "evm-hydro",
  "frame-benchmarking",
  "frame-executive",
  "frame-support",
@@ -2535,7 +2341,6 @@ dependencies = [
  "frame-system-rpc-runtime-api",
  "hex-literal",
  "hydro-runtime",
- "native-asset-precompile",
  "num_enum",
  "orml-currencies",
  "orml-tokens",
@@ -2545,26 +2350,17 @@ dependencies = [
  "pallet-contracts",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
- "pallet-evm",
- "pallet-evm-precompile-dispatch",
- "pallet-evm-precompile-modexp",
- "pallet-evm-precompile-sha3fips",
- "pallet-evm-precompile-simple",
  "pallet-fluent-fee",
  "pallet-grandpa",
- "pallet-gratitude",
- "pallet-rando",
- "pallet-rando-precompile",
  "pallet-scheduler",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc-runtime-api",
- "parity-scale-codec 2.3.1",
- "precompile-utils",
+ "parity-scale-codec",
  "primitives",
  "rand 0.8.5",
- "scale-info 1.0.0",
+ "scale-info",
  "sp-api",
  "sp-block-builder",
  "sp-consensus-aura",
@@ -3207,7 +3003,7 @@ dependencies = [
  "pin-project 1.0.10",
  "rand 0.7.3",
  "salsa20",
- "sha3 0.9.1",
+ "sha3",
 ]
 
 [[package]]
@@ -3779,7 +3575,7 @@ dependencies = [
  "generic-array 0.14.5",
  "multihash-derive",
  "sha2 0.9.9",
- "sha3 0.9.1",
+ "sha3",
  "unsigned-varint 0.5.1",
 ]
 
@@ -3869,28 +3665,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "native-asset-precompile"
-version = "0.1.0"
-dependencies = [
- "fp-evm",
- "frame-support",
- "frame-system",
- "num_enum",
- "pallet-balances",
- "pallet-evm",
- "pallet-evm-precompile-dispatch",
- "pallet-timestamp",
- "parity-scale-codec 2.3.1",
- "precompile-utils",
- "primitives",
- "scale-info 1.0.0",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "net2"
 version = "0.2.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3933,35 +3707,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "num"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43db66d1170d347f9a065114077f7dccb00c1b9478c89384490a3425279a4606"
-dependencies = [
- "num-bigint 0.4.3",
- "num-complex",
- "num-integer",
- "num-iter",
- "num-rational 0.4.0",
- "num-traits",
-]
-
-[[package]]
 name = "num-bigint"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "090c7f9998ee0ff65aa5b723e4009f7b217707f1fb5ea551329cc4d6231fb304"
-dependencies = [
- "autocfg",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
-name = "num-bigint"
-version = "0.4.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f93ab6289c7b344a8a9f60f88d80aa20032336fe78da341afc91c8a2341fc75f"
 dependencies = [
  "autocfg",
  "num-integer",
@@ -3998,24 +3747,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "num-iter"
-version = "0.1.42"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b2021c8337a54d21aca0d59a92577a029af9431cb59b909b03252b9c164fad59"
-dependencies = [
- "autocfg",
- "num-integer",
- "num-traits",
-]
-
-[[package]]
 name = "num-rational"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5c000134b5dbf44adc5cb772486d335293351644b801551abe8f75c84cfa4aef"
 dependencies = [
  "autocfg",
- "num-bigint 0.2.6",
+ "num-bigint",
  "num-integer",
  "num-traits",
 ]
@@ -4027,7 +3765,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d41702bd167c2df5520b384281bc111a4b5efcf7fbc4c9c222c815b07e0a6a6a"
 dependencies = [
  "autocfg",
- "num-bigint 0.4.3",
  "num-integer",
  "num-traits",
 ]
@@ -4067,7 +3804,6 @@ version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3b0498641e53dd6ac1a4f22547548caa6864cc4933784319cd1775271c5a46ce"
 dependencies = [
- "proc-macro-crate 1.1.3",
  "proc-macro2",
  "quote",
  "syn",
@@ -4149,8 +3885,8 @@ dependencies = [
  "frame-system",
  "orml-traits",
  "orml-utilities",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-io",
  "sp-runtime",
@@ -4165,8 +3901,8 @@ dependencies = [
  "frame-support",
  "frame-system",
  "orml-traits",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-runtime",
  "sp-std",
@@ -4181,13 +3917,13 @@ dependencies = [
  "impl-trait-for-tuples",
  "num-traits",
  "orml-utilities",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-io",
  "sp-runtime",
  "sp-std",
- "xcm 0.9.16",
+ "xcm",
 ]
 
 [[package]]
@@ -4196,8 +3932,8 @@ version = "0.4.1-dev"
 source = "git+https://github.com/ultrastable-money/open-runtime-module-library.git?branch=hydro-dep-polkadot-v0.9.16#25aa8cd2014ba913d7b18701e50d02e3388e1455"
 dependencies = [
  "frame-support",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-io",
  "sp-runtime",
@@ -4221,8 +3957,8 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-timestamp",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-application-crypto",
  "sp-consensus-aura",
  "sp-runtime",
@@ -4237,8 +3973,8 @@ dependencies = [
  "frame-support",
  "frame-system",
  "impl-trait-for-tuples",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-authorship",
  "sp-runtime",
  "sp-std",
@@ -4253,8 +3989,8 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-runtime",
  "sp-std",
 ]
@@ -4272,9 +4008,9 @@ dependencies = [
  "log",
  "pallet-contracts-primitives",
  "pallet-contracts-proc-macro",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "rand 0.8.5",
- "scale-info 1.0.0",
+ "scale-info",
  "serde",
  "smallvec",
  "sp-core",
@@ -4292,8 +4028,8 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "bitflags",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-core",
  "sp-rpc",
@@ -4321,7 +4057,7 @@ dependencies = [
  "jsonrpc-derive",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "serde",
  "sp-api",
  "sp-blockchain",
@@ -4336,75 +4072,11 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "pallet-contracts-primitives",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-api",
  "sp-runtime",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-evm"
-version = "6.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#820699af996b06d2a06910aed76e3c281ac4eacb"
-dependencies = [
- "evm",
- "fp-evm",
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "hex",
- "log",
- "pallet-balances",
- "pallet-timestamp",
- "parity-scale-codec 2.3.1",
- "primitive-types",
- "rlp",
- "scale-info 1.0.0",
- "serde",
- "sha3 0.8.2",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-evm-precompile-dispatch"
-version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#820699af996b06d2a06910aed76e3c281ac4eacb"
-dependencies = [
- "fp-evm",
- "frame-support",
- "pallet-evm",
-]
-
-[[package]]
-name = "pallet-evm-precompile-modexp"
-version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#820699af996b06d2a06910aed76e3c281ac4eacb"
-dependencies = [
- "fp-evm",
- "num",
-]
-
-[[package]]
-name = "pallet-evm-precompile-sha3fips"
-version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#820699af996b06d2a06910aed76e3c281ac4eacb"
-dependencies = [
- "fp-evm",
- "tiny-keccak",
-]
-
-[[package]]
-name = "pallet-evm-precompile-simple"
-version = "2.0.0-dev"
-source = "git+https://github.com/ultrastable-money/frontier.git?branch=hydro-dep-master#820699af996b06d2a06910aed76e3c281ac4eacb"
-dependencies = [
- "fp-evm",
- "ripemd",
- "sp-io",
 ]
 
 [[package]]
@@ -4422,9 +4094,9 @@ dependencies = [
  "orml-traits",
  "pallet-balances",
  "pallet-transaction-payment",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "primitives",
- "scale-info 1.0.0",
+ "scale-info",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -4442,8 +4114,8 @@ dependencies = [
  "log",
  "pallet-authorship",
  "pallet-session",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-application-crypto",
  "sp-core",
  "sp-finality-grandpa",
@@ -4455,89 +4127,16 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-gratitude"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "log",
- "orml-currencies",
- "orml-tokens",
- "orml-traits",
- "pallet-balances",
- "parity-scale-codec 2.3.1",
- "primitives",
- "scale-info 1.0.0",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-rando"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "log",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
-]
-
-[[package]]
-name = "pallet-rando-precompile"
-version = "0.1.0"
-dependencies = [
- "fp-evm",
- "frame-support",
- "frame-system",
- "num_enum",
- "pallet-balances",
- "pallet-evm",
- "pallet-evm-precompile-dispatch",
- "pallet-rando",
- "pallet-timestamp",
- "parity-scale-codec 2.3.1",
- "precompile-utils",
- "primitives",
- "scale-info 1.0.0",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "pallet-randomness-collective-flip"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "safe-mix",
- "scale-info 1.0.0",
+ "scale-info",
  "sp-runtime",
- "sp-std",
-]
-
-[[package]]
-name = "pallet-reverse-evm-call"
-version = "0.1.0"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "hex",
- "hex-literal",
- "log",
- "pallet-evm",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
- "sp-core",
  "sp-std",
 ]
 
@@ -4550,8 +4149,8 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-io",
  "sp-runtime",
  "sp-std",
@@ -4567,8 +4166,8 @@ dependencies = [
  "impl-trait-for-tuples",
  "log",
  "pallet-timestamp",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-core",
  "sp-io",
  "sp-runtime",
@@ -4585,8 +4184,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-io",
  "sp-runtime",
  "sp-std",
@@ -4601,8 +4200,8 @@ dependencies = [
  "frame-support",
  "frame-system",
  "log",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-inherents",
  "sp-io",
  "sp-runtime",
@@ -4617,8 +4216,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "frame-support",
  "frame-system",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "smallvec",
  "sp-core",
@@ -4636,7 +4235,7 @@ dependencies = [
  "jsonrpc-core-client",
  "jsonrpc-derive",
  "pallet-transaction-payment-rpc-runtime-api",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-api",
  "sp-blockchain",
  "sp-core",
@@ -4650,7 +4249,7 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "pallet-transaction-payment",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-api",
  "sp-runtime",
 ]
@@ -4684,20 +4283,8 @@ dependencies = [
  "bitvec",
  "byte-slice-cast",
  "impl-trait-for-tuples",
- "parity-scale-codec-derive 2.3.1",
+ "parity-scale-codec-derive",
  "serde",
-]
-
-[[package]]
-name = "parity-scale-codec"
-version = "3.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8b44461635bbb1a0300f100a841e571e7d919c81c73075ef5d152ffdb521066"
-dependencies = [
- "arrayvec 0.7.2",
- "byte-slice-cast",
- "impl-trait-for-tuples",
- "parity-scale-codec-derive 3.1.2",
 ]
 
 [[package]]
@@ -4705,18 +4292,6 @@ name = "parity-scale-codec-derive"
 version = "2.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1557010476e0595c9b568d16dcfb81b93cdeb157612726f5170d31aa707bed27"
-dependencies = [
- "proc-macro-crate 1.1.3",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "parity-scale-codec-derive"
-version = "3.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c45ed1f39709f5a89338fab50e59816b2e8815f5bb58276e7ddf9afd495f73f8"
 dependencies = [
  "proc-macro-crate 1.1.3",
  "proc-macro2",
@@ -5043,37 +4618,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
 
 [[package]]
-name = "precompile-utils"
-version = "0.1.0"
-dependencies = [
- "fp-evm",
- "frame-support",
- "frame-system",
- "hex-literal",
- "log",
- "num_enum",
- "pallet-evm",
- "parity-scale-codec 2.3.1",
- "precompile-utils-macro",
- "sha3 0.9.1",
- "sp-core",
- "sp-io",
- "sp-std",
- "xcm 0.9.19",
-]
-
-[[package]]
-name = "precompile-utils-macro"
-version = "0.1.0"
-dependencies = [
- "num_enum",
- "proc-macro2",
- "quote",
- "sha3 0.8.2",
- "syn",
-]
-
-[[package]]
 name = "primitive-types"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5081,9 +4625,8 @@ checksum = "05e4722c697a58a99d5d06a08c30821d7c082a4632198de1eaa5a6c22ef42373"
 dependencies = [
  "fixed-hash",
  "impl-codec",
- "impl-rlp",
  "impl-serde",
- "scale-info 1.0.0",
+ "scale-info",
  "uint",
 ]
 
@@ -5091,8 +4634,8 @@ dependencies = [
 name = "primitives"
 version = "0.1.0"
 dependencies = [
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-core",
  "sp-runtime",
@@ -5516,36 +5059,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ripemd"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1facec54cb5e0dc08553501fa740091086d0259ad0067e0d4103448e4cb22ed3"
-dependencies = [
- "digest 0.10.3",
-]
-
-[[package]]
-name = "rlp"
-version = "0.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "999508abb0ae792aabed2460c45b89106d97fe4adac593bdaef433c2605847b5"
-dependencies = [
- "bytes 1.1.0",
- "rustc-hex",
-]
-
-[[package]]
-name = "rlp-derive"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e33d7b2abe0c340d8797fe2907d3f20d3b5ea5908683618bfe80df7f621f672a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "rocksdb"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5712,7 +5225,7 @@ dependencies = [
  "futures 0.3.21",
  "futures-timer",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-block-builder",
  "sc-client-api",
  "sc-proposer-metrics",
@@ -5732,7 +5245,7 @@ name = "sc-block-builder"
 version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-client-api",
  "sp-api",
  "sp-block-builder",
@@ -5750,7 +5263,7 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "impl-trait-for-tuples",
  "memmap2 0.5.3",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-chain-spec-derive",
  "sc-network",
  "sc-telemetry",
@@ -5783,7 +5296,7 @@ dependencies = [
  "libp2p",
  "log",
  "names",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "rand 0.7.3",
  "regex",
  "rpassword",
@@ -5818,7 +5331,7 @@ dependencies = [
  "futures 0.3.21",
  "hash-db",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "sc-executor",
  "sc-transaction-pool-api",
@@ -5849,7 +5362,7 @@ dependencies = [
  "linked-hash-map",
  "log",
  "parity-db",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "sc-client-api",
  "sc-state-db",
@@ -5895,7 +5408,7 @@ dependencies = [
  "derive_more",
  "futures 0.3.21",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-block-builder",
  "sc-client-api",
  "sc-consensus",
@@ -5924,7 +5437,7 @@ dependencies = [
  "futures 0.3.21",
  "futures-timer",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-client-api",
  "sc-consensus",
  "sc-telemetry",
@@ -5949,7 +5462,7 @@ dependencies = [
  "libsecp256k1",
  "log",
  "lru 0.6.6",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "sc-executor-common",
  "sc-executor-wasmi",
@@ -5975,7 +5488,7 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "derive_more",
  "environmental",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-allocator",
  "sp-core",
  "sp-maybe-compressed-blob",
@@ -5992,7 +5505,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-allocator",
  "sc-executor-common",
  "scoped-tls",
@@ -6010,7 +5523,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "libc",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parity-wasm 0.42.2",
  "sc-allocator",
  "sc-executor-common",
@@ -6033,7 +5546,7 @@ dependencies = [
  "futures 0.3.21",
  "futures-timer",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "rand 0.8.5",
  "sc-block-builder",
@@ -6114,7 +5627,7 @@ dependencies = [
  "linked_hash_set",
  "log",
  "lru 0.7.5",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "pin-project 1.0.10",
  "prost",
@@ -6171,7 +5684,7 @@ dependencies = [
  "hyper-rustls",
  "num_cpus",
  "once_cell",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "rand 0.7.3",
  "sc-client-api",
@@ -6217,7 +5730,7 @@ dependencies = [
  "jsonrpc-core",
  "jsonrpc-pubsub",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "sc-block-builder",
  "sc-chain-spec",
@@ -6249,7 +5762,7 @@ dependencies = [
  "jsonrpc-derive",
  "jsonrpc-pubsub",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "sc-chain-spec",
  "sc-transaction-pool-api",
@@ -6294,7 +5807,7 @@ dependencies = [
  "jsonrpc-core",
  "jsonrpc-pubsub",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parity-util-mem",
  "parking_lot",
  "pin-project 1.0.10",
@@ -6350,7 +5863,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parity-util-mem",
  "parity-util-mem-derive",
  "parking_lot",
@@ -6427,7 +5940,7 @@ dependencies = [
  "futures-timer",
  "linked-hash-map",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parity-util-mem",
  "parking_lot",
  "retain_mut",
@@ -6480,21 +5993,9 @@ dependencies = [
  "bitvec",
  "cfg-if 1.0.0",
  "derive_more",
- "parity-scale-codec 2.3.1",
- "scale-info-derive 1.0.0",
+ "parity-scale-codec",
+ "scale-info-derive",
  "serde",
-]
-
-[[package]]
-name = "scale-info"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8980cafbe98a7ee7a9cc16b32ebce542c77883f512d83fbf2ddc8f6a85ea74c9"
-dependencies = [
- "cfg-if 1.0.0",
- "derive_more",
- "parity-scale-codec 3.1.2",
- "scale-info-derive 2.1.1",
 ]
 
 [[package]]
@@ -6502,18 +6003,6 @@ name = "scale-info-derive"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baeb2780690380592f86205aa4ee49815feb2acad8c2f59e6dd207148c3f1fcd"
-dependencies = [
- "proc-macro-crate 1.1.3",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "scale-info-derive"
-version = "2.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4260c630e8a8a33429d1688eff2f163f24c65a4e1b1578ef6b565061336e4b6f"
 dependencies = [
  "proc-macro-crate 1.1.3",
  "proc-macro2",
@@ -6748,19 +6237,6 @@ dependencies = [
 
 [[package]]
 name = "sha3"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd26bc0e7a2e3a7c959bc494caf58b72ee0c71d67704e9520f736ca7e4853ecf"
-dependencies = [
- "block-buffer 0.7.3",
- "byte-tools",
- "digest 0.8.1",
- "keccak",
- "opaque-debug 0.2.3",
-]
-
-[[package]]
-name = "sha3"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f81199417d4e5de3f04b1e871023acea7389672c4135918f05aa9cbf2f2fa809"
@@ -6903,7 +6379,7 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "hash-db",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-api-proc-macro",
  "sp-core",
  "sp-runtime",
@@ -6930,8 +6406,8 @@ name = "sp-application-crypto"
 version = "4.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-core",
  "sp-io",
@@ -6945,8 +6421,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "integer-sqrt",
  "num-traits",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-debug-derive",
  "sp-std",
@@ -6959,7 +6435,7 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "async-trait",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-inherents",
  "sp-runtime",
  "sp-std",
@@ -6970,7 +6446,7 @@ name = "sp-block-builder"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-api",
  "sp-inherents",
  "sp-runtime",
@@ -6985,7 +6461,7 @@ dependencies = [
  "futures 0.3.21",
  "log",
  "lru 0.7.5",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "sp-api",
  "sp-consensus",
@@ -7004,7 +6480,7 @@ dependencies = [
  "futures 0.3.21",
  "futures-timer",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-core",
  "sp-inherents",
  "sp-runtime",
@@ -7020,8 +6496,8 @@ version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "async-trait",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-api",
  "sp-application-crypto",
  "sp-consensus",
@@ -7037,8 +6513,8 @@ name = "sp-consensus-slots"
 version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-arithmetic",
  "sp-runtime",
@@ -7065,13 +6541,13 @@ dependencies = [
  "log",
  "merlin",
  "num-traits",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parity-util-mem",
  "parking_lot",
  "primitive-types",
  "rand 0.7.3",
  "regex",
- "scale-info 1.0.0",
+ "scale-info",
  "schnorrkel",
  "secrecy",
  "serde",
@@ -7141,7 +6617,7 @@ version = "0.10.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "environmental",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-std",
  "sp-storage",
 ]
@@ -7153,8 +6629,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "finality-grandpa",
  "log",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "serde",
  "sp-api",
  "sp-application-crypto",
@@ -7171,7 +6647,7 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "async-trait",
  "impl-trait-for-tuples",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-core",
  "sp-runtime",
  "sp-std",
@@ -7187,7 +6663,7 @@ dependencies = [
  "hash-db",
  "libsecp256k1",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "sp-core",
  "sp-externalities",
@@ -7222,7 +6698,7 @@ dependencies = [
  "derive_more",
  "futures 0.3.21",
  "merlin",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "schnorrkel",
  "serde",
@@ -7277,11 +6753,11 @@ dependencies = [
  "hash256-std-hasher",
  "impl-trait-for-tuples",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parity-util-mem",
  "paste",
  "rand 0.7.3",
- "scale-info 1.0.0",
+ "scale-info",
  "serde",
  "sp-application-crypto",
  "sp-arithmetic",
@@ -7296,7 +6772,7 @@ version = "4.1.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "impl-trait-for-tuples",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "primitive-types",
  "sp-externalities",
  "sp-runtime-interface-proc-macro",
@@ -7325,7 +6801,7 @@ version = "0.10.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-core",
  "sp-io",
  "sp-std",
@@ -7347,8 +6823,8 @@ name = "sp-session"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-api",
  "sp-core",
  "sp-runtime",
@@ -7361,8 +6837,8 @@ name = "sp-staking"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-runtime",
  "sp-std",
 ]
@@ -7375,7 +6851,7 @@ dependencies = [
  "hash-db",
  "log",
  "num-traits",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parking_lot",
  "rand 0.7.3",
  "smallvec",
@@ -7401,7 +6877,7 @@ version = "4.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "impl-serde",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "ref-cast",
  "serde",
  "sp-debug-derive",
@@ -7429,7 +6905,7 @@ dependencies = [
  "async-trait",
  "futures-timer",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-api",
  "sp-inherents",
  "sp-runtime",
@@ -7442,7 +6918,7 @@ name = "sp-tracing"
 version = "4.0.0"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-std",
  "tracing",
  "tracing-core",
@@ -7465,8 +6941,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "async-trait",
  "log",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-core",
  "sp-inherents",
  "sp-runtime",
@@ -7481,8 +6957,8 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "hash-db",
  "memory-db",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
+ "parity-scale-codec",
+ "scale-info",
  "sp-core",
  "sp-std",
  "trie-db",
@@ -7495,9 +6971,9 @@ version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
  "impl-serde",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "parity-wasm 0.42.2",
- "scale-info 1.0.0",
+ "scale-info",
  "serde",
  "sp-core-hashing-proc-macro",
  "sp-runtime",
@@ -7511,7 +6987,7 @@ name = "sp-version-proc-macro"
 version = "4.0.0-dev"
 source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-dep-polkadot-v0.9.16#e99110810abbffdc56d91aa8b91f184070be2c6a"
 dependencies = [
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "proc-macro2",
  "quote",
  "syn",
@@ -7524,7 +7000,7 @@ source = "git+https://github.com/ultrastable-money/substrate.git?branch=hydro-de
 dependencies = [
  "impl-trait-for-tuples",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sp-std",
  "wasmi",
  "wasmtime",
@@ -7659,7 +7135,7 @@ dependencies = [
  "jsonrpc-core-client",
  "jsonrpc-derive",
  "log",
- "parity-scale-codec 2.3.1",
+ "parity-scale-codec",
  "sc-client-api",
  "sc-rpc-api",
  "sc-transaction-pool-api",
@@ -8054,16 +7530,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a36c5ca3911ed3c9a5416ee6c679042064b93fc637ded67e25f92e68d783891"
 dependencies = [
  "hash-db",
-]
-
-[[package]]
-name = "triehash"
-version = "0.8.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1631b201eb031b563d2e85ca18ec8092508e262a3196ce9bd10a67ec87b9f5c"
-dependencies = [
- "hash-db",
- "rlp",
 ]
 
 [[package]]
@@ -8779,39 +8245,15 @@ dependencies = [
  "derivative",
  "impl-trait-for-tuples",
  "log",
- "parity-scale-codec 2.3.1",
- "scale-info 1.0.0",
- "xcm-procedural 0.1.0 (git+https://github.com/paritytech/polkadot?branch=release-v0.9.16)",
-]
-
-[[package]]
-name = "xcm"
-version = "0.9.19"
-source = "git+https://github.com/paritytech/polkadot#e3d2bf1535854ca64d2a9792f0f15ef315e83c43"
-dependencies = [
- "derivative",
- "impl-trait-for-tuples",
- "log",
- "parity-scale-codec 3.1.2",
- "scale-info 2.1.1",
- "xcm-procedural 0.1.0 (git+https://github.com/paritytech/polkadot)",
+ "parity-scale-codec",
+ "scale-info",
+ "xcm-procedural",
 ]
 
 [[package]]
 name = "xcm-procedural"
 version = "0.1.0"
 source = "git+https://github.com/paritytech/polkadot?branch=release-v0.9.16#41ab002d7451766324a9f314fee11c9c53314350"
-dependencies = [
- "Inflector",
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
-name = "xcm-procedural"
-version = "0.1.0"
-source = "git+https://github.com/paritytech/polkadot#e3d2bf1535854ca64d2a9792f0f15ef315e83c43"
 dependencies = [
  "Inflector",
  "proc-macro2",
