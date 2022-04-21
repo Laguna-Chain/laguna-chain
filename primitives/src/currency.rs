@@ -57,7 +57,6 @@ pub enum CurrencyId {
 pub enum TokenId {
 	Hydro, // Native token of the hydro-chain
 	FeeToken,
-	GratitudeToken,
 }
 
 /// metadata about a issued token, provide additional info about token issued on substrate to evm
@@ -78,7 +77,6 @@ impl TokenMetadata for CurrencyId {
 			CurrencyId::NativeToken(token) => match token {
 				TokenId::Hydro => "HYDRO",
 				TokenId::FeeToken => "HFEE",
-				TokenId::GratitudeToken => "HGRAT",
 			},
 		}
 	}
@@ -88,7 +86,6 @@ impl TokenMetadata for CurrencyId {
 			CurrencyId::NativeToken(token) => match token {
 				TokenId::Hydro => "HYDRO",
 				TokenId::FeeToken => "HYDRO fee",
-				TokenId::GratitudeToken => "HYDRO gratitude",
 			},
 		}
 	}
@@ -98,7 +95,6 @@ impl TokenMetadata for CurrencyId {
 			CurrencyId::NativeToken(token) => match token {
 				TokenId::Hydro => 18,
 				TokenId::FeeToken => 18,
-				TokenId::GratitudeToken => 18,
 			},
 		}
 	}

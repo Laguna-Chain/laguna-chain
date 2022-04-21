@@ -45,8 +45,6 @@ pub mod impl_pallet_contracts;
 
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
-pub mod impl_pallet_gratitude;
-pub mod impl_pallet_rando;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
 pub mod impl_pallet_timestamp;
@@ -123,25 +121,19 @@ construct_runtime!(
 			Balances: pallet_balances ,
 			Currencies: orml_currencies,
 			Tokens: orml_tokens,
+
 			// weight and fee management
 			TransactionPayment: pallet_transaction_payment ,
 			FluentFee: pallet_fluent_fee,
-			Gratitude: pallet_gratitude ,
 
 			// conseus mechanism
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
 
-			// evm the bytecode execution environment, can preload precompiles
-			// Evm: pallet_evm,
-			// EvmHydro: evm_hydro,
-			// ReverseEvmCall: pallet_reverse_evm_call,
 
 			Contracts: pallet_contracts,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 
-			// dummy pallet for testing interface coupling
-			Rando: pallet_rando ,
 		}
 );
 

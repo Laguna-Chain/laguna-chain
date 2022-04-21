@@ -18,10 +18,8 @@ pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://git
 pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
-# pallet-gratitude = {path = "../pallets/gratitude", default-features = false}
 
 pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-# pallet-rando = {default-features = false, version = "0.1.0", path = "../pallets/rando"}
 pallet-scheduler = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-sudo = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}

@@ -70,37 +70,6 @@ mod tests {
 	}
 
 	#[test]
-	fn transfer_gratitude_token() {
-		const GRATITUDE_TOKEN_ID: CurrencyId = CurrencyId::NativeToken(TokenId::GratitudeToken);
-		ExtBuilder::default()
-			.balances(vec![
-				(ALICE, GRATITUDE_TOKEN_ID, 10 * HYDROS),
-				(BOB, GRATITUDE_TOKEN_ID, 20 * HYDROS),
-			])
-			.build()
-			.execute_with(|| {
-				let alice_init = Currencies::free_balance(GRATITUDE_TOKEN_ID, &ALICE);
-				assert_eq!(alice_init, 10 * HYDROS);
-
-				let bob_init = Currencies::free_balance(GRATITUDE_TOKEN_ID, &BOB);
-				assert_eq!(bob_init, 20 * HYDROS);
-
-				assert_ok!(Currencies::transfer(
-					Origin::signed(ALICE.into()),
-					BOB.into(),
-					GRATITUDE_TOKEN_ID,
-					3 * HYDROS,
-				));
-
-				let alice_after = Currencies::free_balance(GRATITUDE_TOKEN_ID, &ALICE);
-				assert_eq!(alice_after, 7 * HYDROS);
-
-				let bob_after = Currencies::free_balance(GRATITUDE_TOKEN_ID, &BOB);
-				assert_eq!(bob_after, 23 * HYDROS);
-			});
-	}
-
-	#[test]
 	fn set_token_balance() {
 		ExtBuilder::default()
 			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * HYDROS)])

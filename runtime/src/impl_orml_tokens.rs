@@ -23,7 +23,6 @@ orml_traits::parameter_type_with_key! {
 				match token {
 					TokenId::Hydro => MICRO_HYDRO,
 					TokenId::FeeToken => MICRO_HYDRO,
-					TokenId::GratitudeToken => MICRO_HYDRO,
 				}
 			},
 			_ => Balance::max_value() // unreachable ED value for unverified currency type

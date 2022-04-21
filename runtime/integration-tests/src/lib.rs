@@ -1,8 +1,6 @@
 use frame_support::traits::GenesisBuild;
 use hydro_runtime::{Runtime, System};
-use pallet_evm::AddressMapping;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
-use sp_core::H160;
 
 pub mod native_token;
 

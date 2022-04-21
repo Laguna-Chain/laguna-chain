@@ -1,8 +1,6 @@
 // chain-wise primitives and modules
-// use pallet_evm::GenesisAccount;
-use primitives::AccountId;
 
-use primitives::{CurrencyId, TokenId};
+use primitives::{AccountId, CurrencyId, TokenId};
 
 use hydro_runtime::{
 	constants::HYDROS, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig,
