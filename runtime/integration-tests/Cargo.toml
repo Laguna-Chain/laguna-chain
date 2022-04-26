@@ -13,10 +13,8 @@ primitives = {path = "../../primitives", default-features = false}
 pallet-aura = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-balances = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-fluent-fee = {path = "../../pallets/fluent-fee", default-features = false}
-pallet-gratitude = {path = "../../pallets/gratitude", default-features = false}
 
 pallet-grandpa = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-rando = {version = "0.1.0", path = "../../pallets/rando"}
 pallet-scheduler = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-sudo = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-timestamp = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
@@ -28,18 +26,12 @@ orml-currencies = {git = 'https://github.com/ultrastable-money/open-runtime-modu
 orml-tokens = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", branch = "hydro-dep-polkadot-v0.9.16"}
 orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", branch = "hydro-dep-polkadot-v0.9.16"}
 
-# evm related
-evm-hydro = {path = "../../pallets/evm-hydro", default-features = false}
-native-asset-precompile = {path = "../../precompiles/native-asset", default-features = false}
-pallet-evm = {git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-evm-precompile-dispatch = {git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-evm-precompile-modexp = {git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-evm-precompile-sha3fips = {git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-evm-precompile-simple = {git = 'https://github.com/ultrastable-money/frontier.git', branch = "hydro-dep-master"}
-pallet-rando-precompile = {path = "../../precompiles/rando", default-features = false}
+# contract
+pallet-contracts = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+pallet-contracts-primitives = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+pallet-contracts-rpc-runtime-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
 num_enum = {version = '0.5.3', default-features = false}
-precompile-utils = {path = "../../precompiles/utils", default-features = false}
 
 # interface for pallet build with frame
 frame-benchmarking = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev', optional = true}
@@ -72,6 +64,7 @@ scale-info = {features = ['derive'], version = '1.0'}
 
 # runtime
 hydro-runtime = {path = "../"}
+rand = "0.8.5"
 
 # build dependency for the wasm runtime
 [build-dependencies.substrate-wasm-builder]
@@ -81,5 +74,4 @@ version = '5.0.0-dev'
 
 [features]
 default = ["std"]
-evm = []
 std = []

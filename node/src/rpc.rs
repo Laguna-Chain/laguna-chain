@@ -1,18 +1,17 @@
 // expose rpc, derived from substrate-node-template
 
-use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
-use primitives::{AccountId, Balance, Index};
-
 use hydro_runtime::opaque::Block;
-
+use primitives::{AccountId, Balance, BlockNumber, Hash, Index};
 use std::sync::Arc;
-use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
-pub use sc_rpc_api::DenyUnsafe;
+use pallet_contracts_rpc::{Contracts, ContractsApi};
+use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
+use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
+use substrate_frame_rpc_system::{FullSystem, SystemApi};
 
 // TODO: light client before deprecation require additional dependencies
 
@@ -34,6 +33,8 @@ where
 	Client: Send + Sync + 'static,
 	Client::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>, /* client be able to distinquish tx index */
 	Client::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
+	Client::Api:
+		pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
 	Client::Api: BlockBuilder<Block>, // should be able to produce block
 	Pool: TransactionPool + 'static,  // can submit tx into tx-pool
 {
@@ -45,6 +46,8 @@ where
 
 	// allow submit transaction by paying the fee
 	io.extend_with(TransactionPaymentApi::to_delegate(TransactionPayment::new(client.clone())));
+
+	io.extend_with(ContractsApi::to_delegate(Contracts::new(client.clone())));
 
 	// TODO: extend io with needed rpc here interface
 

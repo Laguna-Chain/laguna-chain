@@ -21,6 +21,8 @@ use sp_runtime::{
 
 use sp_std::prelude::*;
 
+pub mod contract_extensions;
+
 #[cfg(feature = "std")]
 use sp_version::NativeVersion;
 use sp_version::RuntimeVersion;
@@ -30,7 +32,7 @@ use pallet_grandpa::{
 };
 
 use frame_support::weights::Weight;
-use primitives::{AccountId, Address, Balance, BlockNumber, Header, Index, Signature};
+use primitives::{AccountId, Address, Balance, BlockNumber, Hash, Header, Index, Signature};
 
 // include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
@@ -39,17 +41,16 @@ pub mod impl_orml_currencies;
 pub mod impl_orml_tokens;
 pub mod impl_pallet_aura;
 pub mod impl_pallet_balances;
-pub mod impl_pallet_evm;
+pub mod impl_pallet_contracts;
+
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
-pub mod impl_pallet_gratitude;
-pub mod impl_pallet_hydro_evm;
-pub mod impl_pallet_rando;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
 pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
-pub mod impl_reverse_evm_call;
+
+impl pallet_randomness_collective_flip::Config for Runtime {}
 
 pub mod constants;
 
@@ -74,7 +75,6 @@ pub mod opaque {
 		pub struct SessionKeys {
 			pub aura: Aura,
 			pub grandpa: Grandpa,
-
 		}
 	}
 }
@@ -121,22 +121,19 @@ construct_runtime!(
 			Balances: pallet_balances ,
 			Currencies: orml_currencies,
 			Tokens: orml_tokens,
+
 			// weight and fee management
 			TransactionPayment: pallet_transaction_payment ,
 			FluentFee: pallet_fluent_fee,
-			Gratitude: pallet_gratitude ,
 
 			// conseus mechanism
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
 
-			// evm the bytecode execution environment, can preload precompiles
-			Evm: pallet_evm,
-			EvmHydro: evm_hydro,
-			ReverseEvmCall: pallet_reverse_evm_call,
 
-			// dummy pallet for testing interface coupling
-			Rando: pallet_rando ,
+			Contracts: pallet_contracts,
+			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
+
 		}
 );
 
@@ -175,11 +172,12 @@ pub type Executive = frame_executive::Executive<
 // this allow software outside of the wasm blob to access internal functionalities
 // often referred to as breaking the "wasm boundary" within substrate ecosystem
 
+const CONTRACTS_DEBUG_OUTPUT: bool = true;
+
 // TODO: common api impl are derived from substrate-node-template, add custom runtime-api later
 impl_runtime_apis! {
 
 	// provide generic api required by the node client
-
 	impl sp_api::Core<Block> for Runtime {
 		fn version() -> RuntimeVersion {
 			VERSION
@@ -314,6 +312,53 @@ impl_runtime_apis! {
 		) -> pallet_transaction_payment::FeeDetails<Balance> {
 			TransactionPayment::query_fee_details(uxt, len)
 		}
+	}
+
+	impl pallet_contracts_rpc_runtime_api::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>
+		for Runtime
+	{
+
+		fn call(
+			origin: AccountId,
+			dest: AccountId,
+			value: Balance,
+			gas_limit: u64,
+			storage_deposit_limit: Option<Balance>,
+			input_data: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractExecResult<Balance> {
+			Contracts::bare_call(origin, dest, value, gas_limit, storage_deposit_limit, input_data, CONTRACTS_DEBUG_OUTPUT)
+		}
+
+		fn instantiate(
+			origin: AccountId,
+			value: Balance,
+			gas_limit: u64,
+			storage_deposit_limit: Option<Balance>,
+			code: pallet_contracts_primitives::Code<Hash>,
+			data: Vec<u8>,
+			salt: Vec<u8>,
+		) -> pallet_contracts_primitives::ContractInstantiateResult<AccountId, Balance>
+		{
+			Contracts::bare_instantiate(origin, value, gas_limit, storage_deposit_limit, code, data, salt, CONTRACTS_DEBUG_OUTPUT)
+		}
+
+		fn upload_code(
+			origin: AccountId,
+			code: Vec<u8>,
+			storage_deposit_limit: Option<Balance>,
+		) -> pallet_contracts_primitives::CodeUploadResult<Hash, Balance>
+		{
+			Contracts::bare_upload_code(origin, code, storage_deposit_limit)
+		}
+
+		fn get_storage(
+			address: AccountId,
+			key: [u8; 32],
+		) -> pallet_contracts_primitives::GetStorageResult {
+			Contracts::get_storage(address, key)
+		}
+
+
 	}
 
 	// TODO: add other needed runtime-api

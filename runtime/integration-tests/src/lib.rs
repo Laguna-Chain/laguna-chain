@@ -1,15 +1,9 @@
 use frame_support::traits::GenesisBuild;
 use hydro_runtime::{Runtime, System};
-use pallet_evm::AddressMapping;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
-use sp_core::H160;
 
+pub mod contracts;
 pub mod native_token;
-pub mod native_token_precompile;
-
-// only enable this branch of testing if required solidity tooling is present
-#[cfg(feature = "evm")]
-pub mod evm_compat;
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
@@ -19,13 +13,12 @@ pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Hydr
 
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, CurrencyId, Balance)>,
-	evm_balances: Vec<(H160, CurrencyId, Balance)>,
 	sudo: Option<AccountId>,
 }
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { balances: vec![], evm_balances: vec![], sudo: None }
+		Self { balances: vec![], sudo: None }
 	}
 }
 
@@ -40,27 +33,16 @@ impl ExtBuilder {
 		self
 	}
 
-	pub fn evm_balances(mut self, balances: Vec<(H160, CurrencyId, Balance)>) -> Self {
-		self.evm_balances = balances;
-		self
-	}
-
 	pub fn build(self) -> sp_io::TestExternalities {
 		// construct test storage for the mock runtime
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
-		// prefund native_blances for tester accounts
+		// prefund native token using pallet_balances
 		pallet_balances::GenesisConfig::<Runtime> {
 			balances: self
-				.evm_balances
+				.balances
 				.clone()
 				.into_iter()
-				.map(|(address, currency_id, amount)| {
-					let acc =
-						<Runtime as pallet_evm::Config>::AddressMapping::into_account_id(address);
-					(acc, currency_id, amount)
-				})
-				.chain(self.balances.clone().into_iter())
 				.filter(|(_, currency_id, _)| *currency_id == NATIVE_CURRENCY_ID)
 				.map(|(account_id, _, initial_balance)| (account_id, initial_balance))
 				.collect::<Vec<_>>(),
@@ -68,18 +50,12 @@ impl ExtBuilder {
 		.assimilate_storage(&mut t)
 		.unwrap();
 
-		// prefund token_balances for tester accounts
+		// prefund alternative token balances for tester accounts
 		orml_tokens::GenesisConfig::<Runtime> {
 			balances: self
-				.evm_balances
+				.balances
 				.clone()
 				.into_iter()
-				.map(|(address, currency_id, amount)| {
-					let acc =
-						<Runtime as pallet_evm::Config>::AddressMapping::into_account_id(address);
-					(acc, currency_id, amount)
-				})
-				.chain(self.balances.clone().into_iter())
 				.filter(|(_, currency_id, _)| *currency_id != NATIVE_CURRENCY_ID)
 				.collect::<Vec<_>>(),
 		}
