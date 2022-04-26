@@ -1,12 +1,221 @@
 #[cfg(test)]
 mod tests {
-	use crate::ExtBuilder;
-	use hydro_runtime::Contracts;
+	use crate::{ExtBuilder, ALICE};
+	use codec::{Decode, Encode};
+	use frame_support::assert_ok;
+	use hydro_runtime::{constants::HYDROS, Block, Contracts, Event, Origin, Runtime, System};
+	use pallet_contracts_primitives::{ContractExecResult, ExecReturnValue};
+	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
+	use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId};
+	use sp_core::{hexdisplay::AsBytesRef, Bytes};
+	use std::str::FromStr;
+
+	const HYDRO_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Hydro);
+	const MAX_GAS: u64 = 200_000_000_000;
 
 	#[test]
-	fn test_deploy_ink() {
-		ExtBuilder::default().build().execute_with(|| {
-			// TODO: add contracts tests from sample contracts
-		});
+	fn test_ink_basic() {
+		ExtBuilder::default()
+			.balances(vec![(ALICE, HYDRO_TOKEN, 10 * HYDROS)])
+			.build()
+			.execute_with(|| {
+				let mut acc_counter = 0_u32; // needed to avoid account_id duplication, should generat random salt in production
+
+				let blob =
+					std::fs::read("../integration-tests/contracts-data/ink/basic/dist/basic.wasm")
+						.expect("cound not find wasm blob");
+
+				// constructor with not argument
+				let sel_constructor = Bytes::from_str("0xed4b9d1b")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				assert_ok!(Contracts::instantiate_with_code(
+					Origin::signed(ALICE),
+					0,
+					MAX_GAS,
+					None,
+					blob.clone(),
+					sel_constructor,
+					acc_counter.encode(),
+				));
+
+				let evts = System::events();
+
+				// deployed contract can be found in the last created instantiated event
+				let deployed_address = evts
+					.iter()
+					.rev()
+					.find_map(|r| {
+						if let Event::Contracts(pallet_contracts::Event::Instantiated {
+							deployer: _,
+							contract,
+						}) = &r.event
+						{
+							Some(contract)
+						} else {
+							None
+						}
+					})
+					.expect("unable to find the last deployed contract");
+
+				acc_counter += 1;
+
+				// prepare the getter
+				let sel_getter = Bytes::from_str("0x2f865bd9")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				// use ContractsApi on the Runtime to query result of a read method
+				let rs =
+					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
+						ALICE,
+						deployed_address.clone().into(),
+						0,
+						MAX_GAS,
+						None,
+						sel_getter.clone(),
+					)
+					.result
+					.expect("execution without result");
+
+				let ExecReturnValue { flags, data } = rs;
+
+				// empty flags determines succesful execution
+				assert!(flags.is_empty());
+
+				assert!(bool::decode(&mut data.as_bytes_ref())
+					.ok()
+					.filter(|rs| *rs == false)
+					.is_some());
+
+				let sel_flip = Bytes::from_str("0x633aa551")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				// submit call on the getter
+				assert_ok!(Contracts::call(
+					Origin::signed(ALICE),
+					deployed_address.clone().into(),
+					0,
+					MAX_GAS,
+					None,
+					sel_flip.clone(),
+				));
+
+				// read the getter again after state mutating call
+				let rs =
+					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
+						ALICE,
+						deployed_address.clone().into(),
+						0,
+						MAX_GAS,
+						None,
+						sel_getter.clone(),
+					)
+					.result
+					.expect("execution without result");
+
+				let ExecReturnValue { flags, data } = rs;
+
+				assert!(flags.is_empty());
+
+				// assert state changes
+				assert!(bool::decode(&mut data.as_bytes_ref())
+					.ok()
+					.filter(|rs| *rs == true)
+					.is_some());
+
+				let mut sel_constructor_with_arg = Bytes::from_str("0x9bae9d5e")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex str");
+
+				sel_constructor_with_arg.append(&mut true.encode());
+
+				assert_ok!(Contracts::instantiate_with_code(
+					Origin::signed(ALICE),
+					0,
+					MAX_GAS,
+					None,
+					blob,
+					sel_constructor_with_arg,
+					acc_counter.encode()
+				));
+
+				let evts = System::events();
+
+				// deployed contract can be found in the last created instantiated event
+				let deployed_address = evts
+					.iter()
+					.rev()
+					.find_map(|r| {
+						if let Event::Contracts(pallet_contracts::Event::Instantiated {
+							deployer: _,
+							contract,
+						}) = &r.event
+						{
+							Some(contract)
+						} else {
+							None
+						}
+					})
+					.expect("unable to find the last deployed contract");
+
+				// read the getter again before state mutating call
+				let rs =
+					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
+						ALICE,
+						deployed_address.clone().into(),
+						0,
+						MAX_GAS,
+						None,
+						sel_getter.clone(),
+					)
+					.result
+					.expect("execution without result");
+
+				let ExecReturnValue { flags, data } = rs;
+
+				assert!(flags.is_empty());
+
+				// assert state changes
+				assert!(bool::decode(&mut data.as_bytes_ref())
+					.ok()
+					.filter(|rs| *rs == true)
+					.is_some());
+
+				// submit call on the getter
+				assert_ok!(Contracts::call(
+					Origin::signed(ALICE),
+					deployed_address.clone().into(),
+					0,
+					MAX_GAS,
+					None,
+					sel_flip.clone(),
+				));
+
+				// read the getter again before state mutating call
+				let rs =
+					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
+						ALICE,
+						deployed_address.clone().into(),
+						0,
+						MAX_GAS,
+						None,
+						sel_getter.clone(),
+					)
+					.result
+					.expect("execution without result");
+
+				let ExecReturnValue { flags, data } = rs;
+
+				assert!(flags.is_empty());
+
+				// assert state changes
+				assert!(bool::decode(&mut data.as_bytes_ref())
+					.ok()
+					.filter(|rs| *rs != true)
+					.is_some());
+			});
 	}
 }

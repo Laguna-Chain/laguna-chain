@@ -29,7 +29,6 @@ orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-l
 # contract
 pallet-contracts = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-contracts-primitives = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-
 pallet-contracts-rpc-runtime-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
 num_enum = {version = '0.5.3', default-features = false}

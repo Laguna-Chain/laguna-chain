@@ -2,6 +2,7 @@ use frame_support::traits::GenesisBuild;
 use hydro_runtime::{Runtime, System};
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
 
+pub mod contracts;
 pub mod native_token;
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
