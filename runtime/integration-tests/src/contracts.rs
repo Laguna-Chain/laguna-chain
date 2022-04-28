@@ -1,3 +1,6 @@
+mod chain_extension;
+mod cross_contract;
+
 #[cfg(test)]
 mod tests {
 	use crate::{ExtBuilder, ALICE};
