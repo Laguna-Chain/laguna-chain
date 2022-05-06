@@ -11,5 +11,6 @@ members = [
   'runtime/integration-tests',
   'primitives',
   'pallets/fluent-fee',
+  'pallets/contract-asset-registry',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution
