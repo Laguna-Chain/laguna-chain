@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "contract-asset-registry"
+name = "pallet-contract-asset-registry"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -20,9 +20,8 @@ sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-mo
 sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 
 # contracts related deps
-pallet-contracts = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-contracts-primitives = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-contracts-rpc-runtime-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+pallet-contracts = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev', default-features = false}
+pallet-contracts-primitives = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev', default-features = false}
 
 pallet-balances = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev', default-features = false}
 
@@ -30,8 +29,9 @@ frame-benchmarking = {default-features = false, git = 'https://github.com/ultras
 hex = {version = "0.4.3", default-features = false}
 hex-literal = "0.3.4"
 
+orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-polkadot-v0.9.16"}
+
 [dev-dependencies]
-# pallet-balances = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-randomness-collective-flip = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-timestamp = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
 pallet-transaction-payment = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
@@ -51,6 +51,7 @@ std = [
   "hex/std",
   "primitives/std",
   'pallet-contracts/std',
-  'pallet-balances/std',
   'pallet-contracts-primitives/std',
+  'pallet-balances/std',
+  'orml-traits/std',
 ]

@@ -27,7 +27,7 @@ fn test_total_supply() {
 		assert_ok!(Contracts::instantiate_with_code(
 			Origin::signed(ALICE),
 			0,
-			MAX_GAS,
+			MaxGas::get(),
 			None,
 			blob,
 			sel_constuctor,
@@ -52,10 +52,28 @@ fn test_total_supply() {
 			.next()
 			.expect("unable to find deployed contract");
 
-		// freshly create token have no supply
 		assert_eq!(
 			ContractTokenRegistry::total_supply(deployed.clone()),
 			Some(init_amount as u128)
+		);
+
+		assert_eq!(
+			ContractTokenRegistry::balance_of(deployed.clone(), ALICE),
+			Some(init_amount as u128)
+		);
+
+		assert_eq!(ContractTokenRegistry::balance_of(deployed.clone(), BOB), Some(0));
+
+		assert_ok!(ContractTokenRegistry::transfer(
+			deployed.clone(),
+			ALICE,
+			BOB,
+			U256::from(init_amount / 10)
+		));
+
+		assert_eq!(
+			ContractTokenRegistry::balance_of(deployed.clone(), BOB),
+			Some(init_amount as u128 / 10)
 		);
 	});
 }

@@ -9,8 +9,6 @@ use frame_support::{
 };
 
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator};
-use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
-
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
 use sp_core::hexdisplay::AsBytesRef;
@@ -174,75 +172,16 @@ impl pallet_contracts::Config for Runtime {
 
 parameter_types! {
 	pub const PId: PalletId = PalletId(*b"tkn/reg_");
-}
-
-pub struct AccessImpl {}
-
-pub const MAX_GAS: u64 = 200_000_000_000;
-
-impl TokenAccess<Runtime> for AccessImpl {
-	type Balance = Balance;
-
-	fn total_supply(asset_address: AccountIdFor<Runtime>) -> Option<Self::Balance> {
-		Contracts::bare_call(
-			<Runtime as Config>::PalletId::get().into_account(),
-			asset_address,
-			0,
-			MAX_GAS,
-			None,
-			Selector::<Runtime>::TotalSupply.selector_buf(),
-			true,
-		)
-		.result
-		.ok()
-		.filter(|v| !v.did_revert())
-		.and_then(|res| -> Option<Balance> { Decode::decode(&mut res.data.as_bytes_ref()).ok() })
-	}
-
-	fn balance_of(
-		asset_address: AccountIdFor<Runtime>,
-		target: AccountIdFor<Runtime>,
-	) -> Option<Self::Balance> {
-		todo!()
-	}
-
-	fn transfer(
-		asset_address: AccountIdFor<Runtime>,
-		target: AccountIdFor<Runtime>,
-		amount: U256,
-	) -> DispatchResult {
-		todo!()
-	}
-
-	fn allowance(
-		asset_address: AccountIdFor<Runtime>,
-		owner: AccountIdFor<Runtime>,
-		spender: AccountIdFor<Runtime>,
-	) -> Option<Self::Balance> {
-		todo!()
-	}
-
-	fn approve(
-		asset_address: AccountIdFor<Runtime>,
-		spender: AccountIdFor<Runtime>,
-		amount: U256,
-	) -> DispatchResult {
-		todo!()
-	}
-
-	fn transfer_from(
-		asset_address: AccountIdFor<Runtime>,
-		from: AccountIdFor<Runtime>,
-		to: AccountIdFor<Runtime>,
-		amount: U256,
-	) -> DispatchResult {
-		todo!()
-	}
+	pub const MaxGas: u64 = 200_000_000_000;
+	pub const DebugFlag: bool = true;
 }
 
 impl Config for Runtime {
 	type PalletId = PId;
-	type TokenAccess = AccessImpl;
+
+	type MaxGas = MaxGas;
+
+	type ContractDebugFlag = DebugFlag;
 }
 
 construct_runtime!(

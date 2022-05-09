@@ -4,20 +4,22 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use codec::HasCompact;
 use core::str::FromStr;
-use frame_support::{pallet_prelude::*, PalletId};
-use frame_system::{pallet_prelude::*, Account};
+use frame_support::{pallet_prelude::*, traits::Currency, PalletId};
+use frame_system::{pallet_prelude::*, RawOrigin};
 use hex_literal::hex;
-use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
+use primitives::{Balance, CurrencyId};
+use sp_core::hexdisplay::AsBytesRef;
 use sp_runtime::{
 	app_crypto::UncheckedFrom,
-	traits::{AccountIdConversion, Block as BlockT},
+	traits::{AccountIdConversion, AccountIdLookup, IdentityLookup},
+	MultiAddress,
 };
 
 pub use pallet::*;
 use sp_core::U256;
-
-pub type AccountIdFor<T> = <T as frame_system::Config>::AccountId;
+use sp_std::fmt::Debug;
 
 #[cfg(test)]
 mod tests;
@@ -25,17 +27,26 @@ mod tests;
 #[cfg(test)]
 mod mock;
 
+pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
+type BalanceOf<T> =
+	<<T as pallet_contracts::Config>::Currency as Currency<AccountIdOf<T>>>::Balance;
+use sp_std::prelude::*;
+
 #[frame_support::pallet]
 mod pallet {
 	use super::*;
 
 	#[pallet::config]
-	pub trait Config:
-		frame_system::Config + pallet_contracts::Config + pallet_balances::Config
-	{
+	pub trait Config: frame_system::Config + pallet_contracts::Config {
 		// generate unique account_id and sub_account_id for this pallet
+		#[pallet::constant]
 		type PalletId: Get<PalletId>;
-		type TokenAccess: TokenAccess<Self, Balance = <Self as pallet_balances::Config>::Balance>;
+
+		#[pallet::constant]
+		type MaxGas: Get<u64>;
+
+		#[pallet::constant]
+		type ContractDebugFlag: Get<bool>;
 	}
 
 	#[pallet::pallet]
@@ -44,11 +55,11 @@ mod pallet {
 
 enum Selector<T: frame_system::Config> {
 	TotalSupply,
-	BalanceOf(AccountIdFor<T>),
-	Transfer(AccountIdFor<T>, U256),
-	Allowance(AccountIdFor<T>, AccountIdFor<T>),
-	Approve(AccountIdFor<T>, U256),
-	TransferFrom(AccountIdFor<T>, AccountIdFor<T>, U256),
+	BalanceOf(AccountIdOf<T>),
+	Transfer(AccountIdOf<T>, U256),
+	Allowance(AccountIdOf<T>, AccountIdOf<T>),
+	Approve(AccountIdOf<T>, U256),
+	TransferFrom(AccountIdOf<T>, AccountIdOf<T>, U256),
 }
 
 // TODO: create selector buf at compile-time using proc-macro
@@ -96,79 +107,125 @@ impl<T: Config> Selector<T> {
 	}
 }
 
-trait TokenAccess<T: Config> {
+// TODO: move this trait to the traits package later
+pub trait TokenAccess<T: frame_system::Config> {
 	type Balance;
 
-	fn total_supply(asset_address: AccountIdFor<T>) -> Option<Self::Balance>;
-	fn balance_of(asset_address: AccountIdFor<T>, target: AccountIdFor<T>)
-		-> Option<Self::Balance>;
+	fn total_supply(asset_address: AccountIdOf<T>) -> Option<Self::Balance>;
+
+	fn balance_of(asset_address: AccountIdOf<T>, who: AccountIdOf<T>) -> Option<Self::Balance>;
 
 	fn transfer(
-		asset_address: AccountIdFor<T>,
-		target: AccountIdFor<T>,
+		asset_address: AccountIdOf<T>,
+		who: AccountIdOf<T>,
+		target: AccountIdOf<T>,
 		amount: U256,
-	) -> DispatchResult;
+	) -> DispatchResultWithPostInfo;
 
 	fn allowance(
-		asset_address: AccountIdFor<T>,
-		owner: AccountIdFor<T>,
-		spender: AccountIdFor<T>,
+		asset_address: AccountIdOf<T>,
+		owner: AccountIdOf<T>,
+		spender: AccountIdOf<T>,
 	) -> Option<Self::Balance>;
 
 	fn approve(
-		asset_address: AccountIdFor<T>,
-		spender: AccountIdFor<T>,
+		asset_address: AccountIdOf<T>,
+		who: AccountIdOf<T>,
+		spender: AccountIdOf<T>,
 		amount: U256,
-	) -> DispatchResult;
+	) -> DispatchResultWithPostInfo;
 
 	fn transfer_from(
-		asset_address: AccountIdFor<T>,
-		from: AccountIdFor<T>,
-		to: AccountIdFor<T>,
+		asset_address: AccountIdOf<T>,
+		who: AccountIdOf<T>,
+		to: AccountIdOf<T>,
 		amount: U256,
-	) -> DispatchResult;
+	) -> DispatchResultWithPostInfo;
 }
 
-type BalanceOf<T> = <T as pallet_balances::Config>::Balance;
+impl<T> TokenAccess<T> for Pallet<T>
+where
+	T: Config<Lookup = IdentityLookup<AccountIdOf<T>>>,
+	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
+	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + Debug + TypeInfo + Encode,
+{
+	type Balance = BalanceOf<T>;
 
-impl<T: Config> Pallet<T> {
-	fn total_supply(asset_address: AccountIdFor<T>) -> Option<BalanceOf<T>> {
-		T::TokenAccess::total_supply(asset_address)
+	fn total_supply(asset_address: AccountIdOf<T>) -> Option<Self::Balance> {
+		pallet_contracts::Pallet::<T>::bare_call(
+			T::PalletId::get().into_account(),
+			asset_address,
+			Self::Balance::default(),
+			T::MaxGas::get(),
+			None,
+			Selector::<T>::TotalSupply.selector_buf(),
+			T::ContractDebugFlag::get(),
+		)
+		.result
+		.ok()
+		.filter(|v| !v.did_revert())
+		.and_then(|res| -> Option<Self::Balance> {
+			Decode::decode(&mut res.data.as_bytes_ref()).ok()
+		})
 	}
-	fn balance_of(asset_address: AccountIdFor<T>, target: AccountIdFor<T>) -> Option<BalanceOf<T>> {
-		T::TokenAccess::balance_of(asset_address, target)
+
+	fn balance_of(asset_address: AccountIdOf<T>, who: AccountIdOf<T>) -> Option<Self::Balance> {
+		pallet_contracts::Pallet::<T>::bare_call(
+			T::PalletId::get().into_account(),
+			asset_address,
+			Self::Balance::default(),
+			T::MaxGas::get(),
+			None,
+			Selector::<T>::BalanceOf(who).selector_buf(),
+			T::ContractDebugFlag::get(),
+		)
+		.result
+		.ok()
+		.filter(|v| !v.did_revert())
+		.and_then(|res| -> Option<Self::Balance> {
+			Decode::decode(&mut res.data.as_bytes_ref()).ok()
+		})
 	}
 
 	fn transfer(
-		asset_address: AccountIdFor<T>,
-		target: AccountIdFor<T>,
+		asset_address: AccountIdOf<T>,
+		who: AccountIdOf<T>,
+		target: AccountIdOf<T>,
 		amount: U256,
-	) -> DispatchResult {
-		T::TokenAccess::transfer(asset_address, target, amount)
+	) -> DispatchResultWithPostInfo {
+		pallet_contracts::Pallet::<T>::call(
+			RawOrigin::Signed(who).into(),
+			asset_address,
+			Default::default(),
+			T::MaxGas::get(),
+			None,
+			Selector::<T>::Transfer(target, amount).selector_buf(),
+		)
 	}
 
 	fn allowance(
-		asset_address: AccountIdFor<T>,
-		owner: AccountIdFor<T>,
-		spender: AccountIdFor<T>,
-	) -> Option<BalanceOf<T>> {
-		T::TokenAccess::allowance(asset_address, owner, spender)
+		asset_address: AccountIdOf<T>,
+		owner: AccountIdOf<T>,
+		spender: AccountIdOf<T>,
+	) -> Option<Self::Balance> {
+		todo!()
 	}
 
 	fn approve(
-		asset_address: AccountIdFor<T>,
-		spender: AccountIdFor<T>,
+		asset_address: AccountIdOf<T>,
+		who: AccountIdOf<T>,
+		spender: AccountIdOf<T>,
 		amount: U256,
-	) -> DispatchResult {
-		T::TokenAccess::approve(asset_address, spender, amount)
+	) -> DispatchResultWithPostInfo {
+		todo!()
 	}
 
 	fn transfer_from(
-		asset_address: AccountIdFor<T>,
-		from: AccountIdFor<T>,
-		to: AccountIdFor<T>,
+		asset_address: AccountIdOf<T>,
+		who: AccountIdOf<T>,
+		to: AccountIdOf<T>,
 		amount: U256,
-	) -> DispatchResult {
-		T::TokenAccess::transfer_from(asset_address, from, to, amount)
+	) -> DispatchResultWithPostInfo {
+		todo!()
 	}
 }
