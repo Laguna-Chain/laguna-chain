@@ -28,6 +28,7 @@ mod tests;
 mod mock;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
+
 type BalanceOf<T> =
 	<<T as pallet_contracts::Config>::Currency as Currency<AccountIdOf<T>>>::Balance;
 use sp_std::prelude::*;
@@ -53,13 +54,15 @@ mod pallet {
 	pub struct Pallet<T>(_);
 }
 
+// TODO: hard-coded erc20 selector, we should extend support to ink tokens as well, or come up with
+// an adapter to bridge to both types of assets(solang sol and ink)
 enum Selector<T: frame_system::Config> {
 	TotalSupply,
-	BalanceOf(AccountIdOf<T>),
-	Transfer(AccountIdOf<T>, U256),
-	Allowance(AccountIdOf<T>, AccountIdOf<T>),
-	Approve(AccountIdOf<T>, U256),
-	TransferFrom(AccountIdOf<T>, AccountIdOf<T>, U256),
+	BalanceOf { owner: AccountIdOf<T> },
+	Transfer { to: AccountIdOf<T>, amount: U256 },
+	Allowance { owner: AccountIdOf<T>, spender: AccountIdOf<T> },
+	Approve { spender: AccountIdOf<T>, amount: U256 },
+	TransferFrom { from: AccountIdOf<T>, to: AccountIdOf<T>, amount: U256 },
 }
 
 // TODO: create selector buf at compile-time using proc-macro
@@ -68,11 +71,11 @@ impl<T: Config> Selector<T> {
 	fn method_selector(&self) -> [u8; 4] {
 		match self {
 			Selector::TotalSupply => hex!("18160ddd"),
-			Selector::BalanceOf(_) => hex!("70a08231"),
-			Selector::Transfer(_, _) => hex!("a9059cbb"),
-			Selector::Allowance(_, _) => hex!("dd62ed3e"),
-			Selector::Approve(_, _) => hex!("095ea7b3"),
-			Selector::TransferFrom(_, _, _) => hex!("23b872dd"),
+			Selector::BalanceOf { owner } => hex!("70a08231"),
+			Selector::Transfer { to, amount } => hex!("a9059cbb"),
+			Selector::Allowance { owner, spender } => hex!("dd62ed3e"),
+			Selector::Approve { spender, amount: amout } => hex!("095ea7b3"),
+			Selector::TransferFrom { from, to, amount } => hex!("23b872dd"),
 		}
 	}
 
@@ -82,22 +85,22 @@ impl<T: Config> Selector<T> {
 
 		match self {
 			Selector::TotalSupply => {},
-			Selector::BalanceOf(account) => {
-				selector.append(&mut account.encode());
+			Selector::BalanceOf { owner } => {
+				selector.append(&mut owner.encode());
 			},
-			Selector::Transfer(account, amount) => {
-				selector.append(&mut account.encode());
+			Selector::Transfer { to, amount } => {
+				selector.append(&mut to.encode());
 				selector.append(&mut amount.encode());
 			},
-			Selector::Allowance(owner, spender) => {
+			Selector::Allowance { owner, spender } => {
 				selector.append(&mut owner.encode());
 				selector.append(&mut spender.encode());
 			},
-			Selector::Approve(account, amount) => {
-				selector.append(&mut account.encode());
+			Selector::Approve { spender, amount } => {
+				selector.append(&mut spender.encode());
 				selector.append(&mut amount.encode());
 			},
-			Selector::TransferFrom(from, to, amount) => {
+			Selector::TransferFrom { from, to, amount } => {
 				selector.append(&mut from.encode());
 				selector.append(&mut to.encode());
 				selector.append(&mut amount.encode());
@@ -117,8 +120,8 @@ pub trait TokenAccess<T: frame_system::Config> {
 
 	fn transfer(
 		asset_address: AccountIdOf<T>,
-		who: AccountIdOf<T>,
-		target: AccountIdOf<T>,
+		who: OriginFor<T>,
+		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo;
 
@@ -130,14 +133,15 @@ pub trait TokenAccess<T: frame_system::Config> {
 
 	fn approve(
 		asset_address: AccountIdOf<T>,
-		who: AccountIdOf<T>,
+		owner: OriginFor<T>,
 		spender: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo;
 
 	fn transfer_from(
 		asset_address: AccountIdOf<T>,
-		who: AccountIdOf<T>,
+		who: OriginFor<T>,
+		from: AccountIdOf<T>,
 		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo;
@@ -176,7 +180,7 @@ where
 			Self::Balance::default(),
 			T::MaxGas::get(),
 			None,
-			Selector::<T>::BalanceOf(who).selector_buf(),
+			Selector::<T>::BalanceOf { owner: who }.selector_buf(),
 			T::ContractDebugFlag::get(),
 		)
 		.result
@@ -189,17 +193,17 @@ where
 
 	fn transfer(
 		asset_address: AccountIdOf<T>,
-		who: AccountIdOf<T>,
-		target: AccountIdOf<T>,
+		who: OriginFor<T>,
+		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
 		pallet_contracts::Pallet::<T>::call(
-			RawOrigin::Signed(who).into(),
+			who,
 			asset_address,
 			Default::default(),
 			T::MaxGas::get(),
 			None,
-			Selector::<T>::Transfer(target, amount).selector_buf(),
+			Selector::<T>::Transfer { to, amount }.selector_buf(),
 		)
 	}
 
@@ -208,24 +212,53 @@ where
 		owner: AccountIdOf<T>,
 		spender: AccountIdOf<T>,
 	) -> Option<Self::Balance> {
-		todo!()
+		pallet_contracts::Pallet::<T>::bare_call(
+			T::PalletId::get().into_account(),
+			asset_address,
+			Self::Balance::default(),
+			T::MaxGas::get(),
+			None,
+			Selector::<T>::Allowance { owner, spender }.selector_buf(),
+			T::ContractDebugFlag::get(),
+		)
+		.result
+		.ok()
+		.filter(|v| !v.did_revert())
+		.and_then(|res| -> Option<Self::Balance> {
+			Decode::decode(&mut res.data.as_bytes_ref()).ok()
+		})
 	}
 
 	fn approve(
 		asset_address: AccountIdOf<T>,
-		who: AccountIdOf<T>,
+		owner: OriginFor<T>,
 		spender: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
-		todo!()
+		pallet_contracts::Pallet::<T>::call(
+			owner,
+			asset_address,
+			Default::default(),
+			T::MaxGas::get(),
+			None,
+			Selector::<T>::Approve { spender, amount }.selector_buf(),
+		)
 	}
 
 	fn transfer_from(
 		asset_address: AccountIdOf<T>,
-		who: AccountIdOf<T>,
+		who: OriginFor<T>,
+		from: AccountIdOf<T>,
 		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
-		todo!()
+		pallet_contracts::Pallet::<T>::call(
+			who,
+			asset_address,
+			Default::default(),
+			T::MaxGas::get(),
+			None,
+			Selector::<T>::TransferFrom { from, to, amount }.selector_buf(),
+		)
 	}
 }

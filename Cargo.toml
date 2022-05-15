@@ -12,5 +12,6 @@ members = [
   'primitives',
   'pallets/fluent-fee',
   'pallets/contract-asset-registry',
+  'pallets/currencies',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution

@@ -30,9 +30,9 @@ orml_traits::parameter_type_with_key! {
 	};
 }
 
-parameter_types! {
-	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(NATIVE_TOKEN);
-}
+// parameter_types! {
+// 	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(NATIVE_TOKEN);
+// }
 
 // use orml's token to represent both native and other tokens
 impl orml_tokens::Config for Runtime {

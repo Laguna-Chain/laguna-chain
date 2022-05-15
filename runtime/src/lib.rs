@@ -37,12 +37,14 @@ use primitives::{AccountId, Address, Balance, BlockNumber, Hash, Header, Index, 
 // include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
 pub mod impl_frame_system;
-pub mod impl_orml_currencies;
+// pub mod impl_orml_currencies;
 pub mod impl_orml_tokens;
 pub mod impl_pallet_aura;
 pub mod impl_pallet_balances;
+pub mod impl_pallet_contract_asset_registry;
 pub mod impl_pallet_contracts;
 
+pub mod impl_pallet_currencies;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
 pub mod impl_pallet_scheduler;
@@ -119,8 +121,10 @@ construct_runtime!(
 
 			// token and currency
 			Balances: pallet_balances ,
-			Currencies: orml_currencies,
+			// Currencies: orml_currencies,
 			Tokens: orml_tokens,
+			Currencies: pallet_currencies,
+			ContractAssetsRegistry: pallet_contract_asset_registry,
 
 			// weight and fee management
 			TransactionPayment: pallet_transaction_payment ,
@@ -129,7 +133,6 @@ construct_runtime!(
 			// conseus mechanism
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
-
 
 			Contracts: pallet_contracts,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,

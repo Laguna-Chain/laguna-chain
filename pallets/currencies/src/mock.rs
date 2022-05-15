@@ -1,18 +1,25 @@
 use super::*;
 
+// use crate::adapter::CurrencyAdapter;
+
 use codec::Decode;
 use frame_support::{
 	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::{Contains, Everything},
+	traits::{Contains, Currency, Everything},
 	weights::IdentityFee,
+	PalletId,
 };
 
+use orml_currencies::BasicCurrencyAdapter;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator};
-use pallet_transaction_payment::CurrencyAdapter;
-use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
+use primitives::{AccountId, Amount, Balance, BlockNumber, Hash, Header, Index, TokenId};
 use sp_core::hexdisplay::AsBytesRef;
 use sp_runtime::Perbill;
+
+use orml_tokens::CurrencyAdapter as TokenCurrencyAdapter;
+
+use pallet_transaction_payment::CurrencyAdapter as PaymentCurrencyAdapter;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -75,17 +82,17 @@ parameter_types! {
 	pub const ExistentialDeposit: u64 = 2;
 }
 
-impl pallet_balances::Config for Runtime {
-	type Balance = Balance;
-	type DustRemoval = ();
-	type Event = Event;
-	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = frame_system::Pallet<Runtime>;
-	type MaxLocks = ();
-	type MaxReserves = ();
-	type ReserveIdentifier = [u8; 8];
-	type WeightInfo = ();
-}
+// impl pallet_balances::Config for Runtime {
+// 	type Balance = Balance;
+// 	type DustRemoval = ();
+// 	type Event = Event;
+// 	type ExistentialDeposit = ExistentialDeposit;
+// 	type AccountStore = frame_system::Pallet<Runtime>;
+// 	type MaxLocks = ();
+// 	type MaxReserves = ();
+// 	type ReserveIdentifier = [u8; 8];
+// 	type WeightInfo = ();
+// }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
@@ -110,7 +117,8 @@ parameter_types! {
 
 impl pallet_transaction_payment::Config for Runtime {
 	// TODO: add benchmark around cross pallet interaction between fee
-	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+	type OnChargeTransaction =
+		PaymentCurrencyAdapter<TokenCurrencyAdapter<Runtime, NativeCurrencyId>, ()>;
 	type TransactionByteFee = TransactionByteFee;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
@@ -150,7 +158,7 @@ parameter_types! {
 impl pallet_contracts::Config for Runtime {
 	type Time = Timestamp;
 	type Randomness = RandomnessCollectiveFlip;
-	type Currency = Balances;
+	type Currency = TokenCurrencyAdapter<Runtime, NativeCurrencyId>;
 	type Event = Event;
 	type Call = Call;
 
@@ -176,7 +184,7 @@ parameter_types! {
 	pub const DebugFlag: bool = true;
 }
 
-impl Config for Runtime {
+impl pallet_contract_asset_registry::Config for Runtime {
 	type PalletId = PId;
 
 	type MaxGas = MaxGas;
@@ -184,21 +192,72 @@ impl Config for Runtime {
 	type ContractDebugFlag = DebugFlag;
 }
 
-construct_runtime!(
+orml_traits::parameter_type_with_key! {
+	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+		Balance::MIN
+	};
+}
 
+pub struct DustRemovalWhitelist;
+
+impl Contains<AccountId> for DustRemovalWhitelist {
+	fn contains(t: &AccountId) -> bool {
+		false
+	}
+}
+
+impl orml_tokens::Config for Runtime {
+	type Event = Event;
+	// how tokens are measured
+	type Balance = Balance;
+	type Amount = Amount;
+
+	// how tokens are represented
+	type CurrencyId = primitives::CurrencyId;
+	type WeightInfo = ();
+	type ExistentialDeposits = ExistentialDeposits;
+	type OnDust = ();
+	type MaxLocks = ();
+	type DustRemovalWhitelist = DustRemovalWhitelist;
+}
+
+parameter_types! {
+	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Hydro);
+}
+
+impl Config for Runtime {
+	// type NativeCurrency = CurrencyAdapter<Runtime, NativeCurrencyId>;
+	type NativeCurrencyId = NativeCurrencyId;
+
+	type MultiCurrency = Tokens;
+	type ContractAssets = ContractTokenRegistry;
+	type ConvertIntoAccountId = AccountConvert;
+}
+
+pub struct AccountConvert;
+
+impl Convert<sr25519::Public, AccountId> for AccountConvert {
+	fn convert(a: sr25519::Public) -> AccountId {
+		a.into()
+	}
+}
+
+construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
-		Balances: pallet_balances,
+
 		Contracts: pallet_contracts,
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 		Timestamp: pallet_timestamp,
 		Payment: pallet_transaction_payment,
 
-		ContractTokenRegistry: crate
+		Tokens: orml_tokens,
+		Currencies: crate,
+		ContractTokenRegistry: pallet_contract_asset_registry,
 	}
 );
 
@@ -207,7 +266,7 @@ pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
 pub struct ExtBuilder {
-	balances: Vec<(AccountId, Balance)>,
+	balances: Vec<(AccountId, CurrencyId, Balance)>,
 }
 
 impl Default for ExtBuilder {
@@ -217,7 +276,7 @@ impl Default for ExtBuilder {
 }
 
 impl ExtBuilder {
-	pub fn balances(mut self, balances: Vec<(AccountId, Balance)>) -> Self {
+	pub fn balances(mut self, balances: Vec<(AccountId, CurrencyId, Balance)>) -> Self {
 		self.balances = balances;
 		self
 	}
@@ -226,7 +285,7 @@ impl ExtBuilder {
 		// construct test storage for the mock runtime
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
-		pallet_balances::GenesisConfig::<Runtime> {
+		orml_tokens::GenesisConfig::<Runtime> {
 			balances: self.balances.clone().into_iter().collect::<Vec<_>>(),
 		}
 		.assimilate_storage(&mut t)
