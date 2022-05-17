@@ -8,6 +8,7 @@ use frame_support::{
 	weights::IdentityFee,
 };
 
+use frame_system::EnsureRoot;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator};
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
@@ -177,11 +178,18 @@ parameter_types! {
 }
 
 impl Config for Runtime {
+	type AllowedOrigin = EnsureRoot<AccountId>;
 	type PalletId = PId;
 
 	type MaxGas = MaxGas;
 
 	type ContractDebugFlag = DebugFlag;
+}
+
+impl pallet_sudo::Config for Runtime {
+	type Event = Event;
+
+	type Call = Call;
 }
 
 construct_runtime!(
@@ -192,6 +200,8 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
+		Sudo: pallet_sudo,
+
 		Balances: pallet_balances,
 		Contracts: pallet_contracts,
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
@@ -208,17 +218,23 @@ pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, Balance)>,
+	sudo: Option<AccountId>,
 }
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { balances: vec![] }
+		Self { balances: vec![], sudo: None }
 	}
 }
 
 impl ExtBuilder {
 	pub fn balances(mut self, balances: Vec<(AccountId, Balance)>) -> Self {
 		self.balances = balances;
+		self
+	}
+
+	pub fn sudo(mut self, account: AccountId) -> Self {
+		self.sudo.replace(account);
 		self
 	}
 
@@ -231,6 +247,14 @@ impl ExtBuilder {
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();
+
+		// setup sudo account
+		if let Some(key) = self.sudo {
+			// FIXME #1578 make this available through chainspec
+			pallet_sudo::GenesisConfig::<Runtime> { key: Some(key) }
+				.assimilate_storage(&mut t)
+				.unwrap();
+		}
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| System::set_block_number(1));

@@ -39,6 +39,8 @@ mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_contracts::Config {
+		type AllowedOrigin: EnsureOrigin<Self::Origin>;
+
 		// generate unique account_id and sub_account_id for this pallet
 		#[pallet::constant]
 		type PalletId: Get<PalletId>;
@@ -52,6 +54,53 @@ mod pallet {
 
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
+
+	#[pallet::error]
+	pub enum Error<T> {
+		InvalidAsset,
+	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn get_registered)]
+	pub type RegisteredAsset<T: Config> = StorageMap<_, Blake2_128Concat, AccountIdOf<T>, bool>;
+
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
+		#[pallet::weight(100_000)]
+		pub fn register_asset(
+			origin: OriginFor<T>,
+			asset_contract_address: AccountIdOf<T>,
+			enabled: bool,
+		) -> DispatchResult {
+			T::AllowedOrigin::ensure_origin(origin.clone())?;
+
+			RegisteredAsset::<T>::insert(asset_contract_address, enabled);
+
+			Ok(())
+		}
+
+		#[pallet::weight(100_000)]
+		pub fn suspend_asset(
+			origin: OriginFor<T>,
+			asset_contract_address: AccountIdOf<T>,
+		) -> DispatchResult {
+			T::AllowedOrigin::ensure_origin(origin.clone())?;
+
+			RegisteredAsset::<T>::mutate(asset_contract_address, |val| *val = Some(false));
+			Ok(())
+		}
+
+		#[pallet::weight(100_000)]
+		pub fn unregister_asset(
+			origin: OriginFor<T>,
+			asset_contract_address: AccountIdOf<T>,
+		) -> DispatchResult {
+			T::AllowedOrigin::ensure_origin(origin.clone())?;
+
+			RegisteredAsset::<T>::remove(asset_contract_address);
+			Ok(())
+		}
+	}
 }
 
 // TODO: hard-coded erc20 selector, we should extend support to ink tokens as well, or come up with
@@ -156,6 +205,13 @@ where
 	type Balance = BalanceOf<T>;
 
 	fn total_supply(asset_address: AccountIdOf<T>) -> Option<Self::Balance> {
+		if Self::get_registered(asset_address.clone())
+			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.is_none()
+		{
+			return None
+		}
+
 		pallet_contracts::Pallet::<T>::bare_call(
 			T::PalletId::get().into_account(),
 			asset_address,
@@ -174,6 +230,13 @@ where
 	}
 
 	fn balance_of(asset_address: AccountIdOf<T>, who: AccountIdOf<T>) -> Option<Self::Balance> {
+		if Self::get_registered(asset_address.clone())
+			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.is_none()
+		{
+			return None
+		}
+
 		pallet_contracts::Pallet::<T>::bare_call(
 			T::PalletId::get().into_account(),
 			asset_address,
@@ -197,6 +260,12 @@ where
 		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
+		if Self::get_registered(asset_address.clone())
+			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.is_none()
+		{
+			return Err(Error::<T>::InvalidAsset.into())
+		}
 		pallet_contracts::Pallet::<T>::call(
 			who,
 			asset_address,
@@ -212,6 +281,12 @@ where
 		owner: AccountIdOf<T>,
 		spender: AccountIdOf<T>,
 	) -> Option<Self::Balance> {
+		if Self::get_registered(asset_address.clone())
+			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.is_none()
+		{
+			return None
+		}
 		pallet_contracts::Pallet::<T>::bare_call(
 			T::PalletId::get().into_account(),
 			asset_address,
@@ -235,6 +310,12 @@ where
 		spender: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
+		if Self::get_registered(asset_address.clone())
+			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.is_none()
+		{
+			return Err(Error::<T>::InvalidAsset.into())
+		}
 		pallet_contracts::Pallet::<T>::call(
 			owner,
 			asset_address,
@@ -252,6 +333,12 @@ where
 		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
+		if Self::get_registered(asset_address.clone())
+			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.is_none()
+		{
+			return Err(Error::<T>::InvalidAsset.into())
+		}
 		pallet_contracts::Pallet::<T>::call(
 			who,
 			asset_address,

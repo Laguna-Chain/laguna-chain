@@ -64,6 +64,12 @@ fn test_total_supply() {
 			let init_amount = 1000_u64;
 			let deployed = create_token(ALICE, "TKN", "TKN", init_amount);
 
+			assert_ok!(ContractTokenRegistry::register_asset(
+				Origin::root(),
+				deployed.clone(),
+				true
+			));
+
 			assert_eq!(
 				ContractTokenRegistry::total_supply(deployed.clone()),
 				Some(init_amount as u128)
@@ -138,5 +144,70 @@ fn test_total_supply() {
 				ContractTokenRegistry::balance_of(deployed.clone(), BOB),
 				Some(init_amount as u128 * 90 / 1000)
 			);
+		});
+}
+
+#[test]
+fn test_register() {
+	ExtBuilder::default()
+		.balances(vec![(ALICE, UNIT), (BOB, UNIT)])
+		.sudo(ALICE)
+		.build()
+		.execute_with(|| {
+			let deployed = create_token(ALICE, "ABC", "ABC", UNIT);
+
+			assert_ok!(ContractTokenRegistry::register_asset(
+				Origin::root(),
+				deployed.clone(),
+				true
+			));
+
+			assert_eq!(ContractTokenRegistry::get_registered(deployed.clone()), Some(true));
+		});
+}
+
+#[test]
+fn test_suspend() {
+	ExtBuilder::default()
+		.balances(vec![(ALICE, UNIT), (BOB, UNIT)])
+		.sudo(ALICE)
+		.build()
+		.execute_with(|| {
+			let deployed = create_token(ALICE, "ABC", "ABC", UNIT);
+
+			assert_ok!(ContractTokenRegistry::register_asset(
+				Origin::root(),
+				deployed.clone(),
+				true
+			));
+
+			assert_eq!(ContractTokenRegistry::get_registered(deployed.clone()), Some(true));
+
+			assert_ok!(ContractTokenRegistry::suspend_asset(Origin::root(), deployed.clone(),));
+
+			assert_eq!(ContractTokenRegistry::get_registered(deployed.clone()), Some(false));
+		});
+}
+
+#[test]
+fn test_unregister() {
+	ExtBuilder::default()
+		.balances(vec![(ALICE, UNIT), (BOB, UNIT)])
+		.sudo(ALICE)
+		.build()
+		.execute_with(|| {
+			let deployed = create_token(ALICE, "ABC", "ABC", UNIT);
+
+			assert_ok!(ContractTokenRegistry::register_asset(
+				Origin::root(),
+				deployed.clone(),
+				true
+			));
+
+			assert_eq!(ContractTokenRegistry::get_registered(deployed.clone()), Some(true));
+
+			assert_ok!(ContractTokenRegistry::unregister_asset(Origin::root(), deployed.clone(),));
+
+			assert_eq!(ContractTokenRegistry::get_registered(deployed.clone()), None);
 		});
 }

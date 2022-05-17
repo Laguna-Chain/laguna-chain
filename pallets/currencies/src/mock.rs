@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use super::*;
 
 // use crate::adapter::CurrencyAdapter;
@@ -11,6 +13,7 @@ use frame_support::{
 	PalletId,
 };
 
+use frame_system::{EnsureRoot, EnsureSigned};
 use orml_currencies::BasicCurrencyAdapter;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator};
 use primitives::{AccountId, Amount, Balance, BlockNumber, Hash, Header, Index, TokenId};
@@ -190,6 +193,8 @@ impl pallet_contract_asset_registry::Config for Runtime {
 	type MaxGas = MaxGas;
 
 	type ContractDebugFlag = DebugFlag;
+
+	type AllowedOrigin = EnsureRoot<AccountId>;
 }
 
 orml_traits::parameter_type_with_key! {
@@ -265,14 +270,9 @@ pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
+#[derive(Default)]
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, CurrencyId, Balance)>,
-}
-
-impl Default for ExtBuilder {
-	fn default() -> Self {
-		Self { balances: vec![] }
-	}
 }
 
 impl ExtBuilder {
