@@ -1,7 +1,7 @@
 use crate::{mock::*, AccountIdOf};
 use codec::Encode;
 use frame_support::{
-	assert_ok,
+	assert_err, assert_ok,
 	traits::{fungible, fungibles},
 };
 use orml_traits::{BasicCurrency, MultiCurrency};
@@ -9,26 +9,6 @@ use pallet_contract_asset_registry::TokenAccess;
 use primitives::{AccountId, CurrencyId};
 use sp_core::{Bytes, U256};
 use std::str::FromStr;
-
-#[test]
-fn test_total_supply() {
-	let init_amount = UNIT;
-	ExtBuilder::default()
-		.balances(vec![
-			(ALICE, NativeCurrencyId::get(), init_amount),
-			(BOB, NativeCurrencyId::get(), init_amount),
-		])
-		.build()
-		.execute_with(|| {
-			assert_eq!(
-				<Currencies as fungibles::Inspect<AccountIdOf<Runtime>>>::balance(
-					NativeCurrencyId::get(),
-					&ALICE
-				),
-				init_amount
-			);
-		});
-}
 
 fn create_token<T>(owner: AccountId, tkn_name: &str, tkn_symbol: &str, init_amount: T) -> AccountId
 where
@@ -79,6 +59,26 @@ where
 }
 
 #[test]
+fn test_total_supply() {
+	let init_amount = UNIT;
+	ExtBuilder::default()
+		.balances(vec![
+			(ALICE, NativeCurrencyId::get(), init_amount),
+			(BOB, NativeCurrencyId::get(), init_amount),
+		])
+		.build()
+		.execute_with(|| {
+			assert_eq!(
+				<Currencies as fungibles::Inspect<AccountIdOf<Runtime>>>::balance(
+					NativeCurrencyId::get(),
+					&ALICE
+				),
+				init_amount
+			);
+		});
+}
+
+#[test]
 fn test_total_supply_erc20() {
 	let init_amount = UNIT;
 	ExtBuilder::default()
@@ -100,12 +100,28 @@ fn test_total_supply_erc20() {
 				deployed.clone(),
 				true
 			));
-			assert_eq!(ContractTokenRegistry::balance_of(deployed.clone(), ALICE), Some(UNIT));
 
-			dbg!(<Currencies as MultiCurrency<AccountIdOf<Runtime>>>::total_issuance(cid));
+			assert_eq!(ContractTokenRegistry::balance_of(deployed.clone(), ALICE), Some(UNIT));
 			assert_eq!(
 				<Currencies as MultiCurrency<AccountIdOf<Runtime>>>::free_balance(cid, &ALICE),
 				UNIT
 			);
+
+			assert_err!(
+				<Currencies as MultiCurrency<AccountIdOf<Runtime>>>::deposit(cid, &ALICE, UNIT),
+				crate::Error::<Runtime>::InvalidContractOperation
+			);
+
+			assert_err!(
+				<Currencies as MultiCurrency<AccountIdOf<Runtime>>>::withdraw(cid, &ALICE, UNIT),
+				crate::Error::<Runtime>::InvalidContractOperation
+			);
+
+			assert_ok!(<Currencies as MultiCurrency<AccountIdOf<Runtime>>>::transfer(
+				cid, &ALICE, &BOB, UNIT
+			),);
+
+			assert_eq!(ContractTokenRegistry::balance_of(deployed.clone(), ALICE), Some(0));
+			assert_eq!(ContractTokenRegistry::balance_of(deployed.clone(), BOB), Some(UNIT));
 		});
 }

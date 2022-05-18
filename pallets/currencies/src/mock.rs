@@ -241,8 +241,8 @@ impl Config for Runtime {
 
 pub struct AccountConvert;
 
-impl Convert<sr25519::Public, AccountId> for AccountConvert {
-	fn convert(a: sr25519::Public) -> AccountId {
+impl Convert<[u8; 32], AccountId> for AccountConvert {
+	fn convert(a: [u8; 32]) -> AccountId {
 		a.into()
 	}
 }

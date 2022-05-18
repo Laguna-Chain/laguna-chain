@@ -36,8 +36,6 @@ type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountIdOf<T
 
 type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
-// pub mod adapter;
-
 #[cfg(test)]
 mod mock;
 
@@ -51,20 +49,6 @@ mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
-		/// platform token adapter
-		// type NativeCurrency: BasicCurrencyExtended<
-		// 		Self::AccountId,
-		// 		Balance = BalanceOf<Self>,
-		// 		Amount = AmountOf<Self>,
-		// 	> + BasicLockableCurrency<Self::AccountId, Balance = BalanceOf<Self>>
-		// 	+ BasicReservableCurrency<Self::AccountId, Balance = BalanceOf<Self>>
-		// 	+ fungible::Inspect<Self::AccountId, Balance = BalanceOf<Self>>
-		// 	+ fungible::Mutate<Self::AccountId, Balance = BalanceOf<Self>>
-		// 	+ fungible::Transfer<Self::AccountId, Balance = BalanceOf<Self>>
-		// 	+ fungible::Unbalanced<Self::AccountId, Balance = BalanceOf<Self>>
-		// 	+ fungible::InspectHold<Self::AccountId, Balance = BalanceOf<Self>>
-		// 	+ fungible::MutateHold<Self::AccountId, Balance = BalanceOf<Self>>;
-
 		#[pallet::constant]
 		type NativeCurrencyId: Get<CurrencyId>;
 
@@ -84,7 +68,7 @@ mod pallet {
 		type ContractAssets: TokenAccess<Self, Balance = BalanceOf<Self>>;
 
 		/// provide mechanism to get account_id from pub key, used for contract-asset lookup
-		type ConvertIntoAccountId: Convert<sr25519::Public, Self::AccountId>;
+		type ConvertIntoAccountId: Convert<[u8; 32], Self::AccountId>;
 	}
 
 	#[pallet::pallet]
@@ -237,8 +221,7 @@ where
 	fn minimum_balance(currency_id: Self::CurrencyId) -> Self::Balance {
 		match currency_id {
 			CurrencyId::Erc20(_) => Default::default(),
-			// x if x == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Inspect<AccountIdOf<T>>>::minimum_balance(),
+
 			CurrencyId::NativeToken(_) => <T::MultiCurrency as fungibles::Inspect<
 				AccountIdOf<T>,
 			>>::minimum_balance(currency_id),
@@ -248,11 +231,10 @@ where
 	fn total_issuance(currency_id: Self::CurrencyId) -> Self::Balance {
 		match currency_id {
 			CurrencyId::Erc20(addr) => {
-				let acc = T::ConvertIntoAccountId::convert(sr25519::Public(addr));
-				T::ContractAssets::total_supply(acc).unwrap_or_default()
+				let asset = T::ConvertIntoAccountId::convert(addr);
+				T::ContractAssets::total_supply(asset).unwrap_or_default()
 			},
-			// x if x == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Inspect<AccountIdOf<T>>>::total_issuance(),
+
 			CurrencyId::NativeToken(_) => {
 				let a = <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::total_issuance(
 					currency_id,
@@ -266,11 +248,10 @@ where
 	fn total_balance(currency_id: Self::CurrencyId, who: &T::AccountId) -> Self::Balance {
 		match currency_id {
 			CurrencyId::Erc20(addr) => {
-				let acc = T::ConvertIntoAccountId::convert(sr25519::Public(addr));
-				T::ContractAssets::balance_of(who.clone(), acc).unwrap_or_default()
+				let asset = T::ConvertIntoAccountId::convert(addr);
+				T::ContractAssets::balance_of(asset, who.clone()).unwrap_or_default()
 			},
-			// x if x == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Inspect<AccountIdOf<T>>>::total_issuance(),
+
 			CurrencyId::NativeToken(_) => <T::MultiCurrency as fungibles::Inspect<
 				AccountIdOf<T>,
 			>>::total_issuance(currency_id),
@@ -279,11 +260,10 @@ where
 
 	fn free_balance(currency_id: Self::CurrencyId, who: &T::AccountId) -> Self::Balance {
 		match currency_id {
-			// x if x == T::NativeCurrencyId::get() => T::NativeCurrency::free_balance(who),
 			CurrencyId::NativeToken(_) => T::MultiCurrency::free_balance(currency_id, who),
 			CurrencyId::Erc20(addr) => {
-				let acc = T::ConvertIntoAccountId::convert(sr25519::Public(addr));
-				T::ContractAssets::balance_of(who.clone(), acc).unwrap_or_default()
+				let asset = T::ConvertIntoAccountId::convert(addr);
+				T::ContractAssets::balance_of(asset, who.clone()).unwrap_or_default()
 			},
 		}
 	}
@@ -294,8 +274,6 @@ where
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			// x if x == T::NativeCurrencyId::get() =>
-			// 	T::NativeCurrency::ensure_can_withdraw(who, amount),
 			CurrencyId::NativeToken(_) =>
 				T::MultiCurrency::ensure_can_withdraw(currency_id, who, amount),
 			CurrencyId::Erc20(addr) => {
@@ -304,8 +282,8 @@ where
 					return Ok(())
 				}
 
-				let asset = T::ConvertIntoAccountId::convert(sr25519::Public(addr));
-				let balance = T::ContractAssets::balance_of(who.clone(), asset).unwrap_or_default();
+				let asset = T::ConvertIntoAccountId::convert(addr);
+				let balance = T::ContractAssets::balance_of(asset, who.clone()).unwrap_or_default();
 
 				ensure!(balance >= amount, Error::<T>::BalanceTooLow);
 				Ok(())
@@ -320,11 +298,9 @@ where
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			// x if x == T::NativeCurrencyId::get() => T::NativeCurrency::transfer(from, to,
-			// amount),
 			CurrencyId::NativeToken(_) => T::MultiCurrency::transfer(currency_id, from, to, amount),
 			CurrencyId::Erc20(addr) => {
-				let asset = T::ConvertIntoAccountId::convert(sr25519::Public(addr));
+				let asset = T::ConvertIntoAccountId::convert(addr);
 
 				let raw_origin = RawOrigin::Signed(from.clone());
 
@@ -344,7 +320,6 @@ where
 			return Ok(())
 		}
 		match currency_id {
-			// x if x == T::NativeCurrencyId::get() => T::NativeCurrency::deposit(who, amount),
 			CurrencyId::NativeToken(_) => T::MultiCurrency::deposit(currency_id, who, amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
@@ -359,7 +334,6 @@ where
 			return Ok(())
 		}
 		match currency_id {
-			// x if x == T::NativeCurrencyId::get() => T::NativeCurrency::withdraw(who, amount),
 			CurrencyId::NativeToken(_) => T::MultiCurrency::withdraw(currency_id, who, amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
@@ -367,7 +341,6 @@ where
 
 	fn can_slash(currency_id: Self::CurrencyId, who: &T::AccountId, value: Self::Balance) -> bool {
 		match currency_id {
-			// x if x == T::NativeCurrencyId::get() => T::NativeCurrency::can_slash(who, value),
 			CurrencyId::NativeToken(_) => T::MultiCurrency::can_slash(currency_id, who, value),
 			CurrencyId::Erc20(_) => value.is_zero(),
 		}
@@ -379,7 +352,6 @@ where
 		amount: Self::Balance,
 	) -> Self::Balance {
 		match currency_id {
-			// x if x == T::NativeCurrencyId::get() => T::NativeCurrency::slash(who, amount),
 			CurrencyId::NativeToken(_) => T::MultiCurrency::slash(currency_id, who, amount),
 			CurrencyId::Erc20(_) => Default::default(),
 		}
@@ -398,8 +370,6 @@ where
 		by_amount: Self::Amount,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::update_balance(who, by_amount),
 			CurrencyId::NativeToken(_) =>
 				<T::MultiCurrency>::update_balance(currency_id, who, by_amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
@@ -420,8 +390,6 @@ where
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::set_lock(lock_id, who, amount),
 			CurrencyId::NativeToken(_) =>
 				<T::MultiCurrency>::set_lock(lock_id, currency_id, who, amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
@@ -435,8 +403,6 @@ where
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::extend_lock(lock_id, who, amount),
 			CurrencyId::NativeToken(_) =>
 				<T::MultiCurrency>::extend_lock(lock_id, currency_id, who, amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
@@ -449,8 +415,6 @@ where
 		who: &T::AccountId,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::remove_lock(lock_id, who),
 			CurrencyId::NativeToken(_) =>
 				<T::MultiCurrency>::remove_lock(lock_id, currency_id, who),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
@@ -468,8 +432,6 @@ where
 		value: Self::Balance,
 	) -> bool {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::can_reserve(who, value),
 			CurrencyId::NativeToken(_) => <T::MultiCurrency>::can_reserve(currency_id, who, value),
 			CurrencyId::Erc20(_) => false,
 		}
@@ -481,8 +443,6 @@ where
 		value: Self::Balance,
 	) -> Self::Balance {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::slash_reserved(who, value),
 			CurrencyId::NativeToken(_) =>
 				<T::MultiCurrency>::slash_reserved(currency_id, who, value),
 			CurrencyId::Erc20(_) => Default::default(),
@@ -491,8 +451,6 @@ where
 
 	fn reserved_balance(currency_id: Self::CurrencyId, who: &T::AccountId) -> Self::Balance {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::reserved_balance(who),
 			CurrencyId::NativeToken(_) => <T::MultiCurrency>::reserved_balance(currency_id, who),
 			CurrencyId::Erc20(_) => Default::default(),
 		}
@@ -504,8 +462,6 @@ where
 		value: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::reserve(who, value),
 			CurrencyId::NativeToken(_) => <T::MultiCurrency>::reserve(currency_id, who, value),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
@@ -517,8 +473,6 @@ where
 		value: Self::Balance,
 	) -> Self::Balance {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::unreserve(who, value),
 			CurrencyId::NativeToken(_) => <T::MultiCurrency>::unreserve(currency_id, who, value),
 			CurrencyId::Erc20(_) => Default::default(),
 		}
@@ -532,8 +486,6 @@ where
 		status: orml_traits::BalanceStatus,
 	) -> core::result::Result<Self::Balance, DispatchError> {
 		match currency_id {
-			// _ if currency_id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency>::repatriate_reserved(slashed, beneficiary, value, status),
 			CurrencyId::NativeToken(_) => <T::MultiCurrency>::repatriate_reserved(
 				currency_id,
 				slashed,
@@ -566,8 +518,6 @@ where
 		match asset {
 			CurrencyId::Erc20(_) =>
 				<Self as MultiCurrency<AccountIdOf<T>>>::total_balance(asset, who),
-			// x if x == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Inspect<AccountIdOf<T>>>::balance(who),
 			_ => <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::balance(asset, who),
 		}
 	}
@@ -580,9 +530,6 @@ where
 		match asset {
 			CurrencyId::Erc20(_) =>
 				<Self as MultiCurrency<AccountIdOf<T>>>::free_balance(asset, who),
-			// x if x == T::NativeCurrencyId::get() => <T::NativeCurrency as fungible::Inspect<
-			// 	AccountIdOf<T>,
-			// >>::reducible_balance(who, keep_alive),
 			_ => <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::reducible_balance(
 				asset, who, keep_alive,
 			),
@@ -615,8 +562,7 @@ where
 
 				DepositConsequence::Success
 			},
-			// x if x == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Inspect<AccountIdOf<T>>>::can_deposit(who, amount),
+
 			_ => <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::can_deposit(
 				asset, who, amount,
 			),
@@ -634,8 +580,7 @@ where
 					Ok(()) => WithdrawConsequence::Success,
 					_ => WithdrawConsequence::NoFunds,
 				},
-			// id if id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Inspect<_>>::can_withdraw(who, amount),
+
 			_ => <T::MultiCurrency as fungibles::Inspect<_>>::can_withdraw(asset, who, amount),
 		}
 	}
@@ -664,8 +609,7 @@ where
 
 		match asset {
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-			// id if id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Mutate<_>>::burn_from(who, amount),
+
 			_ => <T::MultiCurrency as fungibles::Mutate<_>>::burn_from(asset, who, amount),
 		}
 	}
@@ -688,9 +632,7 @@ where
 
 		match asset {
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-			// id if id == T::NativeCurrencyId::get() => <T::NativeCurrency as fungible::Transfer<
-			// 	_,
-			// >>::transfer(source, dest, amount, keep_alive),
+
 			_ => <T::MultiCurrency as fungibles::Transfer<_>>::transfer(
 				asset, source, dest, amount, keep_alive,
 			),
@@ -706,8 +648,7 @@ where
 		match asset {
 			CurrencyId::Erc20(_) =>
 				<Self as MultiReservableCurrency<AccountIdOf<T>>>::reserved_balance(asset, who),
-			// id if id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::InspectHold<_>>::balance_on_hold(who),
+
 			_ => <T::MultiCurrency as fungibles::InspectHold<_>>::balance_on_hold(asset, who),
 		}
 	}
@@ -716,8 +657,7 @@ where
 		match asset {
 			CurrencyId::Erc20(_) =>
 				<Self as MultiReservableCurrency<_>>::can_reserve(asset, who, amount),
-			// id if id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::InspectHold<_>>::can_hold(who, amount),
+
 			_ => <T::MultiCurrency as fungibles::InspectHold<_>>::can_hold(asset, who, amount),
 		}
 	}
@@ -731,8 +671,7 @@ where
 		match asset {
 			CurrencyId::Erc20(_) =>
 				<Self as MultiReservableCurrency<_>>::reserve(asset, who, amount),
-			// id if id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::MutateHold<_>>::hold(who, amount),
+
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::hold(asset, who, amount),
 		}
 	}
@@ -759,8 +698,7 @@ where
 				let gap = <Self as MultiReservableCurrency<_>>::unreserve(asset, who, amount);
 				Ok(amount.saturating_sub(gap))
 			},
-			// id if id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::MutateHold<_>>::release(who, amount, best_effort),
+
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::release(
 				asset,
 				who,
@@ -798,11 +736,7 @@ where
 				)?;
 				Ok(amount.saturating_sub(gap))
 			},
-			// id if id == T::NativeCurrencyId::get() => <T::NativeCurrency as fungible::MutateHold<
-			// 	_,
-			// >>::transfer_held(
-			// 	source, dest, amount, best_effort, on_hold
-			// ),
+
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::transfer_held(
 				asset,
 				source,
@@ -826,8 +760,7 @@ where
 	) -> DispatchResult {
 		match asset {
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-			// id if id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Unbalanced<_>>::set_balance(who, amount),
+
 			_ => <T::MultiCurrency as fungibles::Unbalanced<_>>::set_balance(asset, who, amount),
 		}
 	}
@@ -835,8 +768,7 @@ where
 	fn set_total_issuance(asset: Self::AssetId, amount: Self::Balance) {
 		match asset {
 			CurrencyId::Erc20(_) => {},
-			// id if id == T::NativeCurrencyId::get() =>
-			// 	<T::NativeCurrency as fungible::Unbalanced<_>>::set_total_issuance(amount),
+
 			_ => <T::MultiCurrency as fungibles::Unbalanced<_>>::set_total_issuance(asset, amount),
 		}
 	}
