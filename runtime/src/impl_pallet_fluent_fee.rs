@@ -1,4 +1,4 @@
-use crate::{impl_orml_tokens::NativeCurrencyId, Currencies, Event, Runtime};
+use crate::{impl_pallet_currencies::NativeCurrencyId, Currencies, Event, Runtime};
 
 impl pallet_fluent_fee::Config for Runtime {
 	type Event = Event;

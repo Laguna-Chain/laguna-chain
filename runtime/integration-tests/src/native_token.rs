@@ -9,7 +9,9 @@ mod tests {
 	use crate::*;
 	use frame_support::assert_ok;
 	use hydro_runtime::{constants::HYDROS, Currencies, Origin};
-	use orml_traits::{MultiCurrency, MultiLockableCurrency, MultiReservableCurrency};
+	use orml_traits::{
+		MultiCurrency, MultiCurrencyExtended, MultiLockableCurrency, MultiReservableCurrency,
+	};
 
 	#[test]
 	fn transfer_native() {
@@ -26,12 +28,7 @@ mod tests {
 				let bob_init = Currencies::free_balance(NATIVE_CURRENCY_ID, &BOB);
 				assert_eq!(bob_init, 10 * HYDROS);
 
-				assert_ok!(Currencies::transfer(
-					Origin::signed(ALICE.into()),
-					BOB.into(),
-					NATIVE_CURRENCY_ID,
-					1 * HYDROS,
-				));
+				assert_ok!(Currencies::transfer(NATIVE_CURRENCY_ID, &ALICE, &BOB, 1 * HYDROS,));
 
 				let alice_after = Currencies::free_balance(NATIVE_CURRENCY_ID, &ALICE);
 				assert_eq!(alice_after, 9 * HYDROS);
@@ -54,12 +51,7 @@ mod tests {
 				let bob_init = Currencies::free_balance(FEE_TOKEN_ID, &BOB);
 				assert_eq!(bob_init, 10 * HYDROS);
 
-				assert_ok!(Currencies::transfer(
-					Origin::signed(ALICE.into()),
-					BOB.into(),
-					FEE_TOKEN_ID,
-					1 * HYDROS,
-				));
+				assert_ok!(Currencies::transfer(FEE_TOKEN_ID, &ALICE, &BOB, 1 * HYDROS,));
 
 				let alice_after = Currencies::free_balance(FEE_TOKEN_ID, &ALICE);
 				assert_eq!(alice_after, 9 * HYDROS);
@@ -79,9 +71,8 @@ mod tests {
 				assert_eq!(alice_init, 10 * HYDROS);
 
 				assert_ok!(Currencies::update_balance(
-					Origin::root(),
-					ALICE.into(),
 					NATIVE_CURRENCY_ID,
+					&ALICE,
 					(1 * HYDROS) as i128,
 				));
 

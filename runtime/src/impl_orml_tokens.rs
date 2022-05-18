@@ -1,6 +1,5 @@
 use crate::{
 	constants::{currency::NATIVE_TOKEN, MICRO_HYDRO},
-	impl_pallet_balances::MaxLocks,
 	Event, Runtime,
 };
 use frame_support::{parameter_types, traits::Contains};
@@ -13,6 +12,10 @@ impl Contains<AccountId> for DustRemovalWhitelist {
 		// TODO: all account are possible to be dust-removed now
 		false
 	}
+}
+
+parameter_types! {
+	pub const MaxLocks: u32 = 50;
 }
 
 orml_traits::parameter_type_with_key! {

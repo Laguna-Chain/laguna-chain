@@ -5,7 +5,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::HasCompact;
-use core::str::FromStr;
 use frame_support::{pallet_prelude::*, traits::Currency, PalletId};
 use frame_system::{pallet_prelude::*, RawOrigin};
 use hex_literal::hex;
@@ -13,7 +12,7 @@ use primitives::{Balance, CurrencyId};
 use sp_core::hexdisplay::AsBytesRef;
 use sp_runtime::{
 	app_crypto::UncheckedFrom,
-	traits::{AccountIdConversion, AccountIdLookup, IdentityLookup},
+	traits::{AccountIdConversion, AccountIdLookup, IdentityLookup, StaticLookup},
 	MultiAddress,
 };
 
@@ -196,9 +195,11 @@ pub trait TokenAccess<T: frame_system::Config> {
 	) -> DispatchResultWithPostInfo;
 }
 
+type Lookup<T> = IdentityLookup<AccountIdOf<T>>;
+
 impl<T> TokenAccess<T> for Pallet<T>
 where
-	T: Config<Lookup = IdentityLookup<AccountIdOf<T>>>,
+	T: Config,
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
 	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + Debug + TypeInfo + Encode,
 {
@@ -268,7 +269,7 @@ where
 		}
 		pallet_contracts::Pallet::<T>::call(
 			who,
-			asset_address,
+			T::Lookup::unlookup(asset_address),
 			Default::default(),
 			T::MaxGas::get(),
 			None,
@@ -318,7 +319,7 @@ where
 		}
 		pallet_contracts::Pallet::<T>::call(
 			owner,
-			asset_address,
+			T::Lookup::unlookup(asset_address),
 			Default::default(),
 			T::MaxGas::get(),
 			None,
@@ -341,7 +342,7 @@ where
 		}
 		pallet_contracts::Pallet::<T>::call(
 			who,
-			asset_address,
+			T::Lookup::unlookup(asset_address),
 			Default::default(),
 			T::MaxGas::get(),
 			None,

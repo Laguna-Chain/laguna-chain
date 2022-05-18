@@ -12,7 +12,7 @@ use frame_support::{
 	traits::tokens::{fungible, fungibles, DepositConsequence, WithdrawConsequence},
 };
 
-use frame_system::{pallet_prelude::*, Account, RawOrigin};
+use frame_system::{pallet_prelude::*, RawOrigin};
 
 use orml_traits::{
 	currency::TransferAll, BalanceStatus, BasicCurrency, BasicCurrencyExtended,
@@ -23,7 +23,7 @@ use orml_traits::{
 pub use pallet::*;
 use pallet_contract_asset_registry::TokenAccess;
 use primitives::CurrencyId;
-use sp_core::{sr25519, U256};
+use sp_core::U256;
 use sp_runtime::traits::{CheckedAdd, Convert, Saturating, Zero};
 
 /// +++++++++++++++++++++++
@@ -235,13 +235,9 @@ where
 				T::ContractAssets::total_supply(asset).unwrap_or_default()
 			},
 
-			CurrencyId::NativeToken(_) => {
-				let a = <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::total_issuance(
-					currency_id,
-				);
-				dbg!(&a);
-				a
-			},
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as fungibles::Inspect<
+				AccountIdOf<T>,
+			>>::total_issuance(currency_id),
 		}
 	}
 

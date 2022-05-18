@@ -1,25 +1,25 @@
-use frame_support::traits::Currency;
+use frame_support::{parameter_types, traits::Currency};
 use orml_tokens::CurrencyAdapter;
-use primitives::{AccountId, Amount, BlockNumber};
-use sp_core::sr25519;
-use sp_runtime::traits::Convert;
+use primitives::{AccountId, Amount, BlockNumber, CurrencyId, TokenId};
+use sp_runtime::traits::{Convert, ConvertInto};
 
-use crate::{
-	impl_orml_tokens::NativeCurrencyId, Balances, ContractAssetsRegistry, Runtime, Tokens,
-};
+use crate::{ContractAssetsRegistry, Runtime, Tokens};
+
+parameter_types! {
+	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Hydro);
+}
 
 impl pallet_currencies::Config for Runtime {
-	type NativeCurrency = CurrencyAdapter<Runtime, NativeCurrencyId>;
 	type NativeCurrencyId = NativeCurrencyId;
 	type MultiCurrency = Tokens;
 	type ContractAssets = ContractAssetsRegistry;
-	type ConvertIntoAccountId = AddressConvert;
+	type ConvertIntoAccountId = ConvertInto;
 }
 
 struct AddressConvert;
 
-impl Convert<sr25519::Public, AccountId> for AddressConvert {
-	fn convert(a: sr25519::Public) -> AccountId {
+impl Convert<[u8; 32], AccountId> for AddressConvert {
+	fn convert(a: [u8; 32]) -> AccountId {
 		a.into()
 	}
 }

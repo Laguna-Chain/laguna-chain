@@ -3,9 +3,8 @@
 use crate::{
 	constants::{HYDROS, MILLI_HYDRO},
 	impl_frame_system::BlockWeights,
-	impl_orml_tokens::NativeCurrencyId,
-	Balances, Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment,
-	Weight,
+	impl_pallet_currencies::NativeCurrencyId,
+	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight,
 };
 use frame_support::parameter_types;
 use orml_tokens::CurrencyAdapter;

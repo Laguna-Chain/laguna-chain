@@ -37,10 +37,8 @@ use primitives::{AccountId, Address, Balance, BlockNumber, Hash, Header, Index, 
 // include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
 pub mod impl_frame_system;
-// pub mod impl_orml_currencies;
 pub mod impl_orml_tokens;
 pub mod impl_pallet_aura;
-pub mod impl_pallet_balances;
 pub mod impl_pallet_contract_asset_registry;
 pub mod impl_pallet_contracts;
 
@@ -120,8 +118,6 @@ construct_runtime!(
 			Scheduler: pallet_scheduler ,
 
 			// token and currency
-			Balances: pallet_balances ,
-			// Currencies: orml_currencies,
 			Tokens: orml_tokens,
 			Currencies: pallet_currencies,
 			ContractAssetsRegistry: pallet_contract_asset_registry,
@@ -386,7 +382,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
 
 			// include pallet benchmarks
-			list_benchmark!(list, extra, pallet_balances, Balances);
+			// list_benchmark!(list, extra, pallet_balances, Balances);
 
 			// TODO: add all benchmarks defined by pallets
 
@@ -429,7 +425,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 
 			// pallet-specific bench items
-			add_benchmark!(params, batches, pallet_balances, Balances);
+			// add_benchmark!(params, batches, pallet_balances, Balances);
 
 			// TODO: add pallet-specific bench items below
 
