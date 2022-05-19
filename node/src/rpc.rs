@@ -5,6 +5,8 @@ use primitives::{AccountId, Balance, BlockNumber, Hash, Index};
 use std::sync::Arc;
 
 use pallet_contracts_rpc::{Contracts, ContractsApi};
+use pallet_currencies_rpc::{CurrenciesApi, CurrenciesRpc};
+use pallet_currencies_runtime_api::CurrenciesApi as CurrenciesRuntimeApi;
 use pallet_transaction_payment_rpc::{TransactionPayment, TransactionPaymentApi};
 use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
@@ -35,6 +37,7 @@ where
 	Client::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
 	Client::Api:
 		pallet_contracts_rpc::ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
+	Client::Api: CurrenciesRuntimeApi<Block, AccountId, Balance>,
 	Client::Api: BlockBuilder<Block>, // should be able to produce block
 	Pool: TransactionPool + 'static,  // can submit tx into tx-pool
 {
@@ -49,6 +52,7 @@ where
 
 	io.extend_with(ContractsApi::to_delegate(Contracts::new(client.clone())));
 
+	io.extend_with(CurrenciesApi::to_delegate(CurrenciesRpc::new(client.clone())));
 	// TODO: extend io with needed rpc here interface
 
 	io

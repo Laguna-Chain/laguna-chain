@@ -32,7 +32,9 @@ use pallet_grandpa::{
 };
 
 use frame_support::weights::Weight;
-use primitives::{AccountId, Address, Balance, BlockNumber, Hash, Header, Index, Signature};
+use primitives::{
+	AccountId, Address, Balance, BlockNumber, CurrencyId, Hash, Header, Index, Signature,
+};
 
 // include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
@@ -357,6 +359,21 @@ impl_runtime_apis! {
 			Contracts::get_storage(address, key)
 		}
 
+
+	}
+
+	impl pallet_currencies_runtime_api::CurrenciesApi<Block, AccountId, Balance> for Runtime {
+		fn list_assets() -> Vec<CurrencyId> {
+			ContractAssetsRegistry::enabled_assets().iter().map(|v| CurrencyId::Erc20(*v.as_ref())).collect::<_>()
+		}
+
+		fn free_balance(account: AccountId, asset: CurrencyId) -> Option<Balance> {
+			Some(Currencies::free_balance(account, asset))
+		}
+
+		fn total_balance(account: AccountId, asset: CurrencyId) -> Option<Balance> {
+			Some(Currencies::total_balance(account, asset))
+		}
 
 	}
 

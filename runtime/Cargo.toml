@@ -58,6 +58,7 @@ sp-version = {default-features = false, git = 'https://github.com/ultrastable-mo
 # parity SCALE codec
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0'}
 hex-literal = {version = '0.3.1'}
+pallet-currencies-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '1.0'}
 
 # build dependency for the wasm runtime
@@ -106,6 +107,7 @@ std = [
   "pallet-timestamp/std",
   'pallet-scheduler/std',
   'pallet-currencies/std',
+  'pallet-currencies-runtime-api/std',
   'pallet-transaction-payment/std',
   'pallet-transaction-payment-rpc-runtime-api/std',
   "pallet-fluent-fee/std",

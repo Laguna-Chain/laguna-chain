@@ -84,7 +84,7 @@ fn test_total_supply() {
 
 			assert_ok!(ContractTokenRegistry::transfer(
 				deployed.clone(),
-				Origin::signed(ALICE),
+				ALICE,
 				BOB,
 				U256::from(init_amount / 10)
 			));
@@ -100,7 +100,7 @@ fn test_total_supply() {
 			// alice should not be able to spend on be half of bob
 			assert!(ContractTokenRegistry::transfer_from(
 				deployed.clone(),
-				Origin::signed(ALICE),
+				ALICE,
 				BOB,
 				ALICE,
 				U256::from(init_amount / 100)
@@ -115,7 +115,7 @@ fn test_total_supply() {
 			// bob should be able to allow alice to spend
 			assert_ok!(ContractTokenRegistry::approve(
 				deployed.clone(),
-				Origin::signed(BOB),
+				BOB,
 				ALICE,
 				U256::from(init_amount / 100)
 			));
@@ -134,7 +134,7 @@ fn test_total_supply() {
 			// alice should be able to spend the allowance
 			assert_ok!(ContractTokenRegistry::transfer_from(
 				deployed.clone(),
-				Origin::signed(ALICE),
+				ALICE,
 				BOB,
 				ALICE,
 				U256::from(init_amount / 100)

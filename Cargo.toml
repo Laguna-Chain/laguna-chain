@@ -13,5 +13,7 @@ members = [
   'pallets/fluent-fee',
   'pallets/contract-asset-registry',
   'pallets/currencies',
+  'pallets/currencies/rpc',
+  'pallets/currencies/rpc/runtime-api',
 ] 
 resolver = "2" # use the new resolver for better dependency resolution

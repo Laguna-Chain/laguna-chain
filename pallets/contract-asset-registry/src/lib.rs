@@ -102,6 +102,14 @@ mod pallet {
 	}
 }
 
+impl<T: Config> Pallet<T> {
+	pub fn enabled_assets() -> Vec<AccountIdOf<T>> {
+		RegisteredAsset::<T>::iter()
+			.filter_map(|(k, v)| if v { Some(k) } else { None })
+			.collect::<Vec<_>>()
+	}
+}
+
 // TODO: hard-coded erc20 selector, we should extend support to ink tokens as well, or come up with
 // an adapter to bridge to both types of assets(solang sol and ink)
 enum Selector<T: frame_system::Config> {
@@ -168,7 +176,7 @@ pub trait TokenAccess<T: frame_system::Config> {
 
 	fn transfer(
 		asset_address: AccountIdOf<T>,
-		who: OriginFor<T>,
+		who: AccountIdOf<T>,
 		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo;
@@ -181,21 +189,19 @@ pub trait TokenAccess<T: frame_system::Config> {
 
 	fn approve(
 		asset_address: AccountIdOf<T>,
-		owner: OriginFor<T>,
+		owner: AccountIdOf<T>,
 		spender: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo;
 
 	fn transfer_from(
 		asset_address: AccountIdOf<T>,
-		who: OriginFor<T>,
+		who: AccountIdOf<T>,
 		from: AccountIdOf<T>,
 		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo;
 }
-
-type Lookup<T> = IdentityLookup<AccountIdOf<T>>;
 
 impl<T> TokenAccess<T> for Pallet<T>
 where
@@ -257,7 +263,7 @@ where
 
 	fn transfer(
 		asset_address: AccountIdOf<T>,
-		who: OriginFor<T>,
+		who: AccountIdOf<T>,
 		to: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
@@ -267,8 +273,9 @@ where
 		{
 			return Err(Error::<T>::InvalidAsset.into())
 		}
+
 		pallet_contracts::Pallet::<T>::call(
-			who,
+			RawOrigin::Signed(who).into(),
 			T::Lookup::unlookup(asset_address),
 			Default::default(),
 			T::MaxGas::get(),
@@ -307,7 +314,7 @@ where
 
 	fn approve(
 		asset_address: AccountIdOf<T>,
-		owner: OriginFor<T>,
+		owner: AccountIdOf<T>,
 		spender: AccountIdOf<T>,
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
@@ -318,7 +325,7 @@ where
 			return Err(Error::<T>::InvalidAsset.into())
 		}
 		pallet_contracts::Pallet::<T>::call(
-			owner,
+			RawOrigin::Signed(owner).into(),
 			T::Lookup::unlookup(asset_address),
 			Default::default(),
 			T::MaxGas::get(),
@@ -329,7 +336,7 @@ where
 
 	fn transfer_from(
 		asset_address: AccountIdOf<T>,
-		who: OriginFor<T>,
+		who: AccountIdOf<T>,
 		from: AccountIdOf<T>,
 		to: AccountIdOf<T>,
 		amount: U256,
@@ -341,7 +348,7 @@ where
 			return Err(Error::<T>::InvalidAsset.into())
 		}
 		pallet_contracts::Pallet::<T>::call(
-			who,
+			RawOrigin::Signed(who).into(),
 			T::Lookup::unlookup(asset_address),
 			Default::default(),
 			T::MaxGas::get(),

@@ -60,6 +60,8 @@ frame-benchmarking-cli = {git = 'https://github.com/ultrastable-money/substrate.
 hex-literal = "0.3.4"
 jsonrpc-core = "18.0.0"
 structopt = "0.3.25"
+pallet-currencies-rpc = { version = "0.1.0", path = "../pallets/currencies/rpc" }
+pallet-currencies-runtime-api = { version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api" }
 
 [features]
 default = []
