@@ -43,7 +43,6 @@ impl ExtBuilder {
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();
-		
 
 		// setup sudo account
 		if let Some(key) = self.sudo {
