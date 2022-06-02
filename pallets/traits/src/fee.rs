@@ -9,6 +9,13 @@ pub enum InvalidFeeSource {
 	Unlisted,
 }
 
+#[derive(Debug)]
+pub enum InvalidFeeDispatch {
+	InsufficientBalance,
+	UnresolvedRoute,
+	CorrectionError,
+}
+
 pub trait FeeSource {
 	type AssetId;
 	type Balance;
@@ -41,10 +48,10 @@ where
 		id: &Self::AssetId,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
-	) -> Result<(), InvalidFeeSource>;
+	) -> Result<(), InvalidFeeDispatch>;
 
 	fn post_info_correction(
 		id: &Self::AssetId,
 		post_info: &PostDispatchInfoOf<T::Call>,
-	) -> Result<(), InvalidFeeSource>;
+	) -> Result<(), InvalidFeeDispatch>;
 }

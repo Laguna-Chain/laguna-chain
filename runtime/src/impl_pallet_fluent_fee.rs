@@ -69,15 +69,15 @@ impl FeeDispatch<Runtime> for StaticImpl {
 		id: &Self::AssetId,
 		balance: &Self::Balance,
 		reason: &frame_support::traits::WithdrawReasons,
-	) -> Result<(), traits::fee::InvalidFeeSource> {
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		Currencies::withdraw(*id, account, *balance)
-			.map_err(|e| traits::fee::InvalidFeeSource::Inactive)
+			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 	}
 
 	fn post_info_correction(
 		id: &Self::AssetId,
 		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
-	) -> Result<(), traits::fee::InvalidFeeSource> {
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		Ok(())
 	}
 }

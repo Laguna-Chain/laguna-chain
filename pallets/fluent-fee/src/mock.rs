@@ -198,7 +198,7 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	fn post_info_correction(
 		id: &Self::AssetId,
 		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
-	) -> Result<(), traits::fee::InvalidFeeSource> {
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		Ok(())
 	}
 
@@ -207,9 +207,9 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		id: &Self::AssetId,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
-	) -> Result<(), traits::fee::InvalidFeeSource> {
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		Currencies::withdraw(*id, account, *balance)
-			.map_err(|e| traits::fee::InvalidFeeSource::Inactive)
+			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 	}
 }
 
