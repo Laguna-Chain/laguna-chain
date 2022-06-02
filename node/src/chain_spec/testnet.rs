@@ -3,8 +3,8 @@
 use primitives::{AccountId, CurrencyId, TokenId};
 
 use hydro_runtime::{
-	constants::HYDROS, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig,
-	SystemConfig, TokensConfig, WASM_BINARY,
+	constants::HYDROS, AuraConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
+	TokensConfig, WASM_BINARY,
 };
 
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -91,15 +91,17 @@ fn testnet_genesis(
 			// allowed sudo account to participate in block finalization with GRANDPA
 			authorities: initial_authorities.iter().map(|x| (x.1.clone(), 1)).collect(),
 		},
-		balances: BalancesConfig {
-			// pre-fund test accounts
-			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
-		},
 		transaction_payment: Default::default(),
 		sudo: SudoConfig {
 			// assign network admin rights.
 			key: Some(root_key),
 		},
-		tokens: Default::default(),
+		tokens: TokensConfig {
+			balances: endowed_accounts
+				.iter()
+				.cloned()
+				.map(|k| (k, CurrencyId::NativeToken(TokenId::Hydro), 1 << 60))
+				.collect(),
+		},
 	}
 }

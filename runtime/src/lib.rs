@@ -32,17 +32,19 @@ use pallet_grandpa::{
 };
 
 use frame_support::weights::Weight;
-use primitives::{AccountId, Address, Balance, BlockNumber, Hash, Header, Index, Signature};
+use primitives::{
+	AccountId, Address, Balance, BlockNumber, CurrencyId, Hash, Header, Index, Signature,
+};
 
 // include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
 pub mod impl_frame_system;
-pub mod impl_orml_currencies;
 pub mod impl_orml_tokens;
 pub mod impl_pallet_aura;
-pub mod impl_pallet_balances;
+pub mod impl_pallet_contract_asset_registry;
 pub mod impl_pallet_contracts;
 
+pub mod impl_pallet_currencies;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
 pub mod impl_pallet_scheduler;
@@ -118,9 +120,9 @@ construct_runtime!(
 			Scheduler: pallet_scheduler ,
 
 			// token and currency
-			Balances: pallet_balances ,
-			Currencies: orml_currencies,
 			Tokens: orml_tokens,
+			Currencies: pallet_currencies,
+			ContractAssetsRegistry: pallet_contract_asset_registry,
 
 			// weight and fee management
 			TransactionPayment: pallet_transaction_payment ,
@@ -129,7 +131,6 @@ construct_runtime!(
 			// conseus mechanism
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
-
 
 			Contracts: pallet_contracts,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
@@ -361,6 +362,21 @@ impl_runtime_apis! {
 
 	}
 
+	impl pallet_currencies_runtime_api::CurrenciesApi<Block, AccountId, Balance> for Runtime {
+		fn list_assets() -> Vec<CurrencyId> {
+			ContractAssetsRegistry::enabled_assets().iter().map(|v| CurrencyId::Erc20(*v.as_ref())).collect::<_>()
+		}
+
+		fn free_balance(account: AccountId, asset: CurrencyId) -> Option<Balance> {
+			Some(Currencies::free_balance(account, asset))
+		}
+
+		fn total_balance(account: AccountId, asset: CurrencyId) -> Option<Balance> {
+			Some(Currencies::total_balance(account, asset))
+		}
+
+	}
+
 	// TODO: add other needed runtime-api
 
 	// expose pallet defined rpc below
@@ -383,7 +399,7 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
 
 			// include pallet benchmarks
-			list_benchmark!(list, extra, pallet_balances, Balances);
+			// list_benchmark!(list, extra, pallet_balances, Balances);
 
 			// TODO: add all benchmarks defined by pallets
 
@@ -426,7 +442,7 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 
 			// pallet-specific bench items
-			add_benchmark!(params, batches, pallet_balances, Balances);
+			// add_benchmark!(params, batches, pallet_balances, Balances);
 
 			// TODO: add pallet-specific bench items below
 

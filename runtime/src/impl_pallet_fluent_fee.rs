@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::{impl_orml_tokens::NativeCurrencyId, Call, Currencies, Event, Runtime};
+use crate::{Call, Currencies, Event, Runtime};
 use frame_support::pallet_prelude::InvalidTransaction;
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
