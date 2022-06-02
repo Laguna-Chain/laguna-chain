@@ -29,6 +29,7 @@ orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-l
 frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev', optional = true}
 hex = {version = "0.4.3", default-features = false}
 hex-literal = "0.3.4"
+traits = {version = "0.1.0", path = "../traits", default-features = false}
 
 [features]
 default = ["std"]
@@ -49,4 +50,5 @@ std = [
   "orml-currencies/std",
   "orml-tokens/std",
   "orml-traits/std",
+  "traits/std",
 ]

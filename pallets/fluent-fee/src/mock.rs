@@ -4,6 +4,7 @@ use frame_support::{
 	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
 	traits::{Contains, Everything},
+	unsigned::TransactionValidityError,
 	weights::IdentityFee,
 };
 
@@ -138,12 +139,88 @@ impl orml_currencies::Config for Runtime {
 	type WeightInfo = ();
 }
 
+pub struct DummyFeeSource;
+
+impl FeeSource for DummyFeeSource {
+	type AssetId = CurrencyId;
+
+	type Balance = Balance;
+
+	fn accepted(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+		match id {
+			CurrencyId::NativeToken(TokenId::FeeToken | TokenId::Hydro) => Ok(()),
+			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
+		}
+	}
+
+	fn listing_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+		todo!()
+	}
+
+	fn denounce_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+		todo!()
+	}
+
+	fn disable_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+		todo!()
+	}
+}
+
+pub struct DummyFeeMeasure;
+
+impl FeeMeasure for DummyFeeMeasure {
+	type AssetId = CurrencyId;
+	type Balance = Balance;
+
+	fn measure(
+		id: &Self::AssetId,
+		balance: Self::Balance,
+	) -> Result<Self::Balance, TransactionValidityError> {
+		match id {
+			CurrencyId::NativeToken(TokenId::Hydro) => Ok(balance),
+
+			// demo 5% reduction
+			CurrencyId::NativeToken(TokenId::FeeToken) =>
+				Ok(balance.saturating_mul(95).saturating_div(100)),
+			_ => Err(InvalidTransaction::Payment.into()),
+		}
+	}
+}
+
+pub struct DummyFeeDispatch<T> {
+	_type: PhantomData<T>,
+}
+
+impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
+	type AssetId = CurrencyId;
+	type Balance = Balance;
+
+	fn post_info_correction(
+		id: &Self::AssetId,
+		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		Ok(())
+	}
+
+	fn withdraw(
+		account: &<Runtime as frame_system::Config>::AccountId,
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+		reason: &WithdrawReasons,
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		Currencies::withdraw(*id, account, *balance)
+			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+	}
+}
+
 impl Config for Runtime {
 	type Event = Event;
 
 	type MultiCurrency = Tokens;
 
-	type NativeCurrencyId = NativeCurrencyId;
+	type FeeSource = DummyFeeSource;
+	type FeeMeasure = DummyFeeMeasure;
+	type FeeDispatch = DummyFeeDispatch<Tokens>;
 }
 
 impl pallet_transaction_payment::Config for Runtime {

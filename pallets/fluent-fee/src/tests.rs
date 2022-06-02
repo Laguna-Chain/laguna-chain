@@ -2,16 +2,10 @@
 
 use super::*;
 
-use frame_support::assert_ok;
+use frame_support::{
+	assert_ok,
+	dispatch::{DispatchInfo, Dispatchable, GetDispatchInfo},
+};
 use mock::*;
-
-#[test]
-fn add_fee_source() {
-	ExtBuilder::default().build().execute_with(|| {
-		assert_ok!(FluentFee::add_currency_to_fee_source(
-			Origin::root(),
-			NATIVE_CURRENCY_ID,
-			FeeRatePoint { base: 10, point: 9 }
-		));
-	});
-}
+use pallet_transaction_payment::ChargeTransactionPayment;
+use sp_runtime::traits::SignedExtension;
