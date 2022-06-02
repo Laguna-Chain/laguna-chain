@@ -1,4 +1,4 @@
-use crate::{Balances, Runtime};
+use crate::{FluentFee, Runtime};
 use frame_support::{parameter_types, weights::IdentityFee};
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::Balance;
@@ -10,7 +10,7 @@ parameter_types! {
 
 impl pallet_transaction_payment::Config for Runtime {
 	// TODO: add benchmark around cross pallet interaction between fee
-	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+	type OnChargeTransaction = FluentFee;
 	type TransactionByteFee = TransactionByteFee;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;

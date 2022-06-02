@@ -1,0 +1,25 @@
+[package]
+edition = "2021"
+name = "pallet-currencies-runtime-api"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+codec = {default-features = false, package = 'parity-scale-codec', version = '2.0.0'}
+primitives = {version = "0.1.0", path = "../../../../primitives", default-features = false}
+scale-info = {default-features = false, features = ['derive'], version = '1.0'}
+sp-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.1.0-dev'}
+sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+
+[features]
+default = ["std"]
+std = [
+  "sp-api/std",
+  "codec/std",
+  "scale-info/std",
+  "sp-std/std",
+  "sp-runtime/std",
+  'primitives/std',
+]

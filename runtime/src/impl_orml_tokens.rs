@@ -1,6 +1,5 @@
 use crate::{
 	constants::{currency::NATIVE_TOKEN, MICRO_HYDRO},
-	impl_pallet_balances::MaxLocks,
 	Event, Runtime,
 };
 use frame_support::{parameter_types, traits::Contains};
@@ -13,6 +12,10 @@ impl Contains<AccountId> for DustRemovalWhitelist {
 		// TODO: all account are possible to be dust-removed now
 		false
 	}
+}
+
+parameter_types! {
+	pub const MaxLocks: u32 = 50;
 }
 
 orml_traits::parameter_type_with_key! {
@@ -30,9 +33,9 @@ orml_traits::parameter_type_with_key! {
 	};
 }
 
-parameter_types! {
-	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(NATIVE_TOKEN);
-}
+// parameter_types! {
+// 	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(NATIVE_TOKEN);
+// }
 
 // use orml's token to represent both native and other tokens
 impl orml_tokens::Config for Runtime {

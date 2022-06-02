@@ -37,34 +37,16 @@ impl ExtBuilder {
 		// construct test storage for the mock runtime
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
-		// prefund native token using pallet_balances
-		pallet_balances::GenesisConfig::<Runtime> {
-			balances: self
-				.balances
-				.clone()
-				.into_iter()
-				.filter(|(_, currency_id, _)| *currency_id == NATIVE_CURRENCY_ID)
-				.map(|(account_id, _, initial_balance)| (account_id, initial_balance))
-				.collect::<Vec<_>>(),
-		}
-		.assimilate_storage(&mut t)
-		.unwrap();
-
 		// prefund alternative token balances for tester accounts
 		orml_tokens::GenesisConfig::<Runtime> {
-			balances: self
-				.balances
-				.clone()
-				.into_iter()
-				.filter(|(_, currency_id, _)| *currency_id != NATIVE_CURRENCY_ID)
-				.collect::<Vec<_>>(),
+			balances: self.balances.clone().into_iter().collect::<Vec<_>>(),
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();
+		
 
 		// setup sudo account
 		if let Some(key) = self.sudo {
-			// FIXME #1578 make this available through chainspec
 			pallet_sudo::GenesisConfig::<Runtime> { key: Some(key) }
 				.assimilate_storage(&mut t)
 				.unwrap();

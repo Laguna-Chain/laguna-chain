@@ -21,6 +21,8 @@ use sp_core::{Decode, Encode, RuntimeDebug};
 use serde::{Deserialize, Serialize};
 use sp_runtime::scale_info::TypeInfo;
 
+pub type AddressRaw = [u8; 32];
+
 #[derive(
 	Encode,
 	Decode,
@@ -36,8 +38,8 @@ use sp_runtime::scale_info::TypeInfo;
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum CurrencyId {
-	NativeToken(TokenId), /* Currently only one native type is defined
-	                       * TODO: Erc20, expose whitelisted evm token later */
+	NativeToken(TokenId),
+	Erc20(AddressRaw),
 }
 
 #[derive(
@@ -70,7 +72,6 @@ pub trait TokenMetadata {
 	fn is_native(&self) -> bool;
 }
 
-// FIXME: consider implementing macros as in Acala's primitives/currency.rs
 impl TokenMetadata for CurrencyId {
 	fn symbol(&self) -> &'static str {
 		match self {
@@ -78,6 +79,7 @@ impl TokenMetadata for CurrencyId {
 				TokenId::Hydro => "HYDRO",
 				TokenId::FeeToken => "HFEE",
 			},
+			CurrencyId::Erc20(_) => todo!(),
 		}
 	}
 
@@ -87,6 +89,7 @@ impl TokenMetadata for CurrencyId {
 				TokenId::Hydro => "HYDRO",
 				TokenId::FeeToken => "HYDRO fee",
 			},
+			CurrencyId::Erc20(_) => todo!(),
 		}
 	}
 
@@ -96,12 +99,14 @@ impl TokenMetadata for CurrencyId {
 				TokenId::Hydro => 18,
 				TokenId::FeeToken => 18,
 			},
+			CurrencyId::Erc20(_) => todo!(),
 		}
 	}
 
 	fn is_native(&self) -> bool {
 		match self {
 			CurrencyId::NativeToken(_) => true,
+			CurrencyId::Erc20(_) => false,
 		}
 	}
 }

@@ -3,10 +3,11 @@
 use crate::{
 	constants::{HYDROS, MILLI_HYDRO},
 	impl_frame_system::BlockWeights,
-	Balances, Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment,
-	Weight,
+	impl_pallet_currencies::NativeCurrencyId,
+	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight,
 };
 use frame_support::parameter_types;
+use orml_tokens::CurrencyAdapter;
 use pallet_contracts::DefaultAddressGenerator;
 
 mod chain_extensions;
@@ -48,7 +49,7 @@ parameter_types! {
 impl pallet_contracts::Config for Runtime {
 	type Time = Timestamp;
 	type Randomness = RandomnessCollectiveFlip;
-	type Currency = Balances;
+	type Currency = CurrencyAdapter<Runtime, NativeCurrencyId>;
 	type Event = Event;
 	type Call = Call;
 	/// The safest default is to allow no calls at all.
