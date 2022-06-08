@@ -9,7 +9,7 @@ use frame_support::{
 };
 
 use frame_system::EnsureRoot;
-use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator};
+use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
 use sp_core::hexdisplay::AsBytesRef;
@@ -112,10 +112,11 @@ parameter_types! {
 impl pallet_transaction_payment::Config for Runtime {
 	// TODO: add benchmark around cross pallet interaction between fee
 	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
-	type TransactionByteFee = TransactionByteFee;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
 	type FeeMultiplierUpdate = ();
+
+	type LengthToFee = IdentityFee<Balance>;
 }
 
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
@@ -159,16 +160,19 @@ impl pallet_contracts::Config for Runtime {
 	type WeightPrice = Payment;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
 	type ChainExtension = ();
-	type DeletionQueueDepth = DeletionQueueDepth;
-	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
+	type DeletionQueueDepth = DeletionQueueDepth;
+	type DeletionWeightLimit = DeletionWeightLimit;
 
 	type DepositPerByte = DepositPerByte;
 
 	type DepositPerItem = DepositPerItem;
 
 	type AddressGenerator = DefaultAddressGenerator;
+
+	// TODO: use arbitrary value now, need to adjust usage later
+	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 }
 
 parameter_types! {

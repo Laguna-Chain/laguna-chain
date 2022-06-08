@@ -10,6 +10,7 @@ sp_api::decl_runtime_apis! {
 	where
 		AccountId: Codec,
 		Balance: Codec,
+
 	{
 		fn list_assets() -> Vec<CurrencyId>;
 

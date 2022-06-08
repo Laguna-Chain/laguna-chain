@@ -6,20 +6,20 @@ mod tests {
 	use crate::{ExtBuilder, ALICE};
 	use codec::{Decode, Encode};
 	use frame_support::assert_ok;
-	use hydro_runtime::{constants::HYDROS, Block, Contracts, Event, Origin, Runtime, System};
+	use laguna_runtime::{constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, System};
 	use pallet_contracts_primitives::{ContractExecResult, ExecReturnValue};
 	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
 	use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId};
 	use sp_core::{hexdisplay::AsBytesRef, Bytes};
 	use std::str::FromStr;
 
-	const HYDRO_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Hydro);
+	const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 	const MAX_GAS: u64 = 200_000_000_000;
 
 	#[test]
 	fn test_ink_basic() {
 		ExtBuilder::default()
-			.balances(vec![(ALICE, HYDRO_TOKEN, 10 * HYDROS)])
+			.balances(vec![(ALICE, LAGUNA_TOKEN, 10 * LAGUNAS)])
 			.build()
 			.execute_with(|| {
 				let mut acc_counter = 0_u32; // needed to avoid account_id duplication, should generat random salt in production
@@ -225,7 +225,7 @@ mod tests {
 	#[test]
 	fn test_sol_basic() {
 		ExtBuilder::default()
-			.balances(vec![(ALICE, HYDRO_TOKEN, 10 * HYDROS)])
+			.balances(vec![(ALICE, LAGUNA_TOKEN, 10 * LAGUNAS)])
 			.build()
 			.execute_with(|| {
 				let acc_counter = 0_u32; // needed to avoid account_id duplication, should generat random salt in production

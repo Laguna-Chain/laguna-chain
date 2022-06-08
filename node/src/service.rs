@@ -1,7 +1,7 @@
 //! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 //! Derived from substrate-node-template
 
-use hydro_runtime::{self, opaque::Block, RuntimeApi};
+use laguna_runtime::{self, opaque::Block, RuntimeApi};
 
 use sc_client_api::{BlockBackend, ExecutorProvider};
 use sc_consensus_aura::{ImportQueueParams, SlotProportion, StartAuraParams};
@@ -9,7 +9,6 @@ use sc_executor::NativeElseWasmExecutor;
 use sc_finality_grandpa::SharedVoterState;
 use sc_service::{error::Error as ServiceError, Configuration, TaskManager};
 use sc_telemetry::{Telemetry, TelemetryWorker}; // TODO: evaluate how we do telemetry
-use sp_consensus::SlotData;
 use sp_consensus_aura::sr25519::AuthorityPair as AuraPair;
 use std::{sync::Arc, time::Duration};
 
@@ -24,15 +23,15 @@ impl sc_executor::NativeExecutionDispatch for ExecutorDispatch {
 	type ExtendHostFunctions = ();
 
 	fn dispatch(method: &str, data: &[u8]) -> Option<Vec<u8>> {
-		hydro_runtime::api::dispatch(method, data)
+		laguna_runtime::api::dispatch(method, data)
 	}
 
 	fn native_version() -> sc_executor::NativeVersion {
-		hydro_runtime::native_version()
+		laguna_runtime::native_version()
 	}
 }
 
-type FullClient =
+pub(crate) type FullClient =
 	sc_service::TFullClient<Block, RuntimeApi, NativeElseWasmExecutor<ExecutorDispatch>>;
 
 type FullBackend = sc_service::TFullBackend<Block>;
@@ -124,7 +123,7 @@ pub fn new_partial(
 
 	// aura specific setup
 	// aura slot rotation duration
-	let slot_duration = sc_consensus_aura::slot_duration(&*client)?.slot_duration();
+	let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
 
 	// general block import queue complete
 	let import_queue =
@@ -136,7 +135,7 @@ pub fn new_partial(
 				let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
 				let slot =
-					sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_duration(
+					sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
 						*timestamp,
 						slot_duration,
 					);
@@ -240,7 +239,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 				crate::rpc::FullDeps { client: client.clone(), pool: pool.clone(), deny_unsafe };
 
 			// full rpc extension
-			Ok(crate::rpc::create_full(deps))
+			crate::rpc::create_full(deps).map_err(Into::into)
 		})
 	};
 
@@ -251,7 +250,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		keystore: keystore_container.sync_keystore(),
 		task_manager: &mut task_manager,
 		transaction_pool: transaction_pool.clone(),
-		rpc_extensions_builder,
+		rpc_builder: rpc_extensions_builder,
 		backend,
 		system_rpc_tx,
 		config,
@@ -272,7 +271,6 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
 
 		let slot_duration = sc_consensus_aura::slot_duration(&*client)?;
-		let raw_slot_duration = slot_duration.slot_duration();
 
 		let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _, _>(
 			StartAuraParams {
@@ -285,9 +283,9 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 					let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
 					let slot =
-						sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_duration(
+						sp_consensus_aura::inherents::InherentDataProvider::from_timestamp_and_slot_duration(
 							*timestamp,
-							raw_slot_duration,
+							slot_duration,
 						);
 
 					Ok((timestamp, slot))

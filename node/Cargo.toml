@@ -1,68 +1,73 @@
 [package]
 edition = "2021"
-name = "hydro-node"
+name = "laguna-node"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [[bin]]
-name = "hydro-node"
+name = "laguna-node"
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
 
 [build-dependencies.substrate-build-script-utils]
-branch = "hydro-dep-polkadot-v0.9.16"
-git = 'https://github.com/ultrastable-money/substrate.git'
+branch = "polkadot-v0.9.22"
+git = 'https://github.com/paritytech/substrate.git'
 version = '3.0.0'
 
 [dependencies]
-# hydro chain primitives
+# laguna chain primitives
 primitives = {path = "../primitives"}
 
-# hydro chain runtime
-hydro-runtime = {path = "../runtime"}
+# laguna chain runtime
+laguna-runtime = {path = "../runtime"}
 
-sc-basic-authorship = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sc-cli = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sc-client-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sc-consensus = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sc-consensus-aura = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sc-executor = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sc-finality-grandpa = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sc-rpc = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sc-rpc-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sc-service = {features = ['wasmtime'], git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sc-telemetry = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sc-transaction-pool = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sc-transaction-pool-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sc-basic-authorship = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-cli = {features = ['wasmtime'], git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-client-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-consensus = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-consensus-aura = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-executor = {features = ['wasmtime'], git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-finality-grandpa = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-rpc-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-service = {features = ['wasmtime'], git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-telemetry = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-transaction-pool = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sc-transaction-pool-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # substrate primitives
-sp-api = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-block-builder = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-blockchain = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-consensus = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sp-consensus-aura = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sp-core = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.1.0-dev'}
-sp-finality-grandpa = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-timestamp = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sp-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-block-builder = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-blockchain = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-consensus = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-consensus-aura = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-core = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-finality-grandpa = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-inherents = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-keyring = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-runtime = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-timestamp = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
-substrate-frame-rpc-system = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+substrate-frame-rpc-system = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
-pallet-transaction-payment-rpc = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+pallet-transaction-payment-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
-pallet-contracts-rpc = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+frame-system = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-contracts-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+
+pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # requird for benchmark cli-parsing and conduct runtime-benchmark
-frame-benchmarking = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-frame-benchmarking-cli = {git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+frame-benchmarking = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+frame-benchmarking-cli = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
+clap = {version = "3.1.6", features = ["derive"]}
 hex-literal = "0.3.4"
-jsonrpc-core = "18.0.0"
-structopt = "0.3.25"
-pallet-currencies-rpc = { version = "0.1.0", path = "../pallets/currencies/rpc" }
-pallet-currencies-runtime-api = { version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api" }
+jsonrpsee = {version = "0.13.0", features = ["server"]}
+pallet-currencies-rpc = {version = "0.1.0", path = "../pallets/currencies/rpc"}
 
 [features]
 default = []
-runtime-benchmarks = ["hydro-runtime/runtime-benchmarks"]
+runtime-benchmarks = ["laguna-runtime/runtime-benchmarks"]

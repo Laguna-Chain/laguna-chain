@@ -1,13 +1,13 @@
 use primitives::{Balance, TokenId};
 
-pub const NATIVE_TOKEN: TokenId = TokenId::Hydro;
+pub const NATIVE_TOKEN: TokenId = TokenId::Laguna;
 
-// 1 Unit of HYDROS consists of 10^12 HYDRO
-pub const HYDROS: Balance = 1_000_000_000_000;
-pub const MILLI_HYDRO: Balance = 1_000_000_000;
-pub const MICRO_HYDRO: Balance = 1_000_000;
+// 1 Unit of LAGUNAS consists of 10^12 LAGUNA
+pub const LAGUNAS: Balance = 1_000_000_000_000;
+pub const MILLI_LAGUNAS: Balance = 1_000_000_000;
+pub const MICRO_LAGUNAS: Balance = 1_000_000;
 
-// HYDROS is assumed to be the $DOLLAR in the hydro-chain
-pub const DOLLARS: Balance = HYDROS;
+// LAGUNAS is assumed to be the $DOLLAR in the laguna-chain
+pub const DOLLARS: Balance = LAGUNAS;
 pub const CENTS: Balance = DOLLARS / 100;
 pub const MILLI_CENTS: Balance = CENTS / 1_000;

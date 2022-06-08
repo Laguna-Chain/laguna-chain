@@ -15,7 +15,7 @@ use frame_support::{
 
 use frame_system::{EnsureRoot, EnsureSigned};
 use orml_currencies::BasicCurrencyAdapter;
-use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator};
+use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use primitives::{AccountId, Amount, Balance, BlockNumber, Hash, Header, Index, TokenId};
 use sp_core::hexdisplay::AsBytesRef;
 use sp_runtime::Perbill;
@@ -122,10 +122,11 @@ impl pallet_transaction_payment::Config for Runtime {
 	// TODO: add benchmark around cross pallet interaction between fee
 	type OnChargeTransaction =
 		PaymentCurrencyAdapter<TokenCurrencyAdapter<Runtime, NativeCurrencyId>, ()>;
-	type TransactionByteFee = TransactionByteFee;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
 	type FeeMultiplierUpdate = ();
+
+	type LengthToFee = IdentityFee<Balance>;
 }
 
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
@@ -169,16 +170,18 @@ impl pallet_contracts::Config for Runtime {
 	type WeightPrice = Payment;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
 	type ChainExtension = ();
-	type DeletionQueueDepth = DeletionQueueDepth;
-	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
+	type DeletionQueueDepth = DeletionQueueDepth;
+	type DeletionWeightLimit = DeletionWeightLimit;
 
 	type DepositPerByte = DepositPerByte;
 
 	type DepositPerItem = DepositPerItem;
 
 	type AddressGenerator = DefaultAddressGenerator;
+
+	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 }
 
 parameter_types! {
@@ -211,6 +214,8 @@ impl Contains<AccountId> for DustRemovalWhitelist {
 	}
 }
 
+pub type ReserveIdentifier = [u8; 8];
+
 impl orml_tokens::Config for Runtime {
 	type Event = Event;
 	// how tokens are measured
@@ -224,10 +229,14 @@ impl orml_tokens::Config for Runtime {
 	type OnDust = ();
 	type MaxLocks = ();
 	type DustRemovalWhitelist = DustRemovalWhitelist;
+
+	type MaxReserves = ConstU32<2>;
+
+	type ReserveIdentifier = ReserveIdentifier;
 }
 
 parameter_types! {
-	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Hydro);
+	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 }
 
 impl Config for Runtime {

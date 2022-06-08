@@ -1,14 +1,14 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use crate::{
-	constants::{HYDROS, MILLI_HYDRO},
+	constants::{LAGUNAS, MILLI_LAGUNAS},
 	impl_frame_system::BlockWeights,
 	impl_pallet_currencies::NativeCurrencyId,
 	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight,
 };
 use frame_support::parameter_types;
 use orml_tokens::CurrencyAdapter;
-use pallet_contracts::DefaultAddressGenerator;
+use pallet_contracts::{DefaultAddressGenerator, DefaultContractAccessWeight};
 
 mod chain_extensions;
 use chain_extensions::DemoExtension;
@@ -19,7 +19,7 @@ use sp_runtime::Perbill;
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 
 const fn deposit(items: u32, bytes: u32) -> Balance {
-	(items as Balance * HYDROS + (bytes as Balance) * (5 * MILLI_HYDRO / 100)) / 10
+	(items as Balance * LAGUNAS + (bytes as Balance) * (5 * MILLI_LAGUNAS / 100)) / 10
 }
 
 parameter_types! {
@@ -62,14 +62,16 @@ impl pallet_contracts::Config for Runtime {
 	type WeightPrice = TransactionPayment;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
 	type ChainExtension = DemoExtension;
-	type DeletionQueueDepth = DeletionQueueDepth;
-	type DeletionWeightLimit = DeletionWeightLimit;
 	type Schedule = Schedule;
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
+	type DeletionQueueDepth = DeletionQueueDepth;
+	type DeletionWeightLimit = DeletionWeightLimit;
 
 	type DepositPerByte = DepositPerByte;
 
 	type DepositPerItem = DepositPerItem;
 
 	type AddressGenerator = DefaultAddressGenerator;
+
+	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 }

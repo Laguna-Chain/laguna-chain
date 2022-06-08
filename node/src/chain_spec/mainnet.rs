@@ -1,1 +1,1 @@
-//! chain-spec of hydro-chain
+//! chain-spec of laguna-chain

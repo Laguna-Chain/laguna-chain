@@ -571,6 +571,7 @@ where
 		asset: Self::AssetId,
 		who: &AccountIdOf<T>,
 		amount: Self::Balance,
+		mint: bool,
 	) -> frame_support::traits::tokens::DepositConsequence {
 		match asset {
 			CurrencyId::Erc20(_) => {
@@ -595,7 +596,7 @@ where
 			},
 
 			_ => <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::can_deposit(
-				asset, who, amount,
+				asset, who, amount, mint,
 			),
 		}
 	}

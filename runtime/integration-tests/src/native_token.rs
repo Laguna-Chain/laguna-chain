@@ -8,7 +8,7 @@ mod tests {
 
 	use crate::*;
 	use frame_support::assert_ok;
-	use hydro_runtime::{constants::HYDROS, Currencies, Origin};
+	use laguna_runtime::{constants::LAGUNAS, Currencies, Origin};
 	use orml_traits::{
 		MultiCurrency, MultiCurrencyExtended, MultiLockableCurrency, MultiReservableCurrency,
 	};
@@ -17,33 +17,33 @@ mod tests {
 	fn transfer_native() {
 		ExtBuilder::default()
 			.balances(vec![
-				(ALICE, NATIVE_CURRENCY_ID, 10 * HYDROS),
-				(BOB, NATIVE_CURRENCY_ID, 10 * HYDROS),
+				(ALICE, NATIVE_CURRENCY_ID, 10 * LAGUNAS),
+				(BOB, NATIVE_CURRENCY_ID, 10 * LAGUNAS),
 			])
 			.build()
 			.execute_with(|| {
 				let alice_init =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
-				assert_eq!(alice_init, 10 * HYDROS);
+				assert_eq!(alice_init, 10 * LAGUNAS);
 
 				let bob_init =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &BOB);
-				assert_eq!(bob_init, 10 * HYDROS);
+				assert_eq!(bob_init, 10 * LAGUNAS);
 
 				assert_ok!(<Currencies as MultiCurrency<_>>::transfer(
 					NATIVE_CURRENCY_ID,
 					&ALICE,
 					&BOB,
-					1 * HYDROS,
+					1 * LAGUNAS,
 				));
 
 				let alice_after =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
-				assert_eq!(alice_after, 9 * HYDROS);
+				assert_eq!(alice_after, 9 * LAGUNAS);
 
 				let bob_after =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &BOB);
-				assert_eq!(bob_after, 11 * HYDROS);
+				assert_eq!(bob_after, 11 * LAGUNAS);
 			});
 	}
 
@@ -51,115 +51,115 @@ mod tests {
 	fn transfer_fee_token() {
 		const FEE_TOKEN_ID: CurrencyId = CurrencyId::NativeToken(TokenId::FeeToken);
 		ExtBuilder::default()
-			.balances(vec![(ALICE, FEE_TOKEN_ID, 10 * HYDROS), (BOB, FEE_TOKEN_ID, 10 * HYDROS)])
+			.balances(vec![(ALICE, FEE_TOKEN_ID, 10 * LAGUNAS), (BOB, FEE_TOKEN_ID, 10 * LAGUNAS)])
 			.build()
 			.execute_with(|| {
 				let alice_init =
 					<Currencies as MultiCurrency<_>>::free_balance(FEE_TOKEN_ID, &ALICE);
-				assert_eq!(alice_init, 10 * HYDROS);
+				assert_eq!(alice_init, 10 * LAGUNAS);
 
 				let bob_init = <Currencies as MultiCurrency<_>>::free_balance(FEE_TOKEN_ID, &BOB);
-				assert_eq!(bob_init, 10 * HYDROS);
+				assert_eq!(bob_init, 10 * LAGUNAS);
 
 				assert_ok!(<Currencies as MultiCurrency<_>>::transfer(
 					FEE_TOKEN_ID,
 					&ALICE,
 					&BOB,
-					1 * HYDROS,
+					1 * LAGUNAS,
 				));
 
 				let alice_after =
 					<Currencies as MultiCurrency<_>>::free_balance(FEE_TOKEN_ID, &ALICE);
-				assert_eq!(alice_after, 9 * HYDROS);
+				assert_eq!(alice_after, 9 * LAGUNAS);
 
 				let bob_after = <Currencies as MultiCurrency<_>>::free_balance(FEE_TOKEN_ID, &BOB);
-				assert_eq!(bob_after, 11 * HYDROS);
+				assert_eq!(bob_after, 11 * LAGUNAS);
 			});
 	}
 
 	#[test]
 	fn set_token_balance() {
 		ExtBuilder::default()
-			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * HYDROS)])
+			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * LAGUNAS)])
 			.build()
 			.execute_with(|| {
 				let alice_init =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
-				assert_eq!(alice_init, 10 * HYDROS);
+				assert_eq!(alice_init, 10 * LAGUNAS);
 
 				assert_ok!(Currencies::update_balance(
 					NATIVE_CURRENCY_ID,
 					&ALICE,
-					(1 * HYDROS) as i128,
+					(1 * LAGUNAS) as i128,
 				));
 
 				let alice_after =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
-				assert_eq!(alice_after, 11 * HYDROS);
+				assert_eq!(alice_after, 11 * LAGUNAS);
 			});
 	}
 
 	#[test]
 	fn reserve_balance() {
 		ExtBuilder::default()
-			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * HYDROS)])
+			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * LAGUNAS)])
 			.build()
 			.execute_with(|| {
 				let alice_init =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
-				assert_eq!(alice_init, 10 * HYDROS);
+				assert_eq!(alice_init, 10 * LAGUNAS);
 
-				assert_ok!(Currencies::reserve(NATIVE_CURRENCY_ID, &ALICE, 1 * HYDROS,));
+				assert_ok!(Currencies::reserve(NATIVE_CURRENCY_ID, &ALICE, 1 * LAGUNAS,));
 
 				let alice_free =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
-				assert_eq!(alice_free, 9 * HYDROS);
+				assert_eq!(alice_free, 9 * LAGUNAS);
 
 				let alice_reserved = <Currencies as MultiReservableCurrency<_>>::reserved_balance(
 					NATIVE_CURRENCY_ID,
 					&ALICE,
 				);
-				assert_eq!(alice_reserved, 1 * HYDROS);
+				assert_eq!(alice_reserved, 1 * LAGUNAS);
 			});
 	}
 
 	#[test]
 	fn slash_balance() {
 		ExtBuilder::default()
-			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * HYDROS)])
+			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * LAGUNAS)])
 			.build()
 			.execute_with(|| {
 				let alice_init =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
-				assert_eq!(alice_init, 10 * HYDROS);
+				assert_eq!(alice_init, 10 * LAGUNAS);
 
 				// should return 0 if full target amount is slashed
-				assert_eq!(Currencies::slash(NATIVE_CURRENCY_ID, &ALICE, HYDROS), 0);
+				assert_eq!(Currencies::slash(NATIVE_CURRENCY_ID, &ALICE, LAGUNAS), 0);
 				let alice_free =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
-				assert_eq!(alice_free, 9 * HYDROS);
+				assert_eq!(alice_free, 9 * LAGUNAS);
 
 				assert_ok!(<Currencies as MultiReservableCurrency<_>>::reserve(
 					NATIVE_CURRENCY_ID,
 					&ALICE,
-					1 * HYDROS,
+					1 * LAGUNAS,
 				));
 				assert_eq!(
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE),
-					8 * HYDROS
+					8 * LAGUNAS
 				);
 
 				assert_eq!(
 					<Currencies as MultiReservableCurrency<_>>::slash_reserved(
 						NATIVE_CURRENCY_ID,
 						&ALICE,
-						HYDROS
+						LAGUNAS
 					),
 					0
 				);
 				assert_eq!(
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE),
-					8 * HYDROS
+					8 * LAGUNAS
 				);
 
 				assert_eq!(
@@ -175,7 +175,7 @@ mod tests {
 					<Currencies as MultiReservableCurrency<_>>::slash_reserved(
 						NATIVE_CURRENCY_ID,
 						&ALICE,
-						HYDROS
+						LAGUNAS
 					) != 0
 				);
 				assert_eq!(

@@ -1,5 +1,5 @@
 use frame_support::traits::GenesisBuild;
-use hydro_runtime::{Runtime, System};
+use laguna_runtime::{Runtime, System};
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
 
 pub mod contracts;
@@ -9,7 +9,7 @@ pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
-pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Hydro);
+pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, CurrencyId, Balance)>,

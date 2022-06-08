@@ -2,10 +2,14 @@ use std::{marker::PhantomData, ops::Deref, sync::Arc};
 
 use codec::Codec;
 
-use jsonrpc_core::{Error as RpcError, ErrorCode, Result as RpcResult};
-use jsonrpc_derive::rpc;
+use jsonrpsee::{
+	core::{async_trait, Error as JsonRpseeError, RpcResult},
+	proc_macros::rpc,
+	types::error::{CallError, ErrorCode, ErrorObject},
+};
 
-use pallet_currencies_runtime_api::CurrenciesApi as CurrenciesRuntimeApi;
+pub use pallet_currencies_runtime_api::CurrenciesApi as CurrenciesRuntimeApi;
+
 use sp_api::{BlockId, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
 use sp_runtime::traits::{Block as BlockT, Header as HeaderT};
@@ -15,10 +19,10 @@ use primitives::CurrencyId;
 
 #[rpc(client, server)]
 pub trait CurrenciesApi<BlockHash, BlockNumber, AccountId, Balance> {
-	#[rpc(name = "currencies_listAssets")]
+	#[method(name = "currencies_listAssets")]
 	fn list_assets(&self, at: Option<BlockHash>) -> RpcResult<Vec<CurrencyId>>;
 
-	#[rpc(name = "currencies_freeBalance")]
+	#[method(name = "currencies_freeBalance")]
 	fn free_balance(
 		&self,
 		account: AccountId,
@@ -26,7 +30,7 @@ pub trait CurrenciesApi<BlockHash, BlockNumber, AccountId, Balance> {
 		at: Option<BlockHash>,
 	) -> RpcResult<Balance>;
 
-	#[rpc(name = "currencies_totalBalance")]
+	#[method(name = "currencies_totalBalance")]
 	fn total_balance(
 		&self,
 		account: AccountId,
@@ -46,10 +50,10 @@ impl<Client, Block> CurrenciesRpc<Client, Block> {
 	}
 }
 
-const RUNTIME_ERROR: i64 = 1000;
+const RUNTIME_ERROR: i32 = 1000;
 
 impl<Client, Block, AccountId, Balance>
-	CurrenciesApi<
+	CurrenciesApiServer<
 		<Block as BlockT>::Hash,
 		<<Block as BlockT>::Header as HeaderT>::Number,
 		AccountId,
@@ -57,9 +61,7 @@ impl<Client, Block, AccountId, Balance>
 	> for CurrenciesRpc<Client, Block>
 where
 	Block: BlockT,
-	Client: Send + Sync + 'static,
-	Client: ProvideRuntimeApi<Block>,
-	Client: HeaderBackend<Block>,
+	Client: Send + Sync + 'static + ProvideRuntimeApi<Block> + HeaderBackend<Block>,
 	AccountId: Codec,
 	Balance: Codec + Copy + Default,
 	Client::Api: CurrenciesRuntimeApi<Block, AccountId, Balance>,
@@ -68,11 +70,7 @@ where
 		let api = self.client.runtime_api();
 		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
 
-		api.list_assets(&at).map_err(|e| RpcError {
-			code: ErrorCode::ServerError(RUNTIME_ERROR),
-			message: "Runtime trapped".into(),
-			data: Some(format!("{:?}", e).into()),
-		})
+		api.list_assets(&at).map_err(|e| CallError::from_std_error(e).into())
 	}
 
 	fn free_balance(
@@ -86,11 +84,7 @@ where
 
 		api.free_balance(&at, account, currency_id)
 			.map(|v| v.unwrap_or_default())
-			.map_err(|e| RpcError {
-				code: ErrorCode::ServerError(RUNTIME_ERROR),
-				message: "Runtime trapped".into(),
-				data: Some(format!("{:?}", e).into()),
-			})
+			.map_err(|e| CallError::from_std_error(e).into())
 	}
 
 	fn total_balance(
@@ -104,10 +98,6 @@ where
 
 		api.total_balance(&at, account, currency_id)
 			.map(|v| v.unwrap_or_default())
-			.map_err(|e| RpcError {
-				code: ErrorCode::ServerError(RUNTIME_ERROR),
-				message: "Runtime trapped".into(),
-				data: Some(format!("{:?}", e).into()),
-			})
+			.map_err(|e| CallError::from_std_error(e).into())
 	}
 }

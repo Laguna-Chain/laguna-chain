@@ -7,7 +7,6 @@ use frame_support::{
 
 use orml_traits::{arithmetic::Zero, MultiCurrency};
 use primitives::{CurrencyId, TokenId};
-use scale_info::TypeInfo;
 
 pub use pallet::*;
 use pallet_transaction_payment::OnChargeTransaction;
@@ -49,7 +48,9 @@ pub mod pallet {
 	pub enum Event<T: Config> {}
 
 	#[pallet::error]
-	pub enum Error<T> {}
+	pub enum Error<T> {
+		Placeholder,
+	}
 
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
@@ -57,7 +58,7 @@ pub mod pallet {
 
 impl<T: Config> Pallet<T> {
 	fn default_fee_source() -> <T::FeeSource as FeeSource>::AssetId {
-		CurrencyId::NativeToken(TokenId::Hydro)
+		CurrencyId::NativeToken(TokenId::Laguna)
 	}
 
 	fn account_fee_source_priority(

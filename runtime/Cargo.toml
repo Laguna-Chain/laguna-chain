@@ -1,71 +1,71 @@
 [package]
 edition = "2021"
-name = "hydro-runtime"
+name = "laguna-runtime"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-# hydro-chain's primitives
+# laguna-chain's primitives
 primitives = {path = "../primitives", default-features = false}
 
 # runtime's basic pallet impl
-pallet-aura = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-balances = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-contracts = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-contracts-primitives = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+pallet-aura = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-balances = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-contracts = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-contracts-primitives = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 pallet-contract-asset-registry = {path = "../pallets/contract-asset-registry", default-features = false}
 pallet-currencies = {path = "../pallets/currencies", default-features = false}
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
 
-pallet-grandpa = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-scheduler = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-sudo = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-timestamp = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-transaction-payment = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-pallet-transaction-payment-rpc-runtime-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+pallet-grandpa = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-scheduler = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-sudo = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-timestamp = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-transaction-payment = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-transaction-payment-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # orml
-orml-currencies = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-polkadot-v0.9.16"}
-orml-tokens = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-polkadot-v0.9.16"}
-orml-traits = {git = 'https://github.com/ultrastable-money/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "hydro-dep-polkadot-v0.9.16"}
+orml-currencies = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
+orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
+orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
 
 # interface for pallet build with frame
-frame-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev', optional = true}
-frame-executive = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-frame-support = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-frame-system = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-frame-system-benchmarking = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev', optional = true}
-frame-system-rpc-runtime-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+frame-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", optional = true}
+frame-executive = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+frame-system-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", optional = true}
+frame-system-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # sp stands for substrate-primitives, used across node and runtime
-sp-api = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-block-builder = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-consensus-aura = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '0.10.0-dev'}
-sp-core = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.1.0-dev'}
-sp-inherents = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-offchain = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-runtime = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.1.0-dev'}
-sp-session = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-std = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sp-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-block-builder = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-consensus-aura = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-inherents = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-offchain = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-runtime = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-session = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
-sp-transaction-pool = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
-sp-version = {default-features = false, git = 'https://github.com/ultrastable-money/substrate.git', branch = "hydro-dep-polkadot-v0.9.16", version = '4.0.0-dev'}
+sp-transaction-pool = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-version = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # parity SCALE codec
-codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '2.0.0'}
+codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}
 hex-literal = {version = '0.3.1'}
 pallet-currencies-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
-scale-info = {default-features = false, features = ['derive'], version = '1.0'}
+scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
 traits = {version = "0.1.0", path = "../pallets/traits", default-features = false}
 
 # build dependency for the wasm runtime
 [build-dependencies.substrate-wasm-builder]
-branch = "hydro-dep-polkadot-v0.9.16"
-git = 'https://github.com/ultrastable-money/substrate.git'
+branch = "polkadot-v0.9.22"
+git = 'https://github.com/paritytech/substrate.git'
 version = '5.0.0-dev'
 
 [features]

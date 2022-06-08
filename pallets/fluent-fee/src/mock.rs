@@ -101,6 +101,8 @@ orml_traits::parameter_type_with_key! {
 	};
 }
 
+pub type ReserveIdentifier = [u8; 8];
+
 impl orml_tokens::Config for Runtime {
 	type Event = Event;
 
@@ -119,24 +121,16 @@ impl orml_tokens::Config for Runtime {
 	type MaxLocks = ();
 
 	type DustRemovalWhitelist = DustRemovalWhitelist;
+
+	type MaxReserves = ConstU32<2>;
+
+	type ReserveIdentifier = ReserveIdentifier;
 }
 
-pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Hydro);
+pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 
 parameter_types! {
 	pub const NativeCurrencyId: CurrencyId = NATIVE_CURRENCY_ID;
-}
-
-impl orml_currencies::Config for Runtime {
-	type Event = Event;
-
-	type MultiCurrency = Tokens;
-
-	type NativeCurrency = BasicCurrencyAdapter<Self, Balances, Amount, BlockNumber>;
-
-	type GetNativeCurrencyId = NativeCurrencyId;
-
-	type WeightInfo = ();
 }
 
 pub struct DummyFeeSource;
@@ -148,7 +142,7 @@ impl FeeSource for DummyFeeSource {
 
 	fn accepted(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
 		match id {
-			CurrencyId::NativeToken(TokenId::FeeToken | TokenId::Hydro) => Ok(()),
+			CurrencyId::NativeToken(TokenId::FeeToken | TokenId::Laguna) => Ok(()),
 			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
 		}
 	}
@@ -177,7 +171,7 @@ impl FeeMeasure for DummyFeeMeasure {
 		balance: Self::Balance,
 	) -> Result<Self::Balance, TransactionValidityError> {
 		match id {
-			CurrencyId::NativeToken(TokenId::Hydro) => Ok(balance),
+			CurrencyId::NativeToken(TokenId::Laguna) => Ok(balance),
 
 			// demo 5% reduction
 			CurrencyId::NativeToken(TokenId::FeeToken) =>
@@ -208,7 +202,7 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Currencies::withdraw(*id, account, *balance)
+		Tokens::withdraw(*id, account, *balance)
 			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 	}
 }
@@ -226,13 +220,13 @@ impl Config for Runtime {
 impl pallet_transaction_payment::Config for Runtime {
 	type OnChargeTransaction = FluentFee;
 
-	type TransactionByteFee = ();
-
 	type OperationalFeeMultiplier = ();
 
 	type WeightToFee = IdentityFee<Balance>;
 
 	type FeeMultiplierUpdate = ();
+
+	type LengthToFee = IdentityFee<Balance>;
 }
 
 construct_runtime!(
@@ -245,7 +239,6 @@ construct_runtime!(
 		System: frame_system,
 		Tokens: orml_tokens,
 		Balances: pallet_balances,
-		Currencies: orml_currencies,
 		FluentFee: pallet,
 		Payment: pallet_transaction_payment
 	}

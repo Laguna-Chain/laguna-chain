@@ -83,8 +83,8 @@ pub mod opaque {
 
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("hydro-runtime-placeholder"),
-	impl_name: create_runtime_str!("hydro-runtime-placeholder"),
+	spec_name: create_runtime_str!("laguna-runtime-placeholder"),
+	impl_name: create_runtime_str!("laguna-runtime-placeholder"),
 	authoring_version: 1,
 	spec_version: 100,
 	impl_version: 1,
@@ -149,6 +149,7 @@ pub type Block = generic::Block<Header, UncheckedExtrinsic>;
 /// The SignedExtension to the basic transaction logic
 pub type SignedExtra = (
 	// frame_system required once
+	frame_system::CheckNonZeroSender<Runtime>,
 	frame_system::CheckSpecVersion<Runtime>,
 	frame_system::CheckTxVersion<Runtime>,
 	frame_system::CheckGenesis<Runtime>,

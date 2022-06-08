@@ -1,8 +1,11 @@
 use crate::{
-	constants::{currency::NATIVE_TOKEN, MICRO_HYDRO},
+	constants::{currency::NATIVE_TOKEN, MICRO_LAGUNAS},
 	Event, Runtime,
 };
-use frame_support::{parameter_types, traits::Contains};
+use frame_support::{
+	parameter_types,
+	traits::{ConstU32, Contains},
+};
 use primitives::{AccountId, Amount, Balance, CurrencyId, TokenId};
 
 pub struct DustRemovalWhitelist;
@@ -24,14 +27,16 @@ orml_traits::parameter_type_with_key! {
 		match currency_id {
 			&CurrencyId::NativeToken(token) => {
 				match token {
-					TokenId::Hydro => MICRO_HYDRO,
-					TokenId::FeeToken => MICRO_HYDRO,
+					TokenId::Laguna => MICRO_LAGUNAS,
+					TokenId::FeeToken => MICRO_LAGUNAS,
 				}
 			},
 			_ => Balance::max_value() // unreachable ED value for unverified currency type
 		}
 	};
 }
+
+type ReserveIdentifier = [u8; 8];
 
 // parameter_types! {
 // 	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(NATIVE_TOKEN);
@@ -51,4 +56,8 @@ impl orml_tokens::Config for Runtime {
 	type OnDust = ();
 	type MaxLocks = MaxLocks;
 	type DustRemovalWhitelist = DustRemovalWhitelist;
+
+	type MaxReserves = ConstU32<2>;
+
+	type ReserveIdentifier = ReserveIdentifier;
 }

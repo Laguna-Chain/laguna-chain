@@ -1,7 +1,6 @@
-//! The first ever hydro-chain cli
+//! The first ever laguna-chain cli
 
-mod cli;
-mod command;
+pub(crate) use laguna_node::{cli, command, command_helper, rpc, service};
 
 fn main() -> sc_cli::Result<()> {
 	command::run()

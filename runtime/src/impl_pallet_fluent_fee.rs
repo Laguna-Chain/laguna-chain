@@ -27,7 +27,7 @@ impl FeeSource for StaticImpl {
 
 	fn accepted(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
 		match id {
-			CurrencyId::NativeToken(TokenId::Hydro) => Ok(()),
+			CurrencyId::NativeToken(TokenId::Laguna) => Ok(()),
 			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
 		}
 	}
@@ -54,7 +54,7 @@ impl FeeMeasure for StaticImpl {
 		balance: Self::Balance,
 	) -> Result<Self::Balance, frame_support::unsigned::TransactionValidityError> {
 		match id {
-			CurrencyId::NativeToken(TokenId::Hydro) => Ok(balance),
+			CurrencyId::NativeToken(TokenId::Laguna) => Ok(balance),
 			_ => Err(InvalidTransaction::Payment.into()),
 		}
 	}

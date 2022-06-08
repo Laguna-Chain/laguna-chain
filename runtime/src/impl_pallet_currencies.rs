@@ -6,7 +6,7 @@ use sp_runtime::traits::{Convert, ConvertInto};
 use crate::{ContractAssetsRegistry, Runtime, Tokens};
 
 parameter_types! {
-	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Hydro);
+	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 }
 
 impl pallet_currencies::Config for Runtime {

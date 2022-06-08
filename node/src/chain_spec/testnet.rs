@@ -2,8 +2,8 @@
 
 use primitives::{AccountId, CurrencyId, TokenId};
 
-use hydro_runtime::{
-	constants::HYDROS, AuraConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
+use laguna_runtime::{
+	constants::LAGUNAS, AuraConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
 	TokensConfig, WASM_BINARY,
 };
 
@@ -100,7 +100,7 @@ fn testnet_genesis(
 			balances: endowed_accounts
 				.iter()
 				.cloned()
-				.map(|k| (k, CurrencyId::NativeToken(TokenId::Hydro), 1 << 60))
+				.map(|k| (k, CurrencyId::NativeToken(TokenId::Laguna), 1 << 60))
 				.collect(),
 		},
 	}

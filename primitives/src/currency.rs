@@ -57,7 +57,7 @@ pub enum CurrencyId {
 )]
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 pub enum TokenId {
-	Hydro, // Native token of the hydro-chain
+	Laguna, // Native token of the laguna-chain
 	FeeToken,
 }
 
@@ -76,7 +76,7 @@ impl TokenMetadata for CurrencyId {
 	fn symbol(&self) -> &'static str {
 		match self {
 			CurrencyId::NativeToken(token) => match token {
-				TokenId::Hydro => "HYDRO",
+				TokenId::Laguna => "LAGUNA",
 				TokenId::FeeToken => "HFEE",
 			},
 			CurrencyId::Erc20(_) => todo!(),
@@ -86,8 +86,8 @@ impl TokenMetadata for CurrencyId {
 	fn name(&self) -> &'static str {
 		match self {
 			CurrencyId::NativeToken(token) => match token {
-				TokenId::Hydro => "HYDRO",
-				TokenId::FeeToken => "HYDRO fee",
+				TokenId::Laguna => "LAGUNA",
+				TokenId::FeeToken => "LAGUNA fee",
 			},
 			CurrencyId::Erc20(_) => todo!(),
 		}
@@ -96,7 +96,7 @@ impl TokenMetadata for CurrencyId {
 	fn decimals(&self) -> u8 {
 		match self {
 			CurrencyId::NativeToken(token) => match token {
-				TokenId::Hydro => 18,
+				TokenId::Laguna => 18,
 				TokenId::FeeToken => 18,
 			},
 			CurrencyId::Erc20(_) => todo!(),
