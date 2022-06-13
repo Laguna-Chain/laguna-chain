@@ -101,8 +101,6 @@ orml_traits::parameter_type_with_key! {
 	};
 }
 
-pub type ReserveIdentifier = [u8; 8];
-
 impl orml_tokens::Config for Runtime {
 	type Event = Event;
 
@@ -118,19 +116,37 @@ impl orml_tokens::Config for Runtime {
 
 	type OnDust = ();
 
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 
 	type DustRemovalWhitelist = DustRemovalWhitelist;
 
 	type MaxReserves = ConstU32<2>;
 
-	type ReserveIdentifier = ReserveIdentifier;
+	type ReserveIdentifier = [u8; 8];
 }
 
 pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+pub const FEE_TOKEN_ID: CurrencyId = CurrencyId::NativeToken(TokenId::FeeToken);
+pub const TREASURY_ACCOUNT: AccountId = AccountId::new([9u8; 32]);
 
 parameter_types! {
 	pub const NativeCurrencyId: CurrencyId = NATIVE_CURRENCY_ID;
+	pub const TreasuryAccount: AccountId = TREASURY_ACCOUNT;
+	pub const LockId: LockIdentifier = ID_1;
+	pub const MaxLocks: u32 = 10;
+
+}
+
+impl orml_currencies::Config for Runtime {
+	// type Event = Event;
+
+	type MultiCurrency = Tokens;
+
+	type NativeCurrency = BasicCurrencyAdapter<Self, Balances, Amount, BlockNumber>;
+
+	type GetNativeCurrencyId = NativeCurrencyId;
+
+	type WeightInfo = ();
 }
 
 pub struct DummyFeeSource;
@@ -140,15 +156,26 @@ impl FeeSource for DummyFeeSource {
 
 	type Balance = Balance;
 
-	fn accepted(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		match id {
-			CurrencyId::NativeToken(TokenId::FeeToken | TokenId::Laguna) => Ok(()),
-			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
+	fn accepted(id: &Self::AssetId) -> Result<(), DispatchError> {
+		if let CurrencyId::NativeToken(TokenId::Laguna | TokenId::FeeToken) = id {
+			Ok(())
+		} else if FluentFee::accepted_assets(&id) {
+			Ok(())
+		} else {
+			Err(DispatchError::Other("InvalidFeeSource: Unlisted"))
 		}
 	}
 
-	fn listing_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
+	fn listing_asset(id: &Self::AssetId) -> Result<(), DispatchError> {
+		let staked_amount = FluentFee::total_staked(id);
+		let total_supply = Tokens::total_issuance(id);
+
+		if (staked_amount * 100 / total_supply) < 30 {
+			Err(DispatchError::Other("InvalidFeeSource: Ineligible"))
+		} else {
+			pallet::AcceptedAssets::<Runtime>::insert(&id, true);
+			Ok(())
+		}
 	}
 
 	fn denounce_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
@@ -189,32 +216,52 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	type AssetId = CurrencyId;
 	type Balance = Balance;
 
-	fn post_info_correction(
-		id: &Self::AssetId,
-		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
-	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Ok(())
-	}
-
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
 		balance: &Self::Balance,
+		native_balance: &Self::Balance,
 		reason: &WithdrawReasons,
-	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Tokens::withdraw(*id, account, *balance)
-			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+	) -> Result<(), DispatchError> {
+		let current_user_balance = FluentFee::treasury_balance_per_account(account);
+		// Let the treasury pay the fee on behalf of the user if they have already prepaid
+		if current_user_balance >= *native_balance {
+			Tokens::withdraw(NATIVE_CURRENCY_ID, &TREASURY_ACCOUNT, *native_balance)?;
+			let new_user_balance = current_user_balance - balance;
+			pallet::TreasuryBalancePerAccount::<Runtime>::insert(&account, new_user_balance);
+		}
+		// If there doesn't exist enough balance for the user in the treasury make the user directly
+		// pay for the transaction.
+		else {
+			Tokens::withdraw(*id, &account, *balance)?;
+		}
+		Ok(())
+	}
+
+	fn post_info_correction(
+		id: &Self::AssetId,
+		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
+	) -> Result<(), traits::fee::InvalidFeeSource> {
+		Ok(())
 	}
 }
 
-impl Config for Runtime {
+impl pallet::Config for Runtime {
 	type Event = Event;
 
 	type MultiCurrency = Tokens;
 
+	type Call = Call;
+
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;
 	type FeeDispatch = DummyFeeDispatch<Tokens>;
+
+	type TreasuryAccount = TreasuryAccount;
+
+	type NativeCurrencyId = NativeCurrencyId;
+
+	type LockId = LockId;
 }
 
 impl pallet_transaction_payment::Config for Runtime {
@@ -239,6 +286,7 @@ construct_runtime!(
 		System: frame_system,
 		Tokens: orml_tokens,
 		Balances: pallet_balances,
+		Currencies: orml_currencies,
 		FluentFee: pallet,
 		Payment: pallet_transaction_payment
 	}

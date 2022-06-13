@@ -3,26 +3,23 @@ use frame_support::{
 	unsigned::TransactionValidityError,
 };
 
+use sp_runtime::DispatchError;
+
 #[derive(Debug)]
 pub enum InvalidFeeSource {
 	Inactive,
 	Unlisted,
-}
-
-#[derive(Debug)]
-pub enum InvalidFeeDispatch {
-	InsufficientBalance,
-	UnresolvedRoute,
-	CorrectionError,
+	Ineligible,
+	Insufficient,
 }
 
 pub trait FeeSource {
 	type AssetId;
 	type Balance;
 
-	fn accepted(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
+	fn accepted(id: &Self::AssetId) -> Result<(), DispatchError>;
 
-	fn listing_asset(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
+	fn listing_asset(id: &Self::AssetId) -> Result<(), DispatchError>;
 	fn denounce_asset(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
 	fn disable_asset(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
 }
@@ -47,11 +44,12 @@ where
 		account: &<T as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
 		balance: &Self::Balance,
+		native_balance: &Self::Balance,
 		reason: &WithdrawReasons,
-	) -> Result<(), InvalidFeeDispatch>;
+	) -> Result<(), DispatchError>;
 
 	fn post_info_correction(
 		id: &Self::AssetId,
 		post_info: &PostDispatchInfoOf<T::Call>,
-	) -> Result<(), InvalidFeeDispatch>;
+	) -> Result<(), InvalidFeeSource>;
 }
