@@ -77,7 +77,7 @@ impl TokenMetadata for CurrencyId {
 		match self {
 			CurrencyId::NativeToken(token) => match token {
 				TokenId::Laguna => "LAGUNA",
-				TokenId::FeeToken => "HFEE",
+				TokenId::FeeToken => "LFEE",
 			},
 			CurrencyId::Erc20(_) => todo!(),
 		}

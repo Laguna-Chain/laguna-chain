@@ -227,7 +227,7 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		// Let the treasury pay the fee on behalf of the user if they have already prepaid
 		if current_user_balance >= *native_balance {
 			Tokens::withdraw(NATIVE_CURRENCY_ID, &TREASURY_ACCOUNT, *native_balance)?;
-			let new_user_balance = current_user_balance - balance;
+			let new_user_balance = current_user_balance - native_balance;
 			pallet::TreasuryBalancePerAccount::<Runtime>::insert(&account, new_user_balance);
 		}
 		// If there doesn't exist enough balance for the user in the treasury make the user directly
@@ -259,7 +259,7 @@ impl pallet::Config for Runtime {
 
 	type TreasuryAccount = TreasuryAccount;
 
-	type NativeCurrencyId = NativeCurrencyId;
+	// type NativeCurrencyId = NativeCurrencyId;
 
 	type LockId = LockId;
 }

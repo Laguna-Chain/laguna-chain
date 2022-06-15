@@ -47,8 +47,8 @@ pub mod pallet {
 		#[pallet::constant]
 		type TreasuryAccount: Get<Self::AccountId>;
 
-		#[pallet::constant]
-		type NativeCurrencyId: Get<CurrencyId>;
+		// #[pallet::constant]
+		// type NativeCurrencyId: Get<CurrencyId>;
 
 		#[pallet::constant]
 		type LockId: Get<LockIdentifier>;
