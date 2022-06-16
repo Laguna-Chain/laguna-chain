@@ -139,7 +139,10 @@ impl FeeSource for DummyFeeSource {
 	type AccountId = AccountId;
 	type AssetId = CurrencyId;
 
-	fn accepted(who: &Self::AccountId, id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+	fn accepted(
+		who: &Self::AccountId,
+		id: &Self::AssetId,
+	) -> Result<(), traits::fee::InvalidFeeSource> {
 		match id {
 			CurrencyId::NativeToken(TokenId::FeeToken | TokenId::Laguna) => Ok(()),
 			_ => Err(traits::fee::InvalidFeeSource::Unlisted),

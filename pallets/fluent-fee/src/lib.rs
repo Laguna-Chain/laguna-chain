@@ -32,7 +32,7 @@ pub mod pallet {
 
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
 
-		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>,AssetId = CurrencyId>;
+		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
 		type FeeMeasure: FeeMeasure<AssetId = CurrencyId, Balance = BalanceOf<Self>>;
 		type FeeDispatch: FeeDispatch<Self, AssetId = CurrencyId, Balance = BalanceOf<Self>>;
 	}
@@ -88,8 +88,9 @@ where
 			Self::account_fee_source_priority(who).unwrap_or_else(|| Self::default_fee_source());
 
 		// check if preferenced fee source is both listed and accepted
-		T::FeeSource::listed(&preferred_fee_asset).and_then(|_| T::FeeSource::accepted(who, &preferred_fee_asset))
-				.map_err(|_| TransactionValidityError::from(InvalidTransaction::Payment))?;
+		T::FeeSource::listed(&preferred_fee_asset)
+			.and_then(|_| T::FeeSource::accepted(who, &preferred_fee_asset))
+			.map_err(|_| TransactionValidityError::from(InvalidTransaction::Payment))?;
 
 		let withdraw_reason = if tip.is_zero() {
 			WithdrawReasons::TRANSACTION_PAYMENT
