@@ -45,6 +45,7 @@ pub mod impl_pallet_contract_asset_registry;
 pub mod impl_pallet_contracts;
 
 pub mod impl_pallet_currencies;
+pub mod impl_pallet_fee_enablement;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
 pub mod impl_pallet_scheduler;
@@ -127,6 +128,7 @@ construct_runtime!(
 			// weight and fee management
 			TransactionPayment: pallet_transaction_payment ,
 			FluentFee: pallet_fluent_fee,
+			FeeEnablement: pallet_fee_enablement,
 
 			// conseus mechanism
 			Aura: pallet_aura ,

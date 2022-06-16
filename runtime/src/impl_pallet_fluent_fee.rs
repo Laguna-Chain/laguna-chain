@@ -21,27 +21,24 @@ impl pallet_fluent_fee::Config for Runtime {
 pub struct StaticImpl;
 
 impl FeeSource for StaticImpl {
+	type AccountId = AccountId;
 	type AssetId = CurrencyId;
 
-	type Balance = Balance;
-
-	fn accepted(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+	fn accepted(
+		who: &Self::AccountId,
+		id: &Self::AssetId,
+	) -> Result<(), traits::fee::InvalidFeeSource> {
 		match id {
 			CurrencyId::NativeToken(TokenId::Laguna) => Ok(()),
 			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
 		}
 	}
 
-	fn listing_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
-	}
-
-	fn denounce_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
-	}
-
-	fn disable_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
+	fn listed(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+		match id {
+			CurrencyId::NativeToken(TokenId::Laguna) => Ok(()),
+			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
+		}
 	}
 }
 

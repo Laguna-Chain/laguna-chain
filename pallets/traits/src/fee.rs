@@ -17,14 +17,14 @@ pub enum InvalidFeeDispatch {
 }
 
 pub trait FeeSource {
+	type AccountId;
 	type AssetId;
-	type Balance;
 
-	fn accepted(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
+	/// whether both the caller and the asset are in good condition to be used as fee source
+	fn accepted(who: &Self::AccountId, id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
 
-	fn listing_asset(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
-	fn denounce_asset(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
-	fn disable_asset(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
+	/// whether an assets is enabled globally to be consider as an fee source
+	fn listed(id: &Self::AssetId) -> Result<(), InvalidFeeSource>;
 }
 
 pub trait FeeMeasure {
@@ -54,4 +54,28 @@ where
 		id: &Self::AssetId,
 		post_info: &PostDispatchInfoOf<T::Call>,
 	) -> Result<(), InvalidFeeDispatch>;
+}
+
+pub enum HealthStatusError {
+	Unverified,
+	Unstable,
+	Unavailable,
+}
+
+/// to determine whether an asset's health status to be included as fee source
+pub trait FeeAssetHealth {
+	type AssetId;
+
+	fn health_status(asset_id: &Self::AssetId) -> Result<(), HealthStatusError>;
+}
+
+pub enum EligibilityError {
+	NotAllowed,
+}
+
+pub trait Eligibility {
+	type AccountId;
+	type AssetId;
+
+	fn eligible(who: &Self::AccountId, asset_id: &Self::AssetId) -> Result<(), EligibilityError>;
 }

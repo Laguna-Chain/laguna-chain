@@ -11,6 +11,7 @@ members = [
   'runtime/integration-tests',
   'primitives',
   'pallets/fluent-fee',
+  'pallets/fee-enablement',
   'pallets/static-fee-source',
   "pallets/traits",
   'pallets/contract-asset-registry',

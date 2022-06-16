@@ -3,8 +3,8 @@
 use primitives::{AccountId, CurrencyId, TokenId};
 
 use laguna_runtime::{
-	constants::LAGUNAS, AuraConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
-	TokensConfig, WASM_BINARY,
+	constants::LAGUNAS, AuraConfig, FeeEnablementConfig, GenesisConfig, GrandpaConfig, SudoConfig,
+	SystemConfig, TokensConfig, WASM_BINARY,
 };
 
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -102,6 +102,9 @@ fn testnet_genesis(
 				.cloned()
 				.map(|k| (k, CurrencyId::NativeToken(TokenId::Laguna), 1 << 60))
 				.collect(),
+		},
+		fee_enablement: FeeEnablementConfig {
+			whitelisted: vec![(CurrencyId::NativeToken(TokenId::Laguna), true)],
 		},
 	}
 }
