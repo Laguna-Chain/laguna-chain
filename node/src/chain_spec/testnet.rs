@@ -104,7 +104,7 @@ fn testnet_genesis(
 				.collect(),
 		},
 		fee_enablement: FeeEnablementConfig {
-			whitelisted: vec![(CurrencyId::NativeToken(TokenId::Laguna), true)],
+			enabled: vec![(CurrencyId::NativeToken(TokenId::Laguna), true)],
 		},
 	}
 }

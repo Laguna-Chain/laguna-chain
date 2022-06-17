@@ -37,17 +37,20 @@ pub mod pallet {
 		type FeeDispatch: FeeDispatch<Self, AssetId = CurrencyId, Balance = BalanceOf<Self>>;
 	}
 
+	#[pallet::pallet]
+	pub struct Pallet<T>(_);
+
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config> {}
+	pub enum Event<T: Config> {
+
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
 		Placeholder,
 	}
-
-	#[pallet::pallet]
-	pub struct Pallet<T>(_);
 }
 
 impl<T: Config> Pallet<T> {
@@ -102,7 +105,7 @@ where
 
 		match T::FeeDispatch::withdraw(who, &preferred_fee_asset, &amounts, &withdraw_reason) {
 			Ok(_) => {
-				log::info!(target: "fee withdrawn", "succsefully withdrawn using native_currency");
+				log::debug!(target: "fluent_fee::withdrawn", "succsefully withdrawn using native_currency");
 				Ok(())
 			},
 			Err(_) => Err(InvalidTransaction::Payment.into()),
@@ -119,7 +122,7 @@ where
 	) -> Result<(), frame_support::unsigned::TransactionValidityError> {
 		// TODO: execute refund plan from already_withdrawn
 
-		log::info!(target: "fee correction", "deposit without refund");
+		log::debug!(target: "fluent_fee::post_deposit", "deposit without refund");
 
 		let preferred_fee_asset =
 			Self::account_fee_source_priority(who).unwrap_or_else(|| Self::default_fee_source());

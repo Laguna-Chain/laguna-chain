@@ -21,10 +21,10 @@ use orml_traits::{
 };
 
 pub use pallet::*;
-use pallet_contract_asset_registry::TokenAccess;
 use primitives::CurrencyId;
 use sp_core::U256;
 use sp_runtime::traits::{CheckedAdd, Convert, Saturating, Zero};
+use traits::currencies::TokenAccess;
 
 /// +++++++++++++++++++++++
 /// specifying type alises.

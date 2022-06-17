@@ -4129,6 +4129,7 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
+ "traits",
 ]
 
 [[package]]
@@ -4238,6 +4239,7 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
+ "traits",
 ]
 
 [[package]]

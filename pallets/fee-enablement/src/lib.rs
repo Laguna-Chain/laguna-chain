@@ -3,9 +3,8 @@
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
 
-use frame_system::Account;
 use orml_traits::MultiCurrency;
-use primitives::{CurrencyId, TokenId};
+use primitives::CurrencyId;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<B, T> = <B as MultiCurrency<AccountIdOf<T>>>::Balance;
@@ -79,13 +78,13 @@ mod pallet {
 	#[pallet::genesis_config]
 	#[derive(Default)]
 	pub struct GenesisConfig {
-		pub whitelisted: Vec<(CurrencyId, bool)>,
+		pub enabled: Vec<(CurrencyId, bool)>,
 	}
 
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig {
 		fn build(&self) {
-			for (asset_id, enabled) in &self.whitelisted {
+			for (asset_id, enabled) in &self.enabled {
 				FeeAssets::<T>::insert(asset_id, enabled);
 			}
 		}
@@ -103,17 +102,22 @@ where
 		who: &Self::AccountId,
 		id: &Self::AssetId,
 	) -> Result<(), traits::fee::InvalidFeeSource> {
-		T::HealthStatus::health_status(id).map_err(|_| InvalidFeeSource::Inactive)?;
+		T::HealthStatus::health_status(id)
+			.map_err(|_| InvalidFeeSource::Inactive)
+			.and_then(|_| {
+				T::Eligibility::eligible(who, id).map_err(|_| InvalidFeeSource::Inactive)
+			})?;
 
-		T::Eligibility::eligible(who, id).map_err(|_| InvalidFeeSource::Inactive)?;
+		log::debug!(target: "fee_enablement::fee_source", "{:?} accepted", id);
 		Ok(())
 	}
 
 	fn listed(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
 		if FeeAssets::<T>::get(id).unwrap_or_default() {
+			log::debug!(target: "fee_enablement::fee_source", "{:?} listed", id);
 			Ok(())
 		} else {
-			Err(InvalidFeeSource::Inactive)
+			Err(InvalidFeeSource::Unlisted)
 		}
 	}
 }

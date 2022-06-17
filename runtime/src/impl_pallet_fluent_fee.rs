@@ -1,6 +1,4 @@
-use core::marker::PhantomData;
-
-use crate::{Call, Currencies, Event, Runtime};
+use crate::{Currencies, Event, FeeEnablement, Runtime};
 use frame_support::pallet_prelude::InvalidTransaction;
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
@@ -11,7 +9,7 @@ impl pallet_fluent_fee::Config for Runtime {
 
 	type MultiCurrency = Currencies;
 
-	type FeeSource = StaticImpl;
+	type FeeSource = FeeEnablement;
 
 	type FeeMeasure = StaticImpl;
 

@@ -5,10 +5,10 @@ use frame_support::{
 	traits::{fungible, fungibles},
 };
 use orml_traits::{BasicCurrency, MultiCurrency};
-use pallet_contract_asset_registry::TokenAccess;
 use primitives::{AccountId, CurrencyId};
 use sp_core::{Bytes, U256};
 use std::str::FromStr;
+use traits::currencies::TokenAccess;
 
 fn create_token<T>(owner: AccountId, tkn_name: &str, tkn_symbol: &str, init_amount: T) -> AccountId
 where
