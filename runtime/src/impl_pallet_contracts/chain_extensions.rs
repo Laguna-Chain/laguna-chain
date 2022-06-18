@@ -103,8 +103,8 @@ impl ChainExtension<Runtime> for DemoExtension {
 						// transfer_from
 						// @dev: This is an UNSAFE method. Only whitelisted contracts can access it!
 
-						let caller: AccountId = env.ext().caller().clone();
-						//@todo: Verify that the caller is authorised to do this operation
+						let contract: AccountId = env.ext().address().clone();
+						//@todo: Verify that the contract is authorised to do this operation
 
 						let from: AccountId = env.read_as()?;
 						let to: AccountId = env.read_as()?;
