@@ -7,37 +7,8 @@ use orml_traits::MultiCurrency;
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, RetVal, SysConfig, UncheckedFrom,
 };
-use primitives::{AccountId, Balance, CurrencyId, TokenId};
+use primitives::{AccountId, Balance, CurrencyId, TokenId, TokenMetadata};
 use sp_runtime::DispatchError;
-
-fn allowance(asset: CurrencyId, owner: AccountId, spender: AccountId) -> Balance {
-	unimplemented!()
-}
-
-fn transfer(asset: CurrencyId, from: AccountId, to: AccountId, value: Balance) -> u32 {
-	let origin = RawOrigin::Signed(from);
-	match Currencies::transfer(origin.into(), to, asset, value) {
-		Ok(_) => 0,
-		Err(_) => 2,
-	}
-}
-
-fn approve(asset: CurrencyId, owner: AccountId, spender: AccountId, value: Balance) -> u32 {
-	unimplemented!()
-}
-
-fn transfer_from(
-	asset: CurrencyId,
-	caller: AccountId,
-	from: AccountId,
-	to: AccountId,
-	value: Balance,
-) -> u32 {
-	// 1. Call allowance() (from => caller) to check authorisation
-	// 2. Call Transfer() (from => to) and verify (Reentrancy possible?)
-	// 3. Call approve() (from => caller) to update allowance
-	unimplemented!()
-}
 
 pub struct DemoExtension;
 
@@ -52,6 +23,10 @@ impl ChainExtension<Runtime> for DemoExtension {
 	{
 		let mut env = env.buf_in_buf_out();
 		match func_id {
+			0010 => {
+				// @todo: Whitelist contract after verification
+				unimplemented!()
+			},
 			1000 => {
 				let arg: [u8; 32] = env.read_as()?;
 				env.write(&arg, false, None)
@@ -64,12 +39,36 @@ impl ChainExtension<Runtime> for DemoExtension {
 				let currency = CurrencyId::NativeToken(match token_id {
 					0 => TokenId::Laguna,
 					1 => TokenId::FeeToken,
-					_ => return Ok(RetVal::Converging(1)),
+					_ => return Ok(RetVal::Converging(1)), // Err::InvalidTokenId
 				});
 
 				match func_id {
 					2000 => Ok(RetVal::Converging(0)),
 					2001 => {
+						// Get token name
+						let name = currency.name();
+						env.write(&name.encode(), false, None).map_err(|_| {
+							DispatchError::Other("ChainExtension failed to call allowance")
+						})?;
+						Ok(RetVal::Converging(0))
+					},
+					2002 => {
+						// Get token symbol
+						let symbol = currency.symbol();
+						env.write(&symbol.encode(), false, None).map_err(|_| {
+							DispatchError::Other("ChainExtension failed to call allowance")
+						})?;
+						Ok(RetVal::Converging(0))
+					},
+					2003 => {
+						// Get token decimals
+						let decimals = currency.decimals();
+						env.write(&decimals.encode(), false, None).map_err(|_| {
+							DispatchError::Other("ChainExtension failed to call allowance")
+						})?;
+						Ok(RetVal::Converging(0))
+					},
+					2004 => {
 						// Get total supply
 						let supply = Currencies::total_issuance(currency);
 						env.write(&supply.encode(), false, None).map_err(|_| {
@@ -77,7 +76,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						})?;
 						Ok(RetVal::Converging(0))
 					},
-					2002 => {
+					2005 => {
 						// Get balance
 						let account: AccountId = env.read_as()?;
 
@@ -87,43 +86,35 @@ impl ChainExtension<Runtime> for DemoExtension {
 						})?;
 						Ok(RetVal::Converging(0))
 					},
-					2003 => {
-						// Get Allowance
-						let owner: AccountId = env.read_as()?;
-						let spender: AccountId = env.read_as()?;
-
-						let allowance = allowance(currency, owner, spender);
-						env.write(&allowance.encode(), false, None).map_err(|_| {
-							DispatchError::Other("ChainExtension failed to call allowance")
-						})?;
-						Ok(RetVal::Converging(0))
-					},
-					2004 => {
+					2006 => {
 						// Transfer tokens
 						let from: AccountId = env.ext().caller().clone();
 						let to: AccountId = env.read_as()?;
 						let value: Balance = env.read_as()?;
 
-						let err_code = transfer(currency, from, to, value);
+						let origin = RawOrigin::Signed(from);
+						let err_code = match Currencies::transfer(origin.into(), to, currency, value).is_ok() {
+							true => 0,
+							false => 2, // Err::InsufficientBalance
+						};
 						Ok(RetVal::Converging(err_code))
 					},
-					2005 => {
-						// Set allowance
-						let owner: AccountId = env.ext().caller().clone();
-						let spender: AccountId = env.read_as()?;
-						let value: Balance = env.read_as()?;
-
-						let err_code = approve(currency, owner, spender, value);
-						Ok(RetVal::Converging(err_code))
-					},
-					2006 => {
+					2007 => {
 						// transfer_from
+						// @dev: This is an UNSAFE method. Only whitelisted contracts can access it!
+
 						let caller: AccountId = env.ext().caller().clone();
+						//@todo: Verify that the caller is authorised to do this operation
+
 						let from: AccountId = env.read_as()?;
 						let to: AccountId = env.read_as()?;
 						let value: Balance = env.read_as()?;
 
-						let err_code = transfer_from(currency, caller, from, to, value);
+						let origin = RawOrigin::Signed(from);
+						let err_code = match Currencies::transfer(origin.into(), to, currency, value).is_ok() {
+							true => 0,
+							false => 2, // Err::InsufficientBalance
+						};
 						Ok(RetVal::Converging(err_code))
 					},
 					_ => {
