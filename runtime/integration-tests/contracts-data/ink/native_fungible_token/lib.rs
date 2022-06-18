@@ -2,6 +2,7 @@
 
 use ink_env::{AccountId, Environment};
 use ink_lang as ink;
+use ink_prelude::vec::Vec as StorageVec;
 use scale::{Decode, Encode};
 
 #[derive(Encode, Decode, Debug)]
@@ -10,7 +11,6 @@ pub enum ExtensionError {
 	InvalidTokenId,
 	InsufficientBalance,
 	InsufficientAllowance,
-	ExistentialDepositCrisis,
 	UnknownStatusCode,
 	InvalidScaleEncoding,
 }
@@ -27,8 +27,6 @@ impl ink_env::chain_extension::FromStatusCode for ExtensionError {
 			0 => Ok(()),
 			1 => Err(Self::InvalidTokenId),
 			2 => Err(Self::InsufficientBalance),
-			3 => Err(Self::InsufficientAllowance),
-			4 => Err(Self::ExistentialDepositCrisis),
 			_ => Err(Self::UnknownStatusCode),
 		}
 	}
@@ -40,35 +38,32 @@ type Balance = <ink_env::DefaultEnvironment as Environment>::Balance;
 pub trait NativeTokenRuntimeExt {
 	type ErrorCode = ExtensionError;
 
-	#[ink(extension = 2000, returns_result = false, handle_status = false)]
-	fn is_valid_token(token_id: u32) -> bool;
+	#[ink(extension = 0010, returns_result = false)]
+	fn whitelist_contract();
+
+	#[ink(extension = 2000, returns_result = false)]
+	fn is_valid_token(token_id: u32);
 
 	#[ink(extension = 2001)]
-	fn total_supply(token_id: u32) -> Result<Balance, ExtensionError>;
+	fn name(token_id: u32) -> Result<StorageVec<u8>, ExtensionError>;
 
 	#[ink(extension = 2002)]
-	fn balance_of(token_id: u32, owner: AccountId) -> Result<Balance, ExtensionError>;
+	fn symbol(token_id: u32) -> Result<StorageVec<u8>, ExtensionError>;
 
 	#[ink(extension = 2003)]
-	fn allowance(
-		token_id: u32,
-		owner: AccountId,
-		spender: AccountId,
-	) -> Result<Balance, ExtensionError>;
+	fn decimals(token_id: u32) -> Result<u8, ExtensionError>;
 
 	#[ink(extension = 2004)]
-	fn transfer(token_id: u32, to: AccountId, value: Balance) -> Result<(), ExtensionError>;
+	fn total_supply(token_id: u32) -> Result<Balance, ExtensionError>;
 
 	#[ink(extension = 2005)]
-	fn approve(token_id: u32, spender: AccountId, value: Balance) -> Result<(), ExtensionError>;
+	fn balance_of(token_id: u32, owner: AccountId) -> Result<Balance, ExtensionError>;
 
-	#[ink(extension = 2006)]
-	fn transfer_from(
-		token_id: u32,
-		from: AccountId,
-		to: AccountId,
-		value: Balance,
-	) -> Result<(), ExtensionError>;
+	#[ink(extension = 2006, returns_result = false)]
+	fn transfer(token_id: u32, to: AccountId, value: Balance);
+
+	#[ink(extension = 2007, returns_result = false)]
+	fn transfer_from(token_id: u32, from: AccountId, to: AccountId, value: Balance);
 }
 
 // Contract needs the environment that understand our extension
@@ -91,11 +86,17 @@ impl Environment for CustomEnvironment {
 #[ink::contract(env = crate::CustomEnvironment)]
 mod native_fungible_token {
 
-	use super::ExtensionError;
+	use super::{ExtensionError, StorageVec};
+	use ink_storage::{traits::SpreadAllocate, Mapping};
 
 	#[ink(storage)]
+	#[derive(SpreadAllocate)]
 	pub struct NativeToken {
+		/// Native runtime token ID
 		token_id: u32,
+		/// Mapping of the token amount which an account is allowed to withdraw
+		/// from another account.
+		allowances: Mapping<(AccountId, AccountId), Balance>,
 	}
 
 	/// Event emitted when a token transfer occurs.
@@ -126,10 +127,47 @@ mod native_fungible_token {
 		/// Creates an ERC-20 contract wrapper around an existing native token
 		#[ink(constructor)]
 		pub fn create_wrapper_token(token_id: u32) -> Self {
-			match Self::env().extension().is_valid_token(token_id) {
-				true => Self { token_id },
-				false => panic!("Invalid tokenId"),
+			// Checks if a native token with given token_id exists in the runtime
+			if Self::env().extension().is_valid_token(token_id).is_err() {
+				panic!("Invalid tokenId")
 			}
+
+			// Allows instantaition from priviledged account only (ROOT for now)
+			if Self::env().extension().whitelist_contract().is_err() {
+				panic!("Failed to whitelist the contract")
+			}
+			ink_lang::utils::initialize_contract(|contract| Self::new_init(contract, token_id))
+		}
+
+		fn new_init(&mut self, token_id: u32) {
+			self.token_id = token_id
+		}
+
+		/// Returns the name of the token
+		#[ink(message)]
+		pub fn name(&self) -> StorageVec<u8> {
+			self.env()
+				.extension()
+				.name(self.token_id)
+				.expect("TokenId once created is never destroyed")
+		}
+
+		/// Returns the ticker of the token
+		#[ink(message)]
+		pub fn symbol(&self) -> StorageVec<u8> {
+			self.env()
+				.extension()
+				.symbol(self.token_id)
+				.expect("TokenId once created is never destroyed")
+		}
+
+		/// Returns the decimals places used in the token
+		#[ink(message)]
+		pub fn decimals(&self) -> u8 {
+			self.env()
+				.extension()
+				.decimals(self.token_id)
+				.expect("TokenId once created is never destroyed")
 		}
 
 		/// Returns the total token supply
@@ -155,10 +193,7 @@ mod native_fungible_token {
 		/// Returns `0` if no allowance has been set.
 		#[ink(message)]
 		pub fn allowance(&self, owner: AccountId, spender: AccountId) -> Balance {
-			self.env()
-				.extension()
-				.allowance(self.token_id, owner, spender)
-				.expect("TokenId once created is never destroyed")
+			self.allowances.get((owner, spender)).unwrap_or_default()
 		}
 
 		/// Transfers `value` amount of tokens from the caller's account to account `to`.
@@ -169,9 +204,6 @@ mod native_fungible_token {
 		///
 		/// Returns `InsufficientBalance` error if there are not enough tokens on
 		/// the caller's account balance.
-		///
-		/// Returns `ExistentialDepositCrisis` if the balance of sender/receiver
-		/// goes below ExistemtialDeposit after the transfer
 		#[ink(message)]
 		pub fn transfer(&mut self, to: AccountId, value: Balance) -> Result<()> {
 			self.env().extension().transfer(self.token_id, to, value)?;
@@ -191,8 +223,9 @@ mod native_fungible_token {
 		/// An `Approval` event is emitted.
 		#[ink(message)]
 		pub fn approve(&mut self, spender: AccountId, value: Balance) -> Result<()> {
-			self.env().extension().approve(self.token_id, spender, value)?;
-			self.env().emit_event(Approval { owner: self.env().caller(), spender, value });
+			let owner = self.env().caller();
+			self.allowances.insert((&owner, &spender), &value);
+			self.env().emit_event(Approval { owner, spender, value });
 			Ok(())
 		}
 
@@ -207,9 +240,6 @@ mod native_fungible_token {
 		///
 		/// Returns `InsufficientBalance` error if there are not enough tokens on
 		/// the account balance of `from`.
-		///
-		/// Returns `ExistentialDepositCrisis` if the balance of sender/receiver
-		/// goes below ExistemtialDeposit after the transfer
 		#[ink(message)]
 		pub fn transfer_from(
 			&mut self,
@@ -217,7 +247,13 @@ mod native_fungible_token {
 			to: AccountId,
 			value: Balance,
 		) -> Result<()> {
+			let caller = self.env().caller();
+			let allowance = self.allowance(from, caller);
+			if allowance < value {
+				return Err(ExtensionError::InsufficientAllowance)
+			}
 			self.env().extension().transfer_from(self.token_id, from, to, value)?;
+			self.allowances.insert((&from, &caller), &(allowance - value));
 			self.env().emit_event(Transfer { from: Some(from), to: Some(to), value });
 			Ok(())
 		}
