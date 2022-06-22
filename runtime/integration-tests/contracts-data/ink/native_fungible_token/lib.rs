@@ -83,6 +83,8 @@ impl Environment for CustomEnvironment {
 	type ChainExtension = NativeTokenRuntimeExt;
 }
 
+pub use self::native_fungible_token::NativeTokenRef;
+
 #[ink::contract(env = crate::CustomEnvironment)]
 mod native_fungible_token {
 

@@ -25,7 +25,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 		match func_id {
 			0010 => {
 				// @todo: Whitelist contract after verification
-				unimplemented!()
+				Ok(RetVal::Converging(0))
 			},
 			1000 => {
 				let arg: [u8; 32] = env.read_as()?;
@@ -78,7 +78,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 					},
 					2005 => {
 						// Get balance
-						let account: AccountId = env.read_as()?;
+						let (_, account): (u32, AccountId) = env.read_as()?;
 
 						let balance = Currencies::free_balance(account, currency);
 						env.write(&balance.encode(), false, None).map_err(|_| {
@@ -89,11 +89,17 @@ impl ChainExtension<Runtime> for DemoExtension {
 					2006 => {
 						// Transfer tokens
 						let from: AccountId = env.ext().caller().clone();
-						let to: AccountId = env.read_as()?;
-						let value: Balance = env.read_as()?;
+						let (_, to, value): (u32, AccountId, Balance) = env.read_as()?;
 
 						let origin = RawOrigin::Signed(from);
-						let err_code = match Currencies::transfer(origin.into(), to, currency, value).is_ok() {
+						let err_code = match Currencies::transfer(
+							origin.into(),
+							to,
+							currency,
+							value,
+						)
+						.is_ok()
+						{
 							true => 0,
 							false => 2, // Err::InsufficientBalance
 						};
@@ -106,12 +112,18 @@ impl ChainExtension<Runtime> for DemoExtension {
 						let contract: AccountId = env.ext().address().clone();
 						//@todo: Verify that the contract is authorised to do this operation
 
-						let from: AccountId = env.read_as()?;
-						let to: AccountId = env.read_as()?;
-						let value: Balance = env.read_as()?;
+						let (_, from, to, value): (u32, AccountId, AccountId, Balance) =
+							env.read_as()?;
 
 						let origin = RawOrigin::Signed(from);
-						let err_code = match Currencies::transfer(origin.into(), to, currency, value).is_ok() {
+						let err_code = match Currencies::transfer(
+							origin.into(),
+							to,
+							currency,
+							value,
+						)
+						.is_ok()
+						{
 							true => 0,
 							false => 2, // Err::InsufficientBalance
 						};
