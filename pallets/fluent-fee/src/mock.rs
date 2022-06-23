@@ -6,12 +6,17 @@ use frame_support::{
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
 	weights::IdentityFee,
+	PalletId,
 };
 
+use frame_system::EnsureRoot;
 use orml_currencies::BasicCurrencyAdapter;
 use orml_traits::LockIdentifier;
+use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
-use sp_core::H256;
+use sp_core::{H256, U256};
+use sp_runtime::{DispatchError, Perbill};
+use sp_std::ops::Deref;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -167,14 +172,22 @@ impl FeeSource for DummyFeeSource {
 	}
 
 	fn listing_asset(id: &Self::AssetId) -> Result<(), DispatchError> {
-		let staked_amount = FluentFee::total_staked(id);
-		let total_supply = Tokens::total_issuance(id);
+		match id {
+			CurrencyId::Erc20(_) => {
+				pallet::AcceptedAssets::<Runtime>::insert(&id, true);
+				Ok(())
+			},
+			CurrencyId::NativeToken(_) => {
+				let staked_amount = FluentFee::total_staked(id);
+				let total_supply = Tokens::total_issuance(id);
 
-		if (staked_amount * 100 / total_supply) < 30 {
-			Err(DispatchError::Other("InvalidFeeSource: Ineligible"))
-		} else {
-			pallet::AcceptedAssets::<Runtime>::insert(&id, true);
-			Ok(())
+				if (staked_amount * 100 / total_supply) < 30 {
+					Err(DispatchError::Other("InvalidFeeSource: Ineligible"))
+				} else {
+					pallet::AcceptedAssets::<Runtime>::insert(&id, true);
+					Ok(())
+				}
+			},
 		}
 	}
 
@@ -203,6 +216,7 @@ impl FeeMeasure for DummyFeeMeasure {
 			// demo 5% reduction
 			CurrencyId::NativeToken(TokenId::FeeToken) =>
 				Ok(balance.saturating_mul(95).saturating_div(100)),
+			CurrencyId::Erc20(_) => Ok(balance.saturating_mul(70).saturating_div(100)),
 			_ => Err(InvalidTransaction::Payment.into()),
 		}
 	}
@@ -233,7 +247,17 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		// If there doesn't exist enough balance for the user in the treasury make the user directly
 		// pay for the transaction.
 		else {
-			Tokens::withdraw(*id, &account, *balance)?;
+			match *id {
+				CurrencyId::NativeToken(_) => Tokens::withdraw(*id, &account, *balance)?,
+				CurrencyId::Erc20(asset_address) => ContractAssets::transfer(
+					asset_address.into(),
+					account.clone(),
+					TREASURY_ACCOUNT,
+					U256::from(*balance),
+				)
+				.map(|_| ())
+				.map_err(|_| DispatchError::CannotLookup)?,
+			}
 		}
 		Ok(())
 	}
@@ -244,6 +268,93 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	) -> Result<(), traits::fee::InvalidFeeSource> {
 		Ok(())
 	}
+}
+
+parameter_types! {
+	pub const PId: PalletId = PalletId(*b"tkn/reg_");
+	pub const MaxGas: u64 = 200_000_000_000;
+	pub const DebugFlag: bool = true;
+}
+
+impl pallet_contract_asset_registry::Config for Runtime {
+	type AllowedOrigin = EnsureRoot<AccountId>;
+	type PalletId = PId;
+
+	type MaxGas = MaxGas;
+
+	type ContractDebugFlag = DebugFlag;
+}
+
+const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
+
+pub const UNIT: u128 = 100_000_000_000_000_000;
+const fn deposit(items: u32, bytes: u32) -> Balance {
+	(items as Balance * UNIT + (bytes as Balance) * (5 * UNIT / 10000 / 100)) / 10
+}
+
+const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
+
+const WEIGHT_PER_SECOND: Weight = 1_000_000_000_000;
+
+parameter_types! {
+	pub const DepositPerItem: Balance = deposit(1, 0);
+	pub const DepositPerByte: Balance = deposit(0, 1);
+	pub BlockWeights: frame_system::limits::BlockWeights = frame_system::limits::BlockWeights
+	::with_sensible_defaults(2 * WEIGHT_PER_SECOND, NORMAL_DISPATCH_RATIO);
+	// The lazy deletion runs inside on_initialize.
+	pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
+		BlockWeights::get().max_block;
+	pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get() / (
+			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
+			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
+		)) / 5) as u32;
+	pub Schedule: pallet_contracts::Schedule<Runtime> = {
+		let mut schedule = pallet_contracts::Schedule::<Runtime>::default();
+		schedule.limits.code_len = 256 * 1024;
+		schedule
+	};
+}
+
+impl pallet_contracts::Config for Runtime {
+	type Time = Timestamp;
+	type Randomness = RandomnessCollectiveFlip;
+	type Currency = Balances;
+	type Event = Event;
+	type Call = Call;
+
+	type CallFilter = frame_support::traits::Nothing;
+	type WeightPrice = Payment;
+	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
+	type ChainExtension = ();
+	type Schedule = Schedule;
+	type CallStack = [pallet_contracts::Frame<Self>; 31];
+	type DeletionQueueDepth = DeletionQueueDepth;
+	type DeletionWeightLimit = DeletionWeightLimit;
+
+	type DepositPerByte = DepositPerByte;
+
+	type DepositPerItem = DepositPerItem;
+
+	type AddressGenerator = DefaultAddressGenerator;
+
+	// TODO: use arbitrary value now, need to adjust usage later
+	type ContractAccessWeight = DefaultContractAccessWeight<()>;
+}
+
+impl pallet_randomness_collective_flip::Config for Runtime {}
+
+pub const MILLISECS_PER_BLOCK: u64 = 6000;
+pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
+
+parameter_types! {
+	pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
+}
+
+impl pallet_timestamp::Config for Runtime {
+	type Moment = u64;
+	type OnTimestampSet = ();
+	type MinimumPeriod = MinimumPeriod;
+	type WeightInfo = ();
 }
 
 impl pallet::Config for Runtime {
@@ -288,7 +399,11 @@ construct_runtime!(
 		Balances: pallet_balances,
 		Currencies: orml_currencies,
 		FluentFee: pallet,
-		Payment: pallet_transaction_payment
+		Payment: pallet_transaction_payment,
+		Contracts: pallet_contracts,
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
+		Timestamp: pallet_timestamp,
+		ContractAssets: pallet_contract_asset_registry
 	}
 );
 

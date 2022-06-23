@@ -1,11 +1,17 @@
 //! Unit test for the fluent-fee pallet
 
+use core::str::FromStr;
+
+use crate::mock::Event;
+
 use super::*;
 
 use frame_support::{assert_ok, dispatch::DispatchInfo};
 use mock::*;
 use pallet_transaction_payment::ChargeTransactionPayment;
-use sp_runtime::traits::SignedExtension;
+use primitives::AccountId;
+use sp_core::{Bytes, U256};
+use sp_runtime::{traits::SignedExtension, AccountId32};
 
 #[test]
 fn test_staking_asset() {
@@ -58,17 +64,82 @@ fn test_accepted_assets() {
 		})
 }
 
+fn create_token<T>(owner: AccountId, tkn_name: &str, tkn_symbol: &str, init_amount: T) -> AccountId
+where
+	U256: From<T>,
+{
+	let blob = std::fs::read(
+		"../../runtime/integration-tests/contracts-data/solidity/token/dist/DemoToken.wasm",
+	)
+	.expect("unable to read contract");
+
+	let mut sel_constuctor = Bytes::from_str("0x835a15cb")
+		.map(|v| v.to_vec())
+		.expect("unable to parse selector");
+
+	sel_constuctor.append(&mut tkn_name.encode());
+	sel_constuctor.append(&mut tkn_symbol.encode());
+	sel_constuctor.append(&mut U256::from(init_amount).encode());
+
+	assert_ok!(Contracts::instantiate_with_code(
+		Origin::signed(owner),
+		0,
+		MaxGas::get(),
+		None, /* if not specified, it's allowed to charge the max amount of free balance of the
+		       * creator */
+		blob,
+		sel_constuctor,
+		vec![]
+	));
+
+	let evts = System::events();
+	let deployed = evts
+		.iter()
+		.rev()
+		.find_map(|rec| {
+			if let Event::Contracts(pallet_contracts::Event::Instantiated {
+				deployer: _,
+				contract,
+			}) = &rec.event
+			{
+				Some(contract)
+			} else {
+				None
+			}
+		})
+		.expect("unable to find deployed contract");
+
+	deployed.clone()
+}
+
 #[test]
 fn test_set_priority_fee_asset() {
 	ExtBuilder::default()
 		.balances(vec![
-			(ALICE, FEE_TOKEN_ID, 1_000_000_000),
-			(ALICE, NATIVE_CURRENCY_ID, 1_000_000_000),
+			(ALICE, NATIVE_CURRENCY_ID, 100000000000000000),
+			(BOB, NATIVE_CURRENCY_ID, 100000000000000000),
 		])
 		.build()
 		.execute_with(|| {
-			// should fail as FEE_TOKEN_ID should first be listed as a valid fee source
-			assert_ok!(FluentFee::set_fee_source_priority(Origin::signed(ALICE), FEE_TOKEN_ID));
-			assert_eq!(FluentFee::account_fee_source_priority(ALICE), Some(FEE_TOKEN_ID));
+			let init_amount = 100000000000_u64;
+			let deployed = create_token(ALICE, "TKN", "TKN", init_amount);
+			// let deployed: AccountId32 = AccountId32::from([1u8; 32]);
+
+			assert_ok!(ContractAssets::register_asset(Origin::root(), deployed.clone(), true));
+			// List the ERC20 in the fluent fee pallet
+			assert_ok!(FluentFee::listing_asset(
+				Origin::signed(ALICE),
+				CurrencyId::Erc20(deployed.clone().into())
+			));
+			// set the ERC20 as ALICE's prioritized gas fee source
+			assert_ok!(FluentFee::set_fee_source_priority(
+				Origin::signed(ALICE),
+				CurrencyId::Erc20(deployed.clone().into())
+			));
+			// check if the ERC20 is being accepted
+			assert_ok!(FluentFee::check_accepted_asset(
+				Origin::signed(ALICE),
+				CurrencyId::Erc20(deployed.clone().into())
+			));
 		})
 }

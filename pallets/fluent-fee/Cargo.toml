@@ -16,6 +16,8 @@ frame-system = {default-features = false, git = 'https://github.com/paritytech/s
 
 pallet-balances = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-transaction-payment = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-contract-asset-registry = {version = "0.1.0", path = "../contract-asset-registry", default-features = false}
+pallet-contracts = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", default-features = false}
 
 sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 sp-io = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
@@ -30,6 +32,10 @@ frame-benchmarking = {default-features = false, git = 'https://github.com/parity
 hex = {version = "0.4.3", default-features = false}
 hex-literal = "0.3.4"
 traits = {version = "0.1.0", path = "../traits", default-features = false}
+
+[dev-dependencies]
+pallet-randomness-collective-flip = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-timestamp = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 [features]
 default = ["std"]
@@ -46,6 +52,10 @@ std = [
   "hex/std",
   "pallet-transaction-payment/std",
   "pallet-balances/std",
+  "pallet-randomness-collective-flip/std",
+  "pallet-timestamp/std",
+  "pallet-contracts/std",
+  "pallet-contract-asset-registry/std",
   "primitives/std",
   "orml-currencies/std",
   "orml-tokens/std",

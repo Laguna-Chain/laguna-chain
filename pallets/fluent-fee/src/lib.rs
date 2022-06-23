@@ -15,6 +15,7 @@ use primitives::{CurrencyId, TokenId};
 use scale_info::TypeInfo;
 
 pub use pallet::*;
+use pallet_contract_asset_registry::TokenAccess;
 use pallet_transaction_payment::OnChargeTransaction;
 use traits::fee::{FeeDispatch, FeeMeasure, FeeSource};
 
