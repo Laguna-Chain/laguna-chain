@@ -6,8 +6,8 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-codec = {version = "3.0.0", package = "parity-scale-codec"}
-serde = {version = "1.0.137", features = ["derive"]}
+codec = { version = "3.1.5", package = "parity-scale-codec" }
+serde = { version = "1.0.137", features = ["derive"] }
 
 pallet-currencies-runtime-api = {version = "0.1.0", path = "runtime-api"}
 primitives = {version = "0.1.0", path = "../../../primitives"}
@@ -17,4 +17,4 @@ sp-blockchain = {git = 'https://github.com/paritytech/substrate.git', branch = "
 sp-runtime = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 sp-std = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
-jsonrpsee = {version = "0.13.0", features = ["server", "macros"]}
+jsonrpsee = { version = "0.14.0", features = ["server", "macros"] }

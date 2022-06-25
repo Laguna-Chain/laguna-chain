@@ -6,10 +6,10 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}
-log = "0.4.14"
+codec = { default-features = false, features = ['derive'], package = "parity-scale-codec", version = "3.1.5" }
+log = "0.4.17"
 primitives = {path = "../../primitives", default-features = false}
-scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
+scale-info = { default-features = false, features = ['derive'], version = "2.1.2" }
 
 frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
@@ -19,7 +19,7 @@ sp-runtime = {default-features = false, git = 'https://github.com/paritytech/sub
 sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 frame-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", optional = true}
-hex = {version = "0.4.3", default-features = false}
+hex = { version = "0.4.3", default-features = false }
 hex-literal = "0.3.4"
 
 orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', default-features = false, branch = "polkadot-v0.9.22"}

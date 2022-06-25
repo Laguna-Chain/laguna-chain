@@ -2,12 +2,10 @@
 
 use core::str::FromStr;
 
-use crate::mock::Event;
-
-use super::*;
+use super::mock::*;
+use crate::*;
 
 use frame_support::{assert_ok, dispatch::DispatchInfo};
-use mock::*;
 use pallet_transaction_payment::ChargeTransactionPayment;
 use primitives::AccountId;
 use sp_core::{Bytes, U256};
@@ -93,11 +91,12 @@ where
 	));
 
 	let evts = System::events();
+	dbg!(evts.clone());
 	let deployed = evts
 		.iter()
 		.rev()
 		.find_map(|rec| {
-			if let Event::Contracts(pallet_contracts::Event::Instantiated {
+			if let mock::Event::Contracts(pallet_contracts::Event::Instantiated {
 				deployer: _,
 				contract,
 			}) = &rec.event
@@ -140,6 +139,12 @@ fn test_set_priority_fee_asset() {
 			assert_ok!(FluentFee::check_accepted_asset(
 				Origin::signed(ALICE),
 				CurrencyId::Erc20(deployed.clone().into())
+			));
+			// make some arbitray calls and use the erc20 token as the fee source
+			assert_ok!(FluentFee::prepay_fees(
+				Origin::signed(ALICE),
+				CurrencyId::NativeToken(TokenId::Laguna),
+				100000
 			));
 		})
 }

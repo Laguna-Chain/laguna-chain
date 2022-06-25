@@ -6,9 +6,9 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-codec = {default-features = false, package = 'parity-scale-codec', version = '3.0.0', features = ["derive"]}
+codec = { default-features = false, package = "parity-scale-codec", version = "3.1.5", features = ["derive"] }
 primitives = {version = "0.1.0", path = "../../../../primitives", default-features = false}
-scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
+scale-info = { default-features = false, features = ['derive'], version = "2.1.2" }
 sp-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 sp-runtime = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}

@@ -121,6 +121,11 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(1000_000)]
+		pub fn schedule_call(origin: OriginFor<T>) -> DispatchResult {
+			Ok(())
+		}
+
+		#[pallet::weight(1000_000)]
 		pub fn set_fee_source_priority(
 			origin: OriginFor<T>,
 			currency_id: CurrencyId,
