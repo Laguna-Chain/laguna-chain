@@ -4281,7 +4281,6 @@ dependencies = [
  "parity-scale-codec",
  "primitives",
  "scale-info",
- "sp-std",
  "traits",
 ]
 
@@ -4383,10 +4382,6 @@ dependencies = [
  "sp-std",
  "sp-trie",
 ]
-
-[[package]]
-name = "pallet-static-fee-source"
-version = "0.1.0"
 
 [[package]]
 name = "pallet-sudo"

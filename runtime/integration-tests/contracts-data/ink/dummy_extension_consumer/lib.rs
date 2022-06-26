@@ -10,8 +10,8 @@ pub trait DummyRuntimeExt {
 	type ErrorCode = ExtensionError;
 
 	// match extension ID on your runtime
-	#[ink(extension = 1000, returns_result = false)]
-	fn exposed_method(input: [u8; 32]) -> [u8; 32];
+	#[ink(extension = 1000)]
+	fn exposed_method(input: [u8; 32]) -> Result<[u8; 32], ExtensionError>;
 }
 
 #[derive(Encode, Decode)]

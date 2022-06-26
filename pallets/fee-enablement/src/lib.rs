@@ -1,4 +1,14 @@
+//! # pallet-fee-enablement
+//!
+//! This pallet took part of the fee-distribution pipeline where inclusion of an asset is managed
+//! and checked. This pallet implement the `traits::fee::FeeSource` trait which controls wether an
+//! asset is allowed to took part in fee payout.
+
 #![cfg_attr(not(feature = "std"), no_std)]
+
+// +++++++++++
+// + imports +
+// +++++++++++
 
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
@@ -6,17 +16,19 @@ use frame_system::pallet_prelude::*;
 use orml_traits::MultiCurrency;
 use primitives::CurrencyId;
 
+use traits::fee::{Eligibility, FeeAssetHealth, FeeSource, InvalidFeeSource};
+
+pub use pallet::*;
+use weights::WeightInfo;
+
+// +++++++++++
+// + Aliases +
+// +++++++++++
+
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<B, T> = <B as MultiCurrency<AccountIdOf<T>>>::Balance;
 
-pub use pallet::*;
-use traits::fee::{Eligibility, FeeAssetHealth, FeeSource, InvalidFeeSource};
-
-#[cfg(test)]
-mod mock;
-
-#[cfg(test)]
-mod tests;
+pub mod weights;
 
 #[frame_support::pallet]
 mod pallet {
@@ -35,6 +47,8 @@ mod pallet {
 
 		/// whether an account met the condition to use an asset as fee source
 		type Eligibility: Eligibility<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
+
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -45,7 +59,7 @@ mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(100_000)]
+		#[pallet::weight(T::WeightInfo::onboard_asset())]
 		pub fn onboard_asset(
 			origin: OriginFor<T>,
 			asset_id: CurrencyId,
@@ -57,7 +71,7 @@ mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(100_000)]
+		#[pallet::weight(T::WeightInfo::enable_asset())]
 		pub fn enable_asset(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
 			T::AllowedOrigin::ensure_origin(origin.clone())?;
 
@@ -66,7 +80,7 @@ mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(100_000)]
+		#[pallet::weight(T::WeightInfo::disable_asset())]
 		pub fn disable_asset(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
 			T::AllowedOrigin::ensure_origin(origin.clone())?;
 			FeeAssets::<T>::mutate(asset_id, |val| *val = Some(false));

@@ -9,6 +9,8 @@ impl pallet_fee_enablement::Config for Runtime {
 	type HealthStatus = DefaultImpl;
 
 	type Eligibility = DefaultImpl;
+
+	type WeightInfo = ();
 }
 
 pub struct DefaultImpl;

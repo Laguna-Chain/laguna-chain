@@ -4,7 +4,7 @@ use codec::Decode;
 use frame_support::{
 	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::{Contains, Everything},
+	traits::Everything,
 	weights::IdentityFee,
 };
 
@@ -12,7 +12,6 @@ use frame_system::EnsureRoot;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
-use sp_core::hexdisplay::AsBytesRef;
 use sp_runtime::Perbill;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
@@ -188,6 +187,8 @@ impl Config for Runtime {
 	type MaxGas = MaxGas;
 
 	type ContractDebugFlag = DebugFlag;
+
+	type WeightInfo = ();
 }
 
 impl pallet_sudo::Config for Runtime {

@@ -12,7 +12,6 @@ members = [
   'primitives',
   'pallets/fluent-fee',
   'pallets/fee-enablement',
-  'pallets/static-fee-source',
   "pallets/traits",
   'pallets/contract-asset-registry',
   'pallets/currencies',

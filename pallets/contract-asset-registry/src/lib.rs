@@ -8,17 +8,17 @@ use codec::HasCompact;
 use frame_support::{pallet_prelude::*, traits::Currency, PalletId};
 use frame_system::{pallet_prelude::*, RawOrigin};
 use hex_literal::hex;
-use sp_core::hexdisplay::AsBytesRef;
+pub use pallet::*;
+use sp_core::{hexdisplay::AsBytesRef, U256};
 use sp_runtime::{
 	app_crypto::UncheckedFrom,
 	traits::{AccountIdConversion, StaticLookup},
 };
-
-use traits::currencies::TokenAccess;
-
-pub use pallet::*;
-use sp_core::U256;
 use sp_std::fmt::Debug;
+use traits::currencies::TokenAccess;
+use weights::WeightInfo;
+
+pub mod weights;
 
 #[cfg(test)]
 mod tests;
@@ -49,6 +49,8 @@ mod pallet {
 
 		#[pallet::constant]
 		type ContractDebugFlag: Get<bool>;
+
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -65,7 +67,7 @@ mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(100_000)]
+		#[pallet::weight(<T as Config>::WeightInfo::register_asset())]
 		pub fn register_asset(
 			origin: OriginFor<T>,
 			asset_contract_address: AccountIdOf<T>,
@@ -78,7 +80,7 @@ mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(100_000)]
+		#[pallet::weight(<T as Config>::WeightInfo::suspend_asset())]
 		pub fn suspend_asset(
 			origin: OriginFor<T>,
 			asset_contract_address: AccountIdOf<T>,
@@ -89,7 +91,7 @@ mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(100_000)]
+		#[pallet::weight(<T as Config>::WeightInfo::unregister_asset())]
 		pub fn unregister_asset(
 			origin: OriginFor<T>,
 			asset_contract_address: AccountIdOf<T>,

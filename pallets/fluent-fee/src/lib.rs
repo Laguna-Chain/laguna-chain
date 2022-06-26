@@ -40,12 +40,9 @@ pub mod pallet {
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
 
-
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config> {
-
-	}
+	pub enum Event<T: Config> {}
 
 	#[pallet::error]
 	pub enum Error<T> {
