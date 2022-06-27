@@ -89,6 +89,7 @@ pub use self::native_fungible_token::NativeTokenRef;
 mod native_fungible_token {
 
 	use super::{ExtensionError, StorageVec};
+	use ethereum_types::U256;
 	use ink_storage::{traits::SpreadAllocate, Mapping};
 
 	#[ink(storage)]
@@ -98,7 +99,7 @@ mod native_fungible_token {
 		token_id: u32,
 		/// Mapping of the token amount which an account is allowed to withdraw
 		/// from another account.
-		allowances: Mapping<(AccountId, AccountId), Balance>,
+		allowances: Mapping<(AccountId, AccountId), u128>,
 	}
 
 	/// Event emitted when a token transfer occurs.
@@ -108,7 +109,7 @@ mod native_fungible_token {
 		from: Option<AccountId>,
 		#[ink(topic)]
 		to: Option<AccountId>,
-		value: Balance,
+		value: U256,
 	}
 
 	/// Event emitted when an approval occurs that `spender` is allowed to withdraw
@@ -119,15 +120,12 @@ mod native_fungible_token {
 		owner: AccountId,
 		#[ink(topic)]
 		spender: AccountId,
-		value: Balance,
+		value: U256,
 	}
-
-	/// The ERC-20 result type
-	pub type Result<T> = core::result::Result<T, ExtensionError>;
 
 	impl NativeToken {
 		/// Creates an ERC-20 contract wrapper around an existing native token
-		#[ink(constructor)]
+		#[ink(constructor, selector = 0x45fd0674)]
 		pub fn create_wrapper_token(token_id: u32) -> Self {
 			// Checks if a native token with given token_id exists in the runtime
 			if Self::env().extension().is_valid_token(token_id).is_err() {
@@ -146,7 +144,7 @@ mod native_fungible_token {
 		}
 
 		/// Returns the name of the token
-		#[ink(message)]
+		#[ink(message, selector = 0x06fdde03)]
 		pub fn name(&self) -> StorageVec<u8> {
 			self.env()
 				.extension()
@@ -155,7 +153,7 @@ mod native_fungible_token {
 		}
 
 		/// Returns the ticker of the token
-		#[ink(message)]
+		#[ink(message, selector = 0x95d89b41)]
 		pub fn symbol(&self) -> StorageVec<u8> {
 			self.env()
 				.extension()
@@ -164,7 +162,7 @@ mod native_fungible_token {
 		}
 
 		/// Returns the decimals places used in the token
-		#[ink(message)]
+		#[ink(message, selector = 0x313ce567)]
 		pub fn decimals(&self) -> u8 {
 			self.env()
 				.extension()
@@ -173,29 +171,33 @@ mod native_fungible_token {
 		}
 
 		/// Returns the total token supply
-		#[ink(message)]
-		pub fn total_supply(&self) -> Balance {
-			self.env()
-				.extension()
-				.total_supply(self.token_id)
-				.expect("TokenId once created is never destroyed")
+		#[ink(message, selector = 0x18160ddd)]
+		pub fn total_supply(&self) -> U256 {
+			U256::from(
+				self.env()
+					.extension()
+					.total_supply(self.token_id)
+					.expect("TokenId once created is never destroyed"),
+			)
 		}
 
 		/// Returns the account balance for the specified `owner`
-		#[ink(message)]
-		pub fn balance_of(&self, owner: AccountId) -> Balance {
-			self.env()
-				.extension()
-				.balance_of(self.token_id, owner)
-				.expect("TokenId once created is never destroyed")
+		#[ink(message, selector = 0x70a08231)]
+		pub fn balance_of(&self, owner: AccountId) -> U256 {
+			U256::from(
+				self.env()
+					.extension()
+					.balance_of(self.token_id, owner)
+					.expect("TokenId once created is never destroyed"),
+			)
 		}
 
 		/// Returns the amount which `spender` is still allowed to withdraw from `owner`.
 		///
 		/// Returns `0` if no allowance has been set.
-		#[ink(message)]
-		pub fn allowance(&self, owner: AccountId, spender: AccountId) -> Balance {
-			self.allowances.get((owner, spender)).unwrap_or_default()
+		#[ink(message, selector = 0xdd62ed3e)]
+		pub fn allowance(&self, owner: AccountId, spender: AccountId) -> U256 {
+			U256::from(self.allowances.get((owner, spender)).unwrap_or_default())
 		}
 
 		/// Transfers `value` amount of tokens from the caller's account to account `to`.
@@ -206,15 +208,18 @@ mod native_fungible_token {
 		///
 		/// Returns `InsufficientBalance` error if there are not enough tokens on
 		/// the caller's account balance.
-		#[ink(message)]
-		pub fn transfer(&mut self, to: AccountId, value: Balance) -> Result<()> {
-			self.env().extension().transfer(self.token_id, to, value)?;
+		#[ink(message, selector = 0xa9059cbb)]
+		pub fn transfer(&mut self, to: AccountId, value: U256) -> bool {
+			let value = value.as_u128();
+			if self.env().extension().transfer(self.token_id, to, value).is_err() {
+				return false
+			}
 			self.env().emit_event(Transfer {
 				from: Some(self.env().caller()),
 				to: Some(to),
 				value,
 			});
-			Ok(())
+			true
 		}
 
 		/// Allows `spender` to withdraw from the caller's account multiple times, up to
@@ -223,12 +228,12 @@ mod native_fungible_token {
 		/// If this function is called again it overwrites the current allowance with `value`.
 		///
 		/// An `Approval` event is emitted.
-		#[ink(message)]
-		pub fn approve(&mut self, spender: AccountId, value: Balance) -> Result<()> {
+		#[ink(message, selector = 0x095ea7b3)]
+		pub fn approve(&mut self, spender: AccountId, value: U256) -> bool {
 			let owner = self.env().caller();
-			self.allowances.insert((&owner, &spender), &value);
+			self.allowances.insert((&owner, &spender), &value.as_u128());
 			self.env().emit_event(Approval { owner, spender, value });
-			Ok(())
+			true
 		}
 
 		/// Transfers `value` tokens on the behalf of `from` to the account `to`.
@@ -242,22 +247,24 @@ mod native_fungible_token {
 		///
 		/// Returns `InsufficientBalance` error if there are not enough tokens on
 		/// the account balance of `from`.
-		#[ink(message)]
-		pub fn transfer_from(
-			&mut self,
-			from: AccountId,
-			to: AccountId,
-			value: Balance,
-		) -> Result<()> {
+		#[ink(message, selector = 0x23b872dd)]
+		pub fn transfer_from(&mut self, from: AccountId, to: AccountId, value: U256) -> bool {
 			let caller = self.env().caller();
-			let allowance = self.allowance(from, caller);
+			let value = value.as_u128();
+			let allowance = self.allowance(from, caller).as_u128();
 			if allowance < value {
-				return Err(ExtensionError::InsufficientAllowance)
+				return false
 			}
-			self.env().extension().transfer_from(self.token_id, from, to, value)?;
+			if self.env().extension().transfer_from(self.token_id, from, to, value).is_err() {
+				return false
+			}
 			self.allowances.insert((&from, &caller), &(allowance - value));
-			self.env().emit_event(Transfer { from: Some(from), to: Some(to), value });
-			Ok(())
+			self.env().emit_event(Transfer {
+				from: Some(from),
+				to: Some(to),
+				value: U256::from(value),
+			});
+			true
 		}
 	}
 }

@@ -12,6 +12,7 @@ mod tests {
 	use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId, TokenMetadata};
 	use sp_core::{hexdisplay::AsBytesRef, Bytes};
 	use std::str::FromStr;
+	use sp_core::U256;
 
 	const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 	const MAX_GAS: u64 = 200_000_000_000;
@@ -43,7 +44,7 @@ mod tests {
 					None
 				}
 			})
-			.expect("unable to found contract");
+			.expect("unable to find contract");
 
 		deployed_address.clone()
 	}
@@ -59,7 +60,7 @@ mod tests {
 				let blob = std::fs::read("../integration-tests/contracts-data/ink/native_fungible_token/dist/native_fungible_token.wasm")
 					.expect("Could not find wasm blob");
 
-                let mut sel_constructor = Bytes::from_str("0xe0031b32")
+                let mut sel_constructor = Bytes::from_str("0x45fd0674")
                     .map(|v| v.to_vec())
                     .expect("unable to parse selector");
 
@@ -69,7 +70,7 @@ mod tests {
 				let native_token = CurrencyId::NativeToken(TokenId::Laguna);
 
 				// 2. Test name()
-				let sel_name = Bytes::from_str("0x3adaf70d")
+				let sel_name = Bytes::from_str("0x06fdde03")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
@@ -90,7 +91,7 @@ mod tests {
 				assert_eq!(name, native_token.name());
 
 				// 3. Test symbol()
-				let sel_symbol = Bytes::from_str("0x9bd1933e")
+				let sel_symbol = Bytes::from_str("0x95d89b41")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
@@ -111,7 +112,7 @@ mod tests {
 				assert_eq!(symbol, native_token.symbol());
 
 				// 4. Test decimals()
-				let sel_decimals = Bytes::from_str("0x81c09d87")
+				let sel_decimals = Bytes::from_str("0x313ce567")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
@@ -132,7 +133,7 @@ mod tests {
 				assert_eq!(decimals, native_token.decimals());
 
 				// 5. Test total_supply()
-				let sel_total_supply = Bytes::from_str("0xdb6375a8")
+				let sel_total_supply = Bytes::from_str("0x18160ddd")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
@@ -153,7 +154,7 @@ mod tests {
 				assert_eq!(total_supply, Currencies::total_issuance(native_token));
 
 				// 6. Test balance_of()
-				let mut sel_balance_of = Bytes::from_str("0x0f755a56")
+				let mut sel_balance_of = Bytes::from_str("0x70a08231")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
@@ -177,7 +178,7 @@ mod tests {
 
 				// 7. Test transfer()
 				// @dev: EVA transfers BOB 10 LAGUNA
-				let mut sel_transfer = Bytes::from_str("0x84a15da1")
+				let mut sel_transfer = Bytes::from_str("0xa9059cbb")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
@@ -197,7 +198,7 @@ mod tests {
 				assert_eq!(Currencies::free_balance(BOB, native_token), 15*LAGUNAS);
 
 				// 8. Test allowance(BOB, ALICE)
-				let mut sel_allowance = Bytes::from_str("0x6a00165e")
+				let mut sel_allowance = Bytes::from_str("0xdd62ed3e")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
@@ -222,7 +223,7 @@ mod tests {
 
 				// 9. Test approve()
 				// @dev: BOB approves ALICE to spend upto 5 LAGUNA
-				let mut sel_approve = Bytes::from_str("0x681266a0")
+				let mut sel_approve = Bytes::from_str("0x095ea7b3")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
@@ -256,7 +257,7 @@ mod tests {
 
 				// 10. Test transfer_from()
 				// @dev: ALICE transfers 2 LAGUNA from BOB to EVA
-				let mut sel_transfer_from = Bytes::from_str("0x0b396f18")
+				let mut sel_transfer_from = Bytes::from_str("0x23b872dd")
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 

@@ -62,8 +62,8 @@ contract AMM {
         }
 
         require(share > 0, "Asset value less than threshold for contribution!");
-        token1.transferFrom(msg.sender, address(this), _amountToken1);
-        token2.transferFrom(msg.sender, address(this), _amountToken2);
+        require(token1.transferFrom(msg.sender, address(this), _amountToken1), "Transfer failed");
+        require(token2.transferFrom(msg.sender, address(this), _amountToken2), "Transfer failed");
 
         totalToken1 += _amountToken1;
         totalToken2 += _amountToken2;
@@ -93,8 +93,8 @@ contract AMM {
         totalToken2 -= amountToken2;
         K = totalToken1 * totalToken2;
 
-        token1.transfer(msg.sender, amountToken1);
-        token2.transfer(msg.sender, amountToken2);
+        require(token1.transfer(msg.sender, amountToken1), "Transfer failed");
+        require(token2.transfer(msg.sender, amountToken2), "Transfer failed");
     }
 
     // Returns the amount of Token2 that the user will get when swapping a given amount of Token1 for Token2
@@ -119,10 +119,10 @@ contract AMM {
     function swapToken1(uint256 _amountToken1) external activePool validAmountCheck(token1, _amountToken1) returns(uint256 amountToken2) {
         amountToken2 = getSwapToken1Estimate(_amountToken1);
 
-        token1.transferFrom(msg.sender, address(this), _amountToken1);
+        require(token1.transferFrom(msg.sender, address(this), _amountToken1), "Transfer failed");
         totalToken1 += _amountToken1;
         totalToken2 -= amountToken2;
-        token2.transfer(msg.sender, amountToken2);
+        require(token2.transfer(msg.sender, amountToken2), "Transfer failed");
     }
 
     // Returns the amount of Token2 that the user will get when swapping a given amount of Token1 for Token2
@@ -147,9 +147,9 @@ contract AMM {
     function swapToken2(uint256 _amountToken2) external activePool validAmountCheck(token2, _amountToken2) returns(uint256 amountToken1) {
         amountToken1 = getSwapToken2Estimate(_amountToken2);
 
-        token2.transferFrom(msg.sender, address(this), _amountToken2);
+        require(token2.transferFrom(msg.sender, address(this), _amountToken2), "Transfer failed");
         totalToken2 += _amountToken2;
         totalToken1 -= amountToken1;
-        token1.transfer(msg.sender, amountToken1);
+        require(token1.transfer(msg.sender, amountToken1), "Transfer failed");
     }
 }
