@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x1d4e083c8f5f6bdc56a1da9bff2fbeeca4241d8d9108a913371ce7aaa76675f4",
+    "hash": "0x0a8d34d0f75cc2059b7d0adf04ab27fb37d501fd23a651169592992cc1d907c4",
     "language": "ink! 3.0.1",
     "compiler": "rustc 1.60.0-nightly"
   },
@@ -46,7 +46,7 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 15
+                "type": 13
               }
             },
             {
@@ -57,7 +57,7 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 15
+                "type": 13
               }
             },
             {
@@ -66,9 +66,9 @@
               "label": "value",
               "type": {
                 "displayName": [
-                  "Balance"
+                  "U256"
                 ],
-                "type": 6
+                "type": 9
               }
             }
           ],
@@ -107,9 +107,9 @@
               "label": "value",
               "type": {
                 "displayName": [
-                  "Balance"
+                  "U256"
                 ],
-                "type": 6
+                "type": 9
               }
             }
           ],
@@ -205,9 +205,9 @@
           "payable": false,
           "returnType": {
             "displayName": [
-              "Balance"
+              "U256"
             ],
-            "type": 6
+            "type": 9
           },
           "selector": "0x70a08231"
         },
@@ -242,9 +242,9 @@
           "payable": false,
           "returnType": {
             "displayName": [
-              "Balance"
+              "U256"
             ],
-            "type": 6
+            "type": 9
           },
           "selector": "0xdd62ed3e"
         },
@@ -263,9 +263,9 @@
               "label": "value",
               "type": {
                 "displayName": [
-                  "Balance"
+                  "U256"
                 ],
-                "type": 6
+                "type": 9
               }
             }
           ],
@@ -284,7 +284,7 @@
           "payable": false,
           "returnType": {
             "displayName": [
-              "Result"
+              "bool"
             ],
             "type": 12
           },
@@ -305,9 +305,9 @@
               "label": "value",
               "type": {
                 "displayName": [
-                  "Balance"
+                  "U256"
                 ],
-                "type": 6
+                "type": 9
               }
             }
           ],
@@ -324,7 +324,7 @@
           "payable": false,
           "returnType": {
             "displayName": [
-              "Result"
+              "bool"
             ],
             "type": 12
           },
@@ -354,9 +354,9 @@
               "label": "value",
               "type": {
                 "displayName": [
-                  "Balance"
+                  "U256"
                 ],
-                "type": 6
+                "type": 9
               }
             }
           ],
@@ -378,7 +378,7 @@
           "payable": false,
           "returnType": {
             "displayName": [
-              "Result"
+              "bool"
             ],
             "type": 12
           },
@@ -580,89 +580,12 @@
         "id": 12,
         "type": {
           "def": {
-            "variant": {
-              "variants": [
-                {
-                  "fields": [
-                    {
-                      "type": 13
-                    }
-                  ],
-                  "index": 0,
-                  "name": "Ok"
-                },
-                {
-                  "fields": [
-                    {
-                      "type": 14
-                    }
-                  ],
-                  "index": 1,
-                  "name": "Err"
-                }
-              ]
-            }
-          },
-          "params": [
-            {
-              "name": "T",
-              "type": 13
-            },
-            {
-              "name": "E",
-              "type": 14
-            }
-          ],
-          "path": [
-            "Result"
-          ]
-        }
-      },
-      {
-        "id": 13,
-        "type": {
-          "def": {
-            "tuple": []
+            "primitive": "bool"
           }
         }
       },
       {
-        "id": 14,
-        "type": {
-          "def": {
-            "variant": {
-              "variants": [
-                {
-                  "index": 0,
-                  "name": "InvalidTokenId"
-                },
-                {
-                  "index": 1,
-                  "name": "InsufficientBalance"
-                },
-                {
-                  "index": 2,
-                  "name": "InsufficientAllowance"
-                },
-                {
-                  "index": 3,
-                  "name": "UnknownStatusCode"
-                },
-                {
-                  "index": 4,
-                  "name": "InvalidScaleEncoding"
-                }
-              ]
-            }
-          },
-          "path": [
-            "native_fungible_token",
-            "ExtensionError"
-          ]
-        }
-      },
-      {
-        "id": 15,
+        "id": 13,
         "type": {
           "def": {
             "variant": {

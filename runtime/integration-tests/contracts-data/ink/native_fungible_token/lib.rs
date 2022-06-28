@@ -210,8 +210,7 @@ mod native_fungible_token {
 		/// the caller's account balance.
 		#[ink(message, selector = 0xa9059cbb)]
 		pub fn transfer(&mut self, to: AccountId, value: U256) -> bool {
-			let value = value.as_u128();
-			if self.env().extension().transfer(self.token_id, to, value).is_err() {
+			if self.env().extension().transfer(self.token_id, to, value.as_u128()).is_err() {
 				return false
 			}
 			self.env().emit_event(Transfer {

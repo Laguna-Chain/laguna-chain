@@ -10,9 +10,8 @@ mod tests {
 	use pallet_contracts_primitives::ExecReturnValue;
 	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
 	use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId, TokenMetadata};
-	use sp_core::{hexdisplay::AsBytesRef, Bytes};
+	use sp_core::{hexdisplay::AsBytesRef, Bytes, U256};
 	use std::str::FromStr;
-	use sp_core::U256;
 
 	const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 	const MAX_GAS: u64 = 200_000_000_000;
@@ -150,8 +149,8 @@ mod tests {
 
 				assert!(flags.is_empty());
 
-				let total_supply = Balance::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(total_supply, Currencies::total_issuance(native_token));
+				let total_supply = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
+				assert_eq!(total_supply, Currencies::total_issuance(native_token).into());
 
 				// 6. Test balance_of()
 				let mut sel_balance_of = Bytes::from_str("0x70a08231")
@@ -173,8 +172,8 @@ mod tests {
 
 				assert!(flags.is_empty());
 
-				let alice_balance = Balance::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(alice_balance, Currencies::free_balance(ALICE, native_token));
+				let alice_balance = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
+				assert_eq!(alice_balance, Currencies::free_balance(ALICE, native_token).into());
 
 				// 7. Test transfer()
 				// @dev: EVA transfers BOB 10 LAGUNA
@@ -183,7 +182,7 @@ mod tests {
 					.expect("unable to parse hex string");
 
 				sel_transfer.append(&mut BOB.encode());
-				sel_transfer.append(&mut (5*LAGUNAS).encode());
+				sel_transfer.append(&mut U256::from(5*LAGUNAS).encode());
 
 				assert_ok!(Contracts::call(
 					Origin::signed(EVA),
@@ -218,8 +217,8 @@ mod tests {
 
 				assert!(flags.is_empty());
 
-				let allowance = Balance::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(allowance, 0);
+				let allowance = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
+				assert_eq!(allowance, 0.into());
 
 				// 9. Test approve()
 				// @dev: BOB approves ALICE to spend upto 5 LAGUNA
@@ -228,7 +227,7 @@ mod tests {
 					.expect("unable to parse hex string");
 
 				sel_approve.append(&mut ALICE.encode());
-				sel_approve.append(&mut (5*LAGUNAS).encode());
+				sel_approve.append(&mut U256::from(5*LAGUNAS).encode());
 
 				assert_ok!(Contracts::call(
 					Origin::signed(BOB),
@@ -252,8 +251,8 @@ mod tests {
 
 				assert!(flags.is_empty());
 
-				let allowance = Balance::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(allowance, 5*LAGUNAS);
+				let allowance = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
+				assert_eq!(allowance, (5*LAGUNAS).into());
 
 				// 10. Test transfer_from()
 				// @dev: ALICE transfers 2 LAGUNA from BOB to EVA
@@ -263,7 +262,7 @@ mod tests {
 
 				sel_transfer_from.append(&mut BOB.encode());
 				sel_transfer_from.append(&mut EVA.encode());
-				sel_transfer_from.append(&mut (2*LAGUNAS).encode());
+				sel_transfer_from.append(&mut U256::from(2*LAGUNAS).encode());
 
 				let bob_balance_before = Currencies::free_balance(BOB, native_token);
 
@@ -289,11 +288,11 @@ mod tests {
 
 				assert!(flags.is_empty());
 
-				let allowance = Balance::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
+				let allowance = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
 				let bob_balance_after = Currencies::free_balance(BOB, native_token);
 
 				assert_eq!(bob_balance_before - bob_balance_after, 2*LAGUNAS);
-				assert_eq!(allowance, 3*LAGUNAS);
+				assert_eq!(allowance, (3*LAGUNAS).into());
 				assert_eq!(Currencies::free_balance(EVA, native_token), 7*LAGUNAS);
 			});
 	}
