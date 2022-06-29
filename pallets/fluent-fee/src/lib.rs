@@ -30,6 +30,7 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		type DefaultFeeAsset: Get<CurrencyId>;
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
 
 		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
@@ -51,10 +52,6 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	fn default_fee_source() -> <T::FeeSource as FeeSource>::AssetId {
-		CurrencyId::NativeToken(TokenId::Laguna)
-	}
-
 	fn account_fee_source_priority(
 		account: &<T as frame_system::Config>::AccountId,
 	) -> Option<<T::FeeSource as FeeSource>::AssetId> {
@@ -85,7 +82,7 @@ where
 		}
 
 		let preferred_fee_asset =
-			Self::account_fee_source_priority(who).unwrap_or_else(|| Self::default_fee_source());
+			Self::account_fee_source_priority(who).unwrap_or_else(|| T::DefaultFeeAsset::get());
 
 		// check if preferenced fee source is both listed and accepted
 		T::FeeSource::listed(&preferred_fee_asset)
@@ -122,7 +119,7 @@ where
 		log::debug!(target: "fluent_fee::post_deposit", "deposit without refund");
 
 		let preferred_fee_asset =
-			Self::account_fee_source_priority(who).unwrap_or_else(|| Self::default_fee_source());
+			Self::account_fee_source_priority(who).unwrap_or_else(|| T::DefaultFeeAsset::get());
 
 		match T::FeeDispatch::post_info_correction(&preferred_fee_asset, post_info) {
 			Ok(_) => Ok(()),

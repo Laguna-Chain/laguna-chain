@@ -1,10 +1,12 @@
-use crate::{Currencies, Event, FeeEnablement, Runtime};
+use crate::{impl_pallet_currencies::NativeCurrencyId, Currencies, Event, FeeEnablement, Runtime};
 use frame_support::pallet_prelude::InvalidTransaction;
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
 use traits::fee::{FeeDispatch, FeeMeasure, FeeSource};
 
 impl pallet_fluent_fee::Config for Runtime {
+	type DefaultFeeAsset = NativeCurrencyId;
+
 	type Event = Event;
 
 	type MultiCurrency = Currencies;
@@ -17,28 +19,6 @@ impl pallet_fluent_fee::Config for Runtime {
 }
 
 pub struct StaticImpl;
-
-impl FeeSource for StaticImpl {
-	type AccountId = AccountId;
-	type AssetId = CurrencyId;
-
-	fn accepted(
-		who: &Self::AccountId,
-		id: &Self::AssetId,
-	) -> Result<(), traits::fee::InvalidFeeSource> {
-		match id {
-			CurrencyId::NativeToken(TokenId::Laguna) => Ok(()),
-			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
-		}
-	}
-
-	fn listed(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		match id {
-			CurrencyId::NativeToken(TokenId::Laguna) => Ok(()),
-			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
-		}
-	}
-}
 
 impl FeeMeasure for StaticImpl {
 	type AssetId = CurrencyId;

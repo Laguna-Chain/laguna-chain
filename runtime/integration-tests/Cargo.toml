@@ -12,6 +12,8 @@ primitives = {path = "../../primitives", default-features = false}
 # runtime's basic pallet impl
 pallet-aura = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-balances = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-currencies = {path = "../../pallets/currencies", default-features = false}
+pallet-fee-enablement = {path = "../../pallets/fee-enablement", default-features = false}
 pallet-fluent-fee = {path = "../../pallets/fluent-fee", default-features = false}
 
 pallet-grandpa = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}

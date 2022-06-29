@@ -201,8 +201,14 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	}
 }
 
+parameter_types! {
+	pub const NativeAssetId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+}
+
 impl Config for Runtime {
 	type Event = Event;
+
+	type DefaultFeeAsset = NativeAssetId;
 
 	type MultiCurrency = Tokens;
 

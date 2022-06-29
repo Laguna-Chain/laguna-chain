@@ -38,6 +38,7 @@ type ReserveIdentifier = [u8; 8];
 // use orml's token to represent both native and other tokens
 impl orml_tokens::Config for Runtime {
 	type Event = Event;
+
 	// how tokens are measured
 	type Balance = Balance;
 	type Amount = Amount;

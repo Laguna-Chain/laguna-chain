@@ -17,8 +17,6 @@ use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use substrate_frame_rpc_system::{AccountNonceApi, SystemApiServer, SystemRpc};
 
-// TODO: light client before deprecation require additional dependencies
-
 pub struct FullDeps<Client, Pool> {
 	pub client: Arc<Client>,
 	pub pool: Arc<Pool>,
@@ -48,11 +46,18 @@ where
 
 	let FullDeps { client, pool, deny_unsafe } = deps;
 
+	// ++++++++++++++++
+	// operational rpcs
+	// ++++++++++++++++
+
 	module.merge(SystemRpc::new(client.clone(), pool.clone(), deny_unsafe).into_rpc())?;
 	module.merge(TransactionPaymentRpc::new(client.clone()).into_rpc())?;
-	module.merge(ContractsRpc::new(client.clone()).into_rpc())?;
 
-	// // TODO: extend io with needed rpc here interface
+	// ++++++++++
+	// extra rpcs
+	// ++++++++++
+
+	module.merge(ContractsRpc::new(client.clone()).into_rpc())?;
 	module.merge(CurrenciesRpc::new(client.clone()).into_rpc())?;
 
 	Ok(module)

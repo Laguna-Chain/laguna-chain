@@ -6,9 +6,9 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// +++++++++++
-// + imports +
-// +++++++++++
+// +++++++
+// imports
+// +++++++
 
 use frame_support::pallet_prelude::*;
 use frame_system::pallet_prelude::*;
@@ -21,9 +21,9 @@ use traits::fee::{Eligibility, FeeAssetHealth, FeeSource, InvalidFeeSource};
 pub use pallet::*;
 use weights::WeightInfo;
 
-// +++++++++++
-// + Aliases +
-// +++++++++++
+// +++++++
+// Aliases
+// +++++++
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<B, T> = <B as MultiCurrency<AccountIdOf<T>>>::Balance;
@@ -90,9 +90,15 @@ mod pallet {
 	}
 
 	#[pallet::genesis_config]
-	#[derive(Default)]
 	pub struct GenesisConfig {
 		pub enabled: Vec<(CurrencyId, bool)>,
+	}
+
+	#[cfg(feature = "std")]
+	impl Default for GenesisConfig {
+		fn default() -> Self {
+			Self { enabled: vec![] }
+		}
 	}
 
 	#[pallet::genesis_build]
@@ -129,6 +135,7 @@ where
 	fn listed(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
 		if FeeAssets::<T>::get(id).unwrap_or_default() {
 			log::debug!(target: "fee_enablement::fee_source", "{:?} listed", id);
+
 			Ok(())
 		} else {
 			Err(InvalidFeeSource::Unlisted)

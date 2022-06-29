@@ -63,6 +63,9 @@ pallet-currencies-runtime-api = {version = "0.1.0", path = "../pallets/currencie
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
 traits = {version = "0.1.0", path = "../pallets/traits", default-features = false}
 
+# workaround for https://github.com/paritytech/substrate/issues/11706
+syn = {version = "=1.0.96"}
+
 # build dependency for the wasm runtime
 [build-dependencies.substrate-wasm-builder]
 branch = "polkadot-v0.9.22"

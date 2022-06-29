@@ -19,7 +19,10 @@ impl FeeAssetHealth for DefaultImpl {
 	type AssetId = CurrencyId;
 
 	fn health_status(asset_id: &Self::AssetId) -> Result<(), traits::fee::HealthStatusError> {
-		Ok(())
+		match asset_id {
+			CurrencyId::NativeToken(_) => Ok(()),
+			CurrencyId::Erc20(_) => Err(traits::fee::HealthStatusError::Unavailable),
+		}
 	}
 }
 
