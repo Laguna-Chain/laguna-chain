@@ -37,13 +37,14 @@ mod tests {
 				let len = call.encoded_size();
 				let info = call.get_dispatch_info();
 
-				let pre_validate_amount = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID);
+				let pre_dispatch_amount = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID);
 
-				// validate will trigger all of the SignedExtension, and since one of them is
+				// pre_dispatch will trigger all of the SignedExtension, and since one of them is
 				// consumed by `TransactionPayment --> OnchargeTransaction --> FluentFee`
 				// we can test fee chargin logic by calling validate once
-				assert_ok!(ChargeTransactionPayment::<Runtime>::from(0)
-					.validate(&ALICE, &call, &info, len));
+				let pre = ChargeTransactionPayment::<Runtime>::from(0)
+					.pre_dispatch(&ALICE, &call, &info, len)
+					.expect("should pass");
 
 				// calculate actual fee with all the parameter including base_fee, length_fee and
 				// byte_multiplier etc.
@@ -54,12 +55,23 @@ mod tests {
 					0,
 				);
 
-				let post_validate_amount = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID);
+				let post_dispatch_amount = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID);
 
-				assert_eq!(pre_validate_amount, post_validate_amount + fee);
+				assert_eq!(pre_dispatch_amount, post_dispatch_amount + fee);
 
-				assert_ok!(call.dispatch(Origin::signed(ALICE)));
+				let post =
+					call.clone().dispatch(Origin::signed(ALICE)).expect("should be dispatched");
 
+				// TODO: refund logic and payout to validator etc should work
+				assert_ok!(ChargeTransactionPayment::<Runtime>::post_dispatch(
+					Some(pre),
+					&info,
+					&post,
+					len,
+					&Ok(()),
+				));
+
+				// expected final states
 				assert_eq!(
 					Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID),
 					10 * LAGUNAS - 1 * LAGUNAS - fee
