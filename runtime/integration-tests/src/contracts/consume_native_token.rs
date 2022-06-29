@@ -66,7 +66,6 @@ mod tests {
                 sel_constructor.append(&mut 0_u32.encode());
 
                 let erc20_contract_addr = deploy_contract(blob, sel_constructor);
-				let native_token = CurrencyId::NativeToken(TokenId::Laguna);
 
 				// 2. Test name()
 				let sel_name = Bytes::from_str("0x06fdde03")
@@ -87,7 +86,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				let name = String::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(name, native_token.name());
+				assert_eq!(name, LAGUNA_TOKEN.name());
 
 				// 3. Test symbol()
 				let sel_symbol = Bytes::from_str("0x95d89b41")
@@ -108,7 +107,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				let symbol = String::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(symbol, native_token.symbol());
+				assert_eq!(symbol, LAGUNA_TOKEN.symbol());
 
 				// 4. Test decimals()
 				let sel_decimals = Bytes::from_str("0x313ce567")
@@ -129,7 +128,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				let decimals = u8::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(decimals, native_token.decimals());
+				assert_eq!(decimals, LAGUNA_TOKEN.decimals());
 
 				// 5. Test total_supply()
 				let sel_total_supply = Bytes::from_str("0x18160ddd")
@@ -150,7 +149,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				let total_supply = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(total_supply, Currencies::total_issuance(native_token).into());
+				assert_eq!(total_supply, Currencies::total_issuance(LAGUNA_TOKEN).into());
 
 				// 6. Test balance_of()
 				let mut sel_balance_of = Bytes::from_str("0x70a08231")
@@ -173,7 +172,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				let alice_balance = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				assert_eq!(alice_balance, Currencies::free_balance(ALICE, native_token).into());
+				assert_eq!(alice_balance, Currencies::free_balance(ALICE, LAGUNA_TOKEN).into());
 
 				// 7. Test transfer()
 				// @dev: EVA transfers BOB 10 LAGUNA
@@ -193,8 +192,8 @@ mod tests {
 					sel_transfer.clone(),
 				));
 
-				assert_eq!(Currencies::free_balance(EVA, native_token), 5*LAGUNAS);
-				assert_eq!(Currencies::free_balance(BOB, native_token), 15*LAGUNAS);
+				assert_eq!(Currencies::free_balance(EVA, LAGUNA_TOKEN), 5*LAGUNAS);
+				assert_eq!(Currencies::free_balance(BOB, LAGUNA_TOKEN), 15*LAGUNAS);
 
 				// 8. Test allowance(BOB, ALICE)
 				let mut sel_allowance = Bytes::from_str("0xdd62ed3e")
@@ -264,7 +263,7 @@ mod tests {
 				sel_transfer_from.append(&mut EVA.encode());
 				sel_transfer_from.append(&mut U256::from(2*LAGUNAS).encode());
 
-				let bob_balance_before = Currencies::free_balance(BOB, native_token);
+				let bob_balance_before = Currencies::free_balance(BOB, LAGUNA_TOKEN);
 
 				assert_ok!(Contracts::call(
 					Origin::signed(ALICE),
@@ -289,11 +288,223 @@ mod tests {
 				assert!(flags.is_empty());
 
 				let allowance = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
-				let bob_balance_after = Currencies::free_balance(BOB, native_token);
+				let bob_balance_after = Currencies::free_balance(BOB, LAGUNA_TOKEN);
 
 				assert_eq!(bob_balance_before - bob_balance_after, 2*LAGUNAS);
 				assert_eq!(allowance, (3*LAGUNAS).into());
-				assert_eq!(Currencies::free_balance(EVA, native_token), 7*LAGUNAS);
+				assert_eq!(Currencies::free_balance(EVA, LAGUNA_TOKEN), 7*LAGUNAS);
+			});
+	}
+
+	#[test]
+	fn test_solang_multilayer_amm() {
+		ExtBuilder::default()
+			.balances(vec![(ALICE, LAGUNA_TOKEN, 1000*LAGUNAS)])
+			.build()
+			.execute_with(|| {
+				// @NOTE: Just a simple test method to verify multilayer interaction and ERC20 works!
+				// Does not do extensive test coverage for the contract - AMM
+
+				// 1A. Deploy the library contract (native_fungible_token)
+				let blob_native_erc20 = std::fs::read("../integration-tests/contracts-data/ink/native_fungible_token/dist/native_fungible_token.wasm")
+					.expect("Could not find wasm blob");
+
+                let mut sel_constructor_native_erc20 = Bytes::from_str("0x45fd0674")
+                    .map(|v| v.to_vec())
+                    .expect("unable to parse selector");
+
+                sel_constructor_native_erc20.append(&mut 0_u32.encode());
+
+                let native_erc20_addr = deploy_contract(blob_native_erc20, sel_constructor_native_erc20);
+
+				// 1B. Deploy a standard ERC20 contract (ERC20)
+				let blob_std_erc20 = std::fs::read("../integration-tests/contracts-data/solidity/erc20/dist/ERC20.wasm")
+					.expect("Could not find wasm blob");
+
+                let mut sel_constructor_std_erc20 = Bytes::from_str("0x835a15cb")
+                    .map(|v| v.to_vec())
+                    .expect("unable to parse selector");
+
+                sel_constructor_std_erc20.append(&mut "Ethereum".encode());
+				sel_constructor_std_erc20.append(&mut "ETH".encode());
+				sel_constructor_std_erc20.append(&mut U256::exp10(32).encode());
+
+                let std_erc20_addr = deploy_contract(blob_std_erc20, sel_constructor_std_erc20);
+
+				// 1C. Deploy test dAPP (AMM)
+				let blob_amm = std::fs::read("../integration-tests/contracts-data/solidity/amm/dist/AMM.wasm")
+					.expect("Could not find wasm blob");
+
+                let mut sel_constructor_amm = Bytes::from_str("0x1c26cc85")
+                    .map(|v| v.to_vec())
+                    .expect("unable to parse selector");
+
+                sel_constructor_amm.append(&mut native_erc20_addr.encode());
+				sel_constructor_amm.append(&mut std_erc20_addr.encode());
+
+                let amm_addr = deploy_contract(blob_amm, sel_constructor_amm);
+
+				// 2. Approve AMM contract to spend tokens on ALICE's behalf
+				let mut sel_approve = Bytes::from_str("0x095ea7b3")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				sel_approve.append(&mut amm_addr.encode());
+				sel_approve.append(&mut U256::exp10(32).encode());
+
+				// Will FAIL right now (because of u128 restriction set)
+				assert_ok!(Contracts::call(
+					Origin::signed(ALICE),
+					native_erc20_addr.clone().into(),
+					0,
+					MAX_GAS,
+					None,
+					sel_approve.clone(),
+				));
+
+				assert_ok!(Contracts::call(
+					Origin::signed(ALICE),
+					std_erc20_addr.clone().into(),
+					0,
+					MAX_GAS,
+					None,
+					sel_approve.clone(),
+				));
+
+				let get_balance = |account| {
+					let mut sel_balance_of = Bytes::from_str("0x70a08231")
+						.map(|v| v.to_vec())
+						.expect("unable to parse hex string");
+
+					sel_balance_of.append(&mut ALICE.encode());
+
+					let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
+						account,
+						std_erc20_addr.clone().into(),
+						0,
+						MAX_GAS,
+						None,
+						sel_balance_of.clone(),
+					)
+					.result
+					.expect("Execution without result");
+
+					assert!(flags.is_empty());
+
+					let std_erc20_bal = U256::decode(&mut data.as_bytes_ref()).expect("failed to decode result");
+					let native_erc20_bal: U256 = Currencies::free_balance(ALICE, LAGUNA_TOKEN).into();
+					(native_erc20_bal, std_erc20_bal)
+				};
+
+				// 3. "Add liquidity" works
+				let mut sel_provide = Bytes::from_str("0xe8c3c54f")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				// 1 Native = 10_000 Standard
+				sel_provide.append(&mut U256::exp10(6).encode());
+				sel_provide.append(&mut U256::exp10(10).encode());
+
+				let (native_bal_before, std_bal_before) = get_balance(ALICE);
+				println!("Native balance before PROVIDE => {:?}", native_bal_before);
+				println!("Standard balance before PROVIDE => {:?}\n", std_bal_before);
+
+				assert_ok!(Contracts::call(
+					Origin::signed(ALICE),
+					amm_addr.clone().into(),
+					0,
+					MAX_GAS,
+					None,
+					sel_provide.clone(),
+				));
+
+				let (native_bal_after, std_bal_after) = get_balance(ALICE);
+				println!("Native balance after PROVIDE => {:?}", native_bal_after);
+				println!("Standard balance after PROVIDE => {:?}\n", std_bal_after);
+
+				assert_eq!(native_bal_before - native_bal_after - 600_960_000_000_u128, U256::exp10(6)); // Adjusting fees
+				assert_eq!(std_bal_before - std_bal_after, U256::exp10(10));
+
+				// 4. "Remove liquidity" works
+				let mut sel_withdraw = Bytes::from_str("0x2e1a7d4d")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				sel_withdraw.append(&mut U256::exp10(6).encode());
+
+				let (native_bal_before, std_bal_before) = get_balance(ALICE);
+				println!("Native balance before WITHDRAW => {:?}", native_bal_before);
+				println!("Standard balance before WITHDRAW => {:?}\n", std_bal_before);
+
+				assert_ok!(Contracts::call(
+					Origin::signed(ALICE),
+					amm_addr.clone().into(),
+					0,
+					MAX_GAS,
+					None,
+					sel_withdraw.clone(),
+				));
+
+				let (native_bal_after, std_bal_after) = get_balance(ALICE);
+				println!("Native balance after WITHDRAW => {:?}", native_bal_after);
+				println!("Standard balance after WITHDRAW => {:?}\n", std_bal_after);
+
+				assert_eq!(native_bal_after - native_bal_before, U256::exp10(4));
+				assert_eq!(std_bal_after - std_bal_before, U256::exp10(8));
+
+				// 5A. Swap (STD to NATIVE) works
+				let mut sel_swap = Bytes::from_str("0x980d69d3")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				sel_swap.append(&mut U256::exp10(4).encode());
+
+				let (native_bal_before, std_bal_before) = get_balance(ALICE);
+				println!("Native balance before SWAP => {:?}", native_bal_before);
+				println!("Standard balance before SWAP => {:?}\n", std_bal_before);
+
+				assert_ok!(Contracts::call(
+					Origin::signed(ALICE),
+					amm_addr.clone().into(),
+					0,
+					MAX_GAS,
+					None,
+					sel_swap.clone(),
+				));
+
+				let (native_bal_after, std_bal_after) = get_balance(ALICE);
+				println!("Native balance after SWAP => {:?}", native_bal_after);
+				println!("Standard balance after SWAP => {:?}\n", std_bal_after);
+
+				assert_eq!(native_bal_after - native_bal_before, U256::exp10(0));
+				assert_eq!(std_bal_before - std_bal_after, U256::exp10(4));
+
+				// 5B. Swap (NATIVE to STD) works
+				let mut sel_swap = Bytes::from_str("0xf4cb34d4")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				sel_swap.append(&mut U256::exp10(0).encode());
+
+				let (native_bal_before, std_bal_before) = get_balance(ALICE);
+				println!("Native balance before SWAP => {:?}", native_bal_before);
+				println!("Standard balance before SWAP => {:?}\n", std_bal_before);
+
+				assert_ok!(Contracts::call(
+					Origin::signed(ALICE),
+					amm_addr.clone().into(),
+					0,
+					MAX_GAS,
+					None,
+					sel_swap.clone(),
+				));
+
+				let (native_bal_after, std_bal_after) = get_balance(ALICE);
+				println!("Native balance after SWAP => {:?}", native_bal_after);
+				println!("Standard balance after SWAP => {:?}\n", std_bal_after);
+
+				assert_eq!(native_bal_before - native_bal_after, U256::exp10(0));
+				assert_eq!(std_bal_after - std_bal_before, U256::exp10(4));
 			});
 	}
 }
