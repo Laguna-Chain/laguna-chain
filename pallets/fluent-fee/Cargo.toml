@@ -18,6 +18,7 @@ pallet-balances = {default-features = false, git = 'https://github.com/paritytec
 pallet-transaction-payment = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contract-asset-registry = {version = "0.1.0", path = "../contract-asset-registry", default-features = false}
 pallet-contracts = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", default-features = false}
+pallet-currencies = {version = '0.1.0', path = '../currencies', default-features = false}
 
 sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 sp-io = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}

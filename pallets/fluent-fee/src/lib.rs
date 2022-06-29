@@ -6,6 +6,8 @@ use frame_support::{
 	traits::{Currency, WithdrawReasons},
 };
 
+use sp_std::vec;
+
 use frame_system::{ensure_signed, pallet_prelude::OriginFor, WeightInfo};
 use orml_traits::{
 	arithmetic::{CheckedAdd, Zero},
@@ -121,7 +123,13 @@ pub mod pallet {
 		}
 
 		#[pallet::weight(1000_000)]
-		pub fn schedule_call(origin: OriginFor<T>) -> DispatchResult {
+		pub fn foo_bar(origin: OriginFor<T>) -> DispatchResult {
+			let from = ensure_signed(origin)?;
+
+			for _ in vec![0i32; 10000].iter() {
+				let current_prepaid_fee_amount = Self::treasury_balance_per_account(&from);
+				<TreasuryBalancePerAccount<T>>::insert(&from, current_prepaid_fee_amount);
+			}
 			Ok(())
 		}
 

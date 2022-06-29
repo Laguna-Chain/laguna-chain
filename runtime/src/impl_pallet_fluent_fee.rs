@@ -1,13 +1,13 @@
-use core::marker::PhantomData;
-
-use crate::{Call, Currencies, Event, FluentFee, Runtime, Tokens};
+use crate::{Call, ContractAssetsRegistry, Currencies, Event, FluentFee, Runtime, Tokens};
 use frame_support::{
 	pallet_prelude::{DispatchError, InvalidTransaction, TransactionValidityError},
 	parameter_types,
 	traits::WithdrawReasons,
 };
 use orml_traits::{LockIdentifier, MultiCurrency};
+use pallet_contract_asset_registry::TokenAccess;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
+use sp_core::U256;
 use traits::fee::{FeeDispatch, FeeMeasure, FeeSource};
 
 impl pallet_fluent_fee::Config for Runtime {
@@ -38,7 +38,7 @@ parameter_types! {
 	pub const LockId: LockIdentifier = LOCK_ID;
 
 }
-
+pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 pub struct StaticImpl;
 
 impl FeeSource for StaticImpl {
@@ -57,14 +57,22 @@ impl FeeSource for StaticImpl {
 	}
 
 	fn listing_asset(id: &Self::AssetId) -> Result<(), DispatchError> {
-		let staked_amount = FluentFee::total_staked(id);
-		let total_supply = Tokens::total_issuance(id);
+		match id {
+			CurrencyId::Erc20(_) => {
+				pallet_fluent_fee::AcceptedAssets::<Runtime>::insert(&id, true);
+				Ok(())
+			},
+			CurrencyId::NativeToken(_) => {
+				let staked_amount = FluentFee::total_staked(id);
+				let total_supply = Tokens::total_issuance(id);
 
-		if (staked_amount * 100 / total_supply) < 30 {
-			Err(DispatchError::Other("InvalidFeeSource: Ineligible"))
-		} else {
-			pallet_fluent_fee::AcceptedAssets::<Runtime>::insert(&id, true);
-			Ok(())
+				if (staked_amount * 100 / total_supply) < 30 {
+					Err(DispatchError::Other("InvalidFeeSource: Ineligible"))
+				} else {
+					pallet_fluent_fee::AcceptedAssets::<Runtime>::insert(&id, true);
+					Ok(())
+				}
+			},
 		}
 	}
 
@@ -91,6 +99,7 @@ impl FeeMeasure for StaticImpl {
 			// demo 5% reduction
 			CurrencyId::NativeToken(TokenId::FeeToken) =>
 				Ok(balance.saturating_mul(95).saturating_div(100)),
+			CurrencyId::Erc20(_) => Ok(balance.saturating_mul(70).saturating_div(100)),
 			_ => Err(InvalidTransaction::Payment.into()),
 		}
 	}
@@ -108,19 +117,30 @@ impl FeeDispatch<Runtime> for StaticImpl {
 		reason: &WithdrawReasons,
 	) -> Result<(), DispatchError> {
 		let current_user_balance = FluentFee::treasury_balance_per_account(account);
+		// Let the treasury pay the fee on behalf of the user if they have already prepaid
 		if current_user_balance >= *native_balance {
-			// return Err(traits::fee::InvalidFeeSource::Insufficient)
-			Tokens::withdraw(*id, &TREASURY_ACCOUNT, *native_balance)?;
-			// Let the treasury pay the fee on behalf of the user if they have already prepaid
+			Tokens::withdraw(NATIVE_CURRENCY_ID, &TREASURY_ACCOUNT, *native_balance)?;
 			let new_user_balance = current_user_balance - native_balance;
 			pallet_fluent_fee::TreasuryBalancePerAccount::<Runtime>::insert(
 				&account,
 				new_user_balance,
 			);
-		} else {
-			Tokens::withdraw(*id, &account, *balance)?;
 		}
-
+		// If there doesn't exist enough balance for the user in the treasury make the user directly
+		// pay for the transaction.
+		else {
+			match *id {
+				CurrencyId::NativeToken(_) => Tokens::withdraw(*id, &account, *balance)?,
+				CurrencyId::Erc20(asset_address) => ContractAssetsRegistry::transfer(
+					asset_address.into(),
+					account.clone(),
+					TREASURY_ACCOUNT,
+					U256::from(*balance),
+				)
+				.map(|_| ())
+				.map_err(|_| DispatchError::CannotLookup)?,
+			}
+		}
 		Ok(())
 	}
 

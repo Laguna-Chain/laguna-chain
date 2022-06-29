@@ -15,8 +15,7 @@ use orml_traits::LockIdentifier;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
 use sp_core::{H256, U256};
-use sp_runtime::{DispatchError, Perbill};
-use sp_std::ops::Deref;
+use sp_runtime::{traits::Convert, DispatchError, Perbill};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -133,6 +132,7 @@ impl orml_tokens::Config for Runtime {
 pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 pub const FEE_TOKEN_ID: CurrencyId = CurrencyId::NativeToken(TokenId::FeeToken);
 pub const TREASURY_ACCOUNT: AccountId = AccountId::new([9u8; 32]);
+pub const BURN_ACCOUNT: AccountId = AccountId::new([0u8; 32]);
 
 parameter_types! {
 	pub const NativeCurrencyId: CurrencyId = NATIVE_CURRENCY_ID;
@@ -142,16 +142,23 @@ parameter_types! {
 
 }
 
-impl orml_currencies::Config for Runtime {
+impl pallet_currencies::Config for Runtime {
 	// type Event = Event;
 
 	type MultiCurrency = Tokens;
+	type ContractAssets = ContractAssets;
 
-	type NativeCurrency = BasicCurrencyAdapter<Self, Balances, Amount, BlockNumber>;
+	type NativeCurrencyId = NativeCurrencyId;
 
-	type GetNativeCurrencyId = NativeCurrencyId;
+	type ConvertIntoAccountId = AccountConvert;
+}
 
-	type WeightInfo = ();
+pub struct AccountConvert;
+
+impl Convert<[u8; 32], AccountId> for AccountConvert {
+	fn convert(a: [u8; 32]) -> AccountId {
+		a.into()
+	}
 }
 
 pub struct DummyFeeSource;
@@ -247,12 +254,13 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		// If there doesn't exist enough balance for the user in the treasury make the user directly
 		// pay for the transaction.
 		else {
+			// Currencies::transfer(account.clone(), BURN_ACCOUNT.clone(), *id, *balance)?;
 			match *id {
 				CurrencyId::NativeToken(_) => Tokens::withdraw(*id, &account, *balance)?,
 				CurrencyId::Erc20(asset_address) => ContractAssets::transfer(
 					asset_address.into(),
 					account.clone(),
-					TREASURY_ACCOUNT,
+					BURN_ACCOUNT,
 					U256::from(*balance),
 				)
 				.map(|_| ())
@@ -397,7 +405,7 @@ construct_runtime!(
 		System: frame_system,
 		Tokens: orml_tokens,
 		Balances: pallet_balances,
-		Currencies: orml_currencies,
+		Currencies: pallet_currencies,
 		FluentFee: pallet,
 		Payment: pallet_transaction_payment,
 		Contracts: pallet_contracts,
@@ -448,7 +456,7 @@ impl ExtBuilder {
 			balances: self
 				.balances
 				.into_iter()
-				.filter(|(_, currency_id, _)| *currency_id != NATIVE_CURRENCY_ID)
+				// .filter(|(_, currency_id, _)| *currency_id = NATIVE_CURRENCY_ID)
 				.collect::<Vec<_>>(),
 		}
 		.assimilate_storage(&mut t)

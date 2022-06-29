@@ -91,7 +91,7 @@ where
 	));
 
 	let evts = System::events();
-	dbg!(evts.clone());
+	// dbg!(evts.clone());
 	let deployed = evts
 		.iter()
 		.rev()
@@ -115,12 +115,12 @@ where
 fn test_set_priority_fee_asset() {
 	ExtBuilder::default()
 		.balances(vec![
-			(ALICE, NATIVE_CURRENCY_ID, 100000000000000000),
-			(BOB, NATIVE_CURRENCY_ID, 100000000000000000),
+			(ALICE, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+			(BOB, NATIVE_CURRENCY_ID, 10000000000000000000000000000000000),
 		])
 		.build()
 		.execute_with(|| {
-			let init_amount = 100000000000_u64;
+			let init_amount = 1000000000000000000000_u128;
 			let deployed = create_token(ALICE, "TKN", "TKN", init_amount);
 			// let deployed: AccountId32 = AccountId32::from([1u8; 32]);
 
@@ -144,7 +144,7 @@ fn test_set_priority_fee_asset() {
 			assert_ok!(FluentFee::prepay_fees(
 				Origin::signed(ALICE),
 				CurrencyId::NativeToken(TokenId::Laguna),
-				100000
+				1000
 			));
 		})
 }
