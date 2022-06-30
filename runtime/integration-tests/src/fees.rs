@@ -39,8 +39,8 @@ mod tests {
 
 				let pre_dispatch_amount = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID);
 
-				// pre_dispatch will trigger all of the SignedExtension, and since one of them is
-				// consumed by `TransactionPayment --> OnchargeTransaction --> FluentFee`
+				// pre_dispatch will trigger the SignedExtension
+				// via `TransactionPayment --> OnchargeTransaction --> FluentFee`
 				// we can test fee chargin logic by calling validate once
 				let pre = ChargeTransactionPayment::<Runtime>::from(0)
 					.pre_dispatch(&ALICE, &call, &info, len)
