@@ -350,9 +350,8 @@ mod tests {
 					.expect("unable to parse hex string");
 
 				sel_approve.append(&mut amm_addr.encode());
-				sel_approve.append(&mut U256::exp10(32).encode());
+				sel_approve.append(&mut U256::MAX.encode());
 
-				// Will FAIL right now (because of u128 restriction set)
 				assert_ok!(Contracts::call(
 					Origin::signed(ALICE),
 					native_erc20_addr.clone().into(),

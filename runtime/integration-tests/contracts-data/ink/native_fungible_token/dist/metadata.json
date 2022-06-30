@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x0a8d34d0f75cc2059b7d0adf04ab27fb37d501fd23a651169592992cc1d907c4",
+    "hash": "0x4258c9de4446c1c457f2780788d146c4aea0ed3cffea6d7ccd244a8b3028f967",
     "language": "ink! 3.0.1",
     "compiler": "rustc 1.60.0-nightly"
   },
@@ -46,7 +46,7 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 13
+                "type": 12
               }
             },
             {
@@ -57,7 +57,7 @@
                 "displayName": [
                   "Option"
                 ],
-                "type": 13
+                "type": 12
               }
             },
             {
@@ -68,7 +68,7 @@
                 "displayName": [
                   "U256"
                 ],
-                "type": 9
+                "type": 10
               }
             }
           ],
@@ -109,7 +109,7 @@
                 "displayName": [
                   "U256"
                 ],
-                "type": 9
+                "type": 10
               }
             }
           ],
@@ -133,7 +133,7 @@
             "displayName": [
               "StorageVec"
             ],
-            "type": 8
+            "type": 9
           },
           "selector": "0x06fdde03"
         },
@@ -149,7 +149,7 @@
             "displayName": [
               "StorageVec"
             ],
-            "type": 8
+            "type": 9
           },
           "selector": "0x95d89b41"
         },
@@ -181,7 +181,7 @@
             "displayName": [
               "U256"
             ],
-            "type": 9
+            "type": 10
           },
           "selector": "0x18160ddd"
         },
@@ -207,7 +207,7 @@
             "displayName": [
               "U256"
             ],
-            "type": 9
+            "type": 10
           },
           "selector": "0x70a08231"
         },
@@ -244,7 +244,7 @@
             "displayName": [
               "U256"
             ],
-            "type": 9
+            "type": 10
           },
           "selector": "0xdd62ed3e"
         },
@@ -265,19 +265,14 @@
                 "displayName": [
                   "U256"
                 ],
-                "type": 9
+                "type": 10
               }
             }
           ],
           "docs": [
             " Transfers `value` amount of tokens from the caller's account to account `to`.",
             "",
-            " On success a `Transfer` event is emitted.",
-            "",
-            " # Errors",
-            "",
-            " Returns `InsufficientBalance` error if there are not enough tokens on",
-            " the caller's account balance."
+            " On success a `Transfer` event is emitted."
           ],
           "label": "transfer",
           "mutates": true,
@@ -286,7 +281,7 @@
             "displayName": [
               "bool"
             ],
-            "type": 12
+            "type": 11
           },
           "selector": "0xa9059cbb"
         },
@@ -307,7 +302,7 @@
                 "displayName": [
                   "U256"
                 ],
-                "type": 9
+                "type": 10
               }
             }
           ],
@@ -326,7 +321,7 @@
             "displayName": [
               "bool"
             ],
-            "type": 12
+            "type": 11
           },
           "selector": "0x095ea7b3"
         },
@@ -356,22 +351,14 @@
                 "displayName": [
                   "U256"
                 ],
-                "type": 9
+                "type": 10
               }
             }
           ],
           "docs": [
             " Transfers `value` tokens on the behalf of `from` to the account `to`.",
             "",
-            " On success a `Transfer` event is emitted.",
-            "",
-            " # Errors",
-            "",
-            " Returns `InsufficientAllowance` error if there are not enough tokens allowed",
-            " for the caller to withdraw from `from`.",
-            "",
-            " Returns `InsufficientBalance` error if there are not enough tokens on",
-            " the account balance of `from`."
+            " On success a `Transfer` event is emitted."
           ],
           "label": "transfer_from",
           "mutates": true,
@@ -380,7 +367,7 @@
             "displayName": [
               "bool"
             ],
-            "type": 12
+            "type": 11
           },
           "selector": "0x23b872dd"
         }
@@ -427,7 +414,7 @@
               "fields": [
                 {
                   "name": "offset_key",
-                  "type": 7,
+                  "type": 8,
                   "typeName": "Key"
                 }
               ]
@@ -505,12 +492,23 @@
         "id": 6,
         "type": {
           "def": {
-            "primitive": "u128"
+            "array": {
+              "len": 4,
+              "type": 7
+            }
           }
         }
       },
       {
         "id": 7,
+        "type": {
+          "def": {
+            "primitive": "u64"
+          }
+        }
+      },
+      {
+        "id": 8,
         "type": {
           "def": {
             "composite": {
@@ -529,7 +527,7 @@
         }
       },
       {
-        "id": 8,
+        "id": 9,
         "type": {
           "def": {
             "sequence": {
@@ -539,13 +537,13 @@
         }
       },
       {
-        "id": 9,
+        "id": 10,
         "type": {
           "def": {
             "composite": {
               "fields": [
                 {
-                  "type": 10,
+                  "type": 6,
                   "typeName": "[u64; 4]"
                 }
               ]
@@ -558,26 +556,7 @@
         }
       },
       {
-        "id": 10,
-        "type": {
-          "def": {
-            "array": {
-              "len": 4,
-              "type": 11
-            }
-          }
-        }
-      },
-      {
         "id": 11,
-        "type": {
-          "def": {
-            "primitive": "u64"
-          }
-        }
-      },
-      {
-        "id": 12,
         "type": {
           "def": {
             "primitive": "bool"
@@ -585,7 +564,7 @@
         }
       },
       {
-        "id": 13,
+        "id": 12,
         "type": {
           "def": {
             "variant": {

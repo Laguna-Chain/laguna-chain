@@ -88,7 +88,7 @@ pub use self::native_fungible_token::NativeTokenRef;
 #[ink::contract(env = crate::CustomEnvironment)]
 mod native_fungible_token {
 
-	use super::{ExtensionError, StorageVec};
+	use super::StorageVec;
 	use ethereum_types::U256;
 	use ink_storage::{traits::SpreadAllocate, Mapping};
 
@@ -99,7 +99,7 @@ mod native_fungible_token {
 		token_id: u32,
 		/// Mapping of the token amount which an account is allowed to withdraw
 		/// from another account.
-		allowances: Mapping<(AccountId, AccountId), u128>,
+		allowances: Mapping<(AccountId, AccountId), [u64; 4]>,
 	}
 
 	/// Event emitted when a token transfer occurs.
@@ -197,20 +197,19 @@ mod native_fungible_token {
 		/// Returns `0` if no allowance has been set.
 		#[ink(message, selector = 0xdd62ed3e)]
 		pub fn allowance(&self, owner: AccountId, spender: AccountId) -> U256 {
-			U256::from(self.allowances.get((owner, spender)).unwrap_or_default())
+			U256(self.allowances.get((owner, spender)).unwrap_or_default())
 		}
 
 		/// Transfers `value` amount of tokens from the caller's account to account `to`.
 		///
 		/// On success a `Transfer` event is emitted.
-		///
-		/// # Errors
-		///
-		/// Returns `InsufficientBalance` error if there are not enough tokens on
-		/// the caller's account balance.
 		#[ink(message, selector = 0xa9059cbb)]
 		pub fn transfer(&mut self, to: AccountId, value: U256) -> bool {
-			if self.env().extension().transfer(self.token_id, to, value.as_u128()).is_err() {
+			let val = match u128::try_from(value) {
+				Ok(val) => val,
+				Err(_) => return false,
+			};
+			if self.env().extension().transfer(self.token_id, to, val).is_err() {
 				return false
 			}
 			self.env().emit_event(Transfer {
@@ -230,7 +229,7 @@ mod native_fungible_token {
 		#[ink(message, selector = 0x095ea7b3)]
 		pub fn approve(&mut self, spender: AccountId, value: U256) -> bool {
 			let owner = self.env().caller();
-			self.allowances.insert((&owner, &spender), &value.as_u128());
+			self.allowances.insert((&owner, &spender), &value.0);
 			self.env().emit_event(Approval { owner, spender, value });
 			true
 		}
@@ -238,31 +237,22 @@ mod native_fungible_token {
 		/// Transfers `value` tokens on the behalf of `from` to the account `to`.
 		///
 		/// On success a `Transfer` event is emitted.
-		///
-		/// # Errors
-		///
-		/// Returns `InsufficientAllowance` error if there are not enough tokens allowed
-		/// for the caller to withdraw from `from`.
-		///
-		/// Returns `InsufficientBalance` error if there are not enough tokens on
-		/// the account balance of `from`.
 		#[ink(message, selector = 0x23b872dd)]
 		pub fn transfer_from(&mut self, from: AccountId, to: AccountId, value: U256) -> bool {
 			let caller = self.env().caller();
-			let value = value.as_u128();
-			let allowance = self.allowance(from, caller).as_u128();
+			let allowance = self.allowance(from, caller);
 			if allowance < value {
 				return false
 			}
-			if self.env().extension().transfer_from(self.token_id, from, to, value).is_err() {
+			let val = match u128::try_from(value) {
+				Ok(val) => val,
+				Err(_) => return false,
+			};
+			if self.env().extension().transfer_from(self.token_id, from, to, val).is_err() {
 				return false
 			}
-			self.allowances.insert((&from, &caller), &(allowance - value));
-			self.env().emit_event(Transfer {
-				from: Some(from),
-				to: Some(to),
-				value: U256::from(value),
-			});
+			self.allowances.insert((&from, &caller), &(allowance - value).0);
+			self.env().emit_event(Transfer { from: Some(from), to: Some(to), value });
 			true
 		}
 	}
