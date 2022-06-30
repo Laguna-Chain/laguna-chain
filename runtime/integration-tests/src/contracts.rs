@@ -1,4 +1,5 @@
 mod chain_extension;
+mod consume_native_token;
 mod cross_contract;
 
 #[cfg(test)]
