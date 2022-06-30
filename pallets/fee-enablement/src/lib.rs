@@ -21,6 +21,12 @@ use traits::fee::{Eligibility, FeeAssetHealth, FeeSource, InvalidFeeSource};
 pub use pallet::*;
 use weights::WeightInfo;
 
+#[cfg(test)]
+pub mod mock;
+
+#[cfg(test)]
+pub mod tests;
+
 // +++++++
 // Aliases
 // +++++++

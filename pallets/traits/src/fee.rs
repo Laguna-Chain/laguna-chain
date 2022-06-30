@@ -69,6 +69,14 @@ pub trait FeeAssetHealth {
 	fn health_status(asset_id: &Self::AssetId) -> Result<(), HealthStatusError>;
 }
 
+impl<A> FeeAssetHealth for ((), A) {
+	type AssetId = A;
+
+	fn health_status(asset_id: &Self::AssetId) -> Result<(), HealthStatusError> {
+		Ok(())
+	}
+}
+
 pub enum EligibilityError {
 	NotAllowed,
 }
@@ -78,4 +86,14 @@ pub trait Eligibility {
 	type AssetId;
 
 	fn eligible(who: &Self::AccountId, asset_id: &Self::AssetId) -> Result<(), EligibilityError>;
+}
+
+impl<A, B> Eligibility for ((), A, B) {
+	type AccountId = A;
+
+	type AssetId = B;
+
+	fn eligible(who: &Self::AccountId, asset_id: &Self::AssetId) -> Result<(), EligibilityError> {
+		Ok(())
+	}
 }

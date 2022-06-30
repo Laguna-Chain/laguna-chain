@@ -1,4 +1,7 @@
-use crate::{impl_pallet_currencies::NativeCurrencyId, Currencies, Event, FeeEnablement, Runtime};
+use crate::{
+	impl_pallet_currencies::NativeCurrencyId, ContractAssetsRegistry, Currencies, Event,
+	FeeEnablement, Runtime,
+};
 use frame_support::pallet_prelude::InvalidTransaction;
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};

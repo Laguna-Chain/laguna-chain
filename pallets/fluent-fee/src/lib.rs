@@ -55,6 +55,7 @@ impl<T: Config> Pallet<T> {
 	fn account_fee_source_priority(
 		account: &<T as frame_system::Config>::AccountId,
 	) -> Option<<T::FeeSource as FeeSource>::AssetId> {
+		// TODO: inject account preference selection here
 		None
 	}
 }
