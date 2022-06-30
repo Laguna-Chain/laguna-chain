@@ -1,3 +1,7 @@
+//# # fluent fee
+//#
+//# this modules customize and replace the how fee is charged for a given transaction
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{pallet_prelude::*, traits::WithdrawReasons};
@@ -19,9 +23,6 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-/// # fluent fee
-///
-/// this modules customize and replace the how fee is charged for a given transaction
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;

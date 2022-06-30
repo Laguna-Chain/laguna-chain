@@ -23,8 +23,13 @@ use orml_traits::{
 pub use pallet::*;
 use primitives::CurrencyId;
 use sp_core::U256;
-use sp_runtime::traits::{CheckedAdd, Convert, Saturating, Zero};
+use sp_runtime::{
+	traits::{CheckedAdd, Convert, Saturating, Zero},
+	TokenError,
+};
 use traits::currencies::TokenAccess;
+
+pub mod adapters;
 
 /// +++++++++++++++++++++++
 /// specifying type alises.
@@ -302,6 +307,10 @@ where
 		who: &AccountIdOf<T>,
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
+		if amount.is_zero() {
+			return Ok(())
+		}
+
 		match currency_id {
 			CurrencyId::NativeToken(_) =>
 				T::MultiCurrency::ensure_can_withdraw(currency_id, who, amount),
@@ -329,6 +338,9 @@ where
 		match currency_id {
 			CurrencyId::NativeToken(_) => T::MultiCurrency::transfer(currency_id, from, to, amount),
 			CurrencyId::Erc20(addr) => {
+				if amount.is_zero() {
+					return Ok(())
+				}
 				let asset = T::ConvertIntoAccountId::convert(addr);
 
 				T::ContractAssets::transfer(asset, from.clone(), to.clone(), amount.into())
@@ -505,7 +517,10 @@ where
 	) -> Self::Balance {
 		match currency_id {
 			CurrencyId::NativeToken(_) => <T::MultiCurrency>::unreserve(currency_id, who, value),
-			CurrencyId::Erc20(_) => Default::default(),
+			CurrencyId::Erc20(_) => {
+				log::debug!("not amount will be unreserved for contract based assets");
+				Default::default()
+			},
 		}
 	}
 
@@ -538,11 +553,17 @@ where
 	type Balance = BalanceOf<T>;
 
 	fn total_issuance(asset: Self::AssetId) -> Self::Balance {
-		<T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::total_issuance(asset)
+		match asset {
+			CurrencyId::Erc20(_) => <Self as MultiCurrency<AccountIdOf<T>>>::total_issuance(asset),
+			_ => <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::total_issuance(asset),
+		}
 	}
 
 	fn minimum_balance(asset: Self::AssetId) -> Self::Balance {
-		<T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::minimum_balance(asset)
+		match asset {
+			CurrencyId::Erc20(_) => <Self as MultiCurrency<AccountIdOf<T>>>::minimum_balance(asset),
+			_ => <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::minimum_balance(asset),
+		}
 	}
 
 	fn balance(asset: Self::AssetId, who: &AccountIdOf<T>) -> Self::Balance {
@@ -627,7 +648,10 @@ where
 		who: &AccountIdOf<T>,
 		amount: Self::Balance,
 	) -> DispatchResult {
-		<Self as MultiCurrency<_>>::deposit(asset, who, amount)
+		match asset {
+			CurrencyId::Erc20(_) => <Self as MultiCurrency<_>>::deposit(asset, who, amount),
+			_ => <T::MultiCurrency as MultiCurrency<_>>::deposit(asset, who, amount),
+		}
 	}
 
 	fn burn_from(
@@ -635,13 +659,9 @@ where
 		who: &AccountIdOf<T>,
 		amount: Self::Balance,
 	) -> Result<Self::Balance, DispatchError> {
-		if amount.is_zero() {
-			return Ok(amount)
-		}
-
 		match asset {
-			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-
+			CurrencyId::Erc20(_) =>
+				<Self as MultiCurrency<_>>::withdraw(asset, who, amount).map(|_| amount),
 			_ => <T::MultiCurrency as fungibles::Mutate<_>>::burn_from(asset, who, amount),
 		}
 	}
@@ -663,8 +683,8 @@ where
 		}
 
 		match asset {
-			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-
+			CurrencyId::Erc20(_) =>
+				<Self as MultiCurrency<_>>::transfer(asset, source, dest, amount).map(|_| amount),
 			_ => <T::MultiCurrency as fungibles::Transfer<_>>::transfer(
 				asset, source, dest, amount, keep_alive,
 			),
@@ -701,9 +721,7 @@ where
 {
 	fn hold(asset: Self::AssetId, who: &AccountIdOf<T>, amount: Self::Balance) -> DispatchResult {
 		match asset {
-			CurrencyId::Erc20(_) =>
-				<Self as MultiReservableCurrency<_>>::reserve(asset, who, amount),
-
+			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::hold(asset, who, amount),
 		}
 	}
@@ -715,22 +733,7 @@ where
 		best_effort: bool,
 	) -> Result<Self::Balance, DispatchError> {
 		match asset {
-			CurrencyId::Erc20(_) => {
-				if amount.is_zero() {
-					return Ok(amount)
-				}
-				ensure!(
-					best_effort ||
-						amount <=
-							<Self as MultiReservableCurrency<_>>::reserved_balance(
-								asset, who
-							),
-					Error::<T>::BalanceTooLow
-				);
-				let gap = <Self as MultiReservableCurrency<_>>::unreserve(asset, who, amount);
-				Ok(amount.saturating_sub(gap))
-			},
-
+			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::release(
 				asset,
 				who,
@@ -749,26 +752,7 @@ where
 		on_hold: bool,
 	) -> Result<Self::Balance, DispatchError> {
 		match asset {
-			CurrencyId::Erc20(_) => {
-				if amount.is_zero() {
-					return Ok(amount)
-				}
-				ensure!(
-					best_effort ||
-						amount <=
-							<Self as fungibles::InspectHold<_>>::balance_on_hold(
-								asset, source
-							),
-					Error::<T>::BalanceTooLow
-				);
-
-				let status = if on_hold { BalanceStatus::Reserved } else { BalanceStatus::Free };
-				let gap = <Self as MultiReservableCurrency<_>>::repatriate_reserved(
-					asset, source, dest, amount, status,
-				)?;
-				Ok(amount.saturating_sub(gap))
-			},
-
+			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::transfer_held(
 				asset,
 				source,
@@ -791,16 +775,19 @@ where
 		amount: Self::Balance,
 	) -> DispatchResult {
 		match asset {
-			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-
+			CurrencyId::Erc20(_) => {
+				log::warn!("setting balance for contract based asset is not allowed");
+				Err(Error::<T>::InvalidContractOperation.into())
+			},
 			_ => <T::MultiCurrency as fungibles::Unbalanced<_>>::set_balance(asset, who, amount),
 		}
 	}
 
 	fn set_total_issuance(asset: Self::AssetId, amount: Self::Balance) {
 		match asset {
-			CurrencyId::Erc20(_) => {},
-
+			CurrencyId::Erc20(_) => {
+				log::warn!("no action will be executed for contract based assets");
+			},
 			_ => <T::MultiCurrency as fungibles::Unbalanced<_>>::set_total_issuance(asset, amount),
 		}
 	}

@@ -4225,6 +4225,7 @@ dependencies = [
  "hex",
  "hex-literal",
  "log",
+ "once_cell",
  "orml-currencies",
  "orml-tokens",
  "orml-traits",
