@@ -48,7 +48,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						// Get token name
 						let name = currency.name();
 						env.write(&name.encode(), false, None).map_err(|_| {
-							DispatchError::Other("ChainExtension failed to call allowance")
+							DispatchError::Other("ChainExtension failed to call name")
 						})?;
 						Ok(RetVal::Converging(0))
 					},
@@ -56,7 +56,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						// Get token symbol
 						let symbol = currency.symbol();
 						env.write(&symbol.encode(), false, None).map_err(|_| {
-							DispatchError::Other("ChainExtension failed to call allowance")
+							DispatchError::Other("ChainExtension failed to call symbol")
 						})?;
 						Ok(RetVal::Converging(0))
 					},
@@ -64,7 +64,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						// Get token decimals
 						let decimals = currency.decimals();
 						env.write(&decimals.encode(), false, None).map_err(|_| {
-							DispatchError::Other("ChainExtension failed to call allowance")
+							DispatchError::Other("ChainExtension failed to call decimals")
 						})?;
 						Ok(RetVal::Converging(0))
 					},
