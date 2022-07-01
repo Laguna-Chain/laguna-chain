@@ -1,4 +1,4 @@
-// TODO: adapte the helper copied from substrate upstream to our internal needs
+// TODO: adapt the helper copied from substrate upstream to our internal needs
 
 use crate::service::FullClient;
 

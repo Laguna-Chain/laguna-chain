@@ -1,7 +1,4 @@
-use crate::{
-	constants::{currency::NATIVE_TOKEN, MICRO_LAGUNAS},
-	Event, Runtime,
-};
+use crate::{constants::MICRO_LAGUNAS, Event, Runtime};
 use frame_support::{
 	parameter_types,
 	traits::{ConstU32, Contains},
@@ -38,13 +35,10 @@ orml_traits::parameter_type_with_key! {
 
 type ReserveIdentifier = [u8; 8];
 
-// parameter_types! {
-// 	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(NATIVE_TOKEN);
-// }
-
 // use orml's token to represent both native and other tokens
 impl orml_tokens::Config for Runtime {
 	type Event = Event;
+
 	// how tokens are measured
 	type Balance = Balance;
 	type Amount = Amount;

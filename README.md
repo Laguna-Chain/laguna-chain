@@ -1,4 +1,4 @@
-# Hydro Chain
+# Laguna Chain
 
 WIP
 
@@ -41,16 +41,16 @@ rustup show
 
 ### Clone Repo, Build, and Start the Chain
 
-1. Clone the `hydro-chain` repo by running the following command:
+1. Clone the `laguna-chain` repo by running the following command:
 
 ```bash
-git clone https://github.com/ultrastable-money/hydro-chain.git
+git clone https://github.com/Laguna-Chain/laguna-chain.git
 ```
 
-2. Change to the root of the `hydro-chain` directory by running the following command:
+2. Change to the root of the `laguna-chain` directory by running the following command:
 
 ```bash
-cd hydro-chain
+cd laguna-chain
 ```
 
 3. Compile the chain by running the following command:
@@ -64,5 +64,5 @@ Building with the `--release` flag results in optimized artifacts.
 4. To start the chain, run the following command:
 
 ```bash
-./target/release/hydro-chain --dev
+./target/release/laguna-chain --dev
 ```

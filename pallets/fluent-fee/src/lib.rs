@@ -1,9 +1,10 @@
+//# # fluent fee
+//#
+//# this modules customize and replace the how fee is charged for a given transaction
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{
-	pallet_prelude::*,
-	traits::{Currency, WithdrawReasons},
-};
+use frame_support::{pallet_prelude::*, traits::WithdrawReasons};
 
 use orml_traits::{arithmetic::Zero, MultiCurrency};
 use primitives::{CurrencyId, TokenId};
@@ -12,12 +13,9 @@ pub use pallet::*;
 use pallet_transaction_payment::OnChargeTransaction;
 use traits::fee::{FeeDispatch, FeeMeasure, FeeSource};
 
-type NegativeImbalanceOf<C, T> =
-	<C as Currency<<T as frame_system::Config>::AccountId>>::NegativeImbalance;
+pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
-pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<
-	<T as frame_system::Config>::AccountId,
->>::Balance;
+pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountIdOf<T>>>::Balance;
 
 #[cfg(test)]
 mod mock;
@@ -25,9 +23,6 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-/// # fluent fee
-///
-/// this modules customize and replace the how fee is charged for a given transaction
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
@@ -36,12 +31,16 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		type DefaultFeeAsset: Get<CurrencyId>;
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
 
-		type FeeSource: FeeSource<AssetId = CurrencyId, Balance = BalanceOf<Self>>;
+		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
 		type FeeMeasure: FeeMeasure<AssetId = CurrencyId, Balance = BalanceOf<Self>>;
 		type FeeDispatch: FeeDispatch<Self, AssetId = CurrencyId, Balance = BalanceOf<Self>>;
 	}
+
+	#[pallet::pallet]
+	pub struct Pallet<T>(_);
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -51,19 +50,13 @@ pub mod pallet {
 	pub enum Error<T> {
 		Placeholder,
 	}
-
-	#[pallet::pallet]
-	pub struct Pallet<T>(_);
 }
 
 impl<T: Config> Pallet<T> {
-	fn default_fee_source() -> <T::FeeSource as FeeSource>::AssetId {
-		CurrencyId::NativeToken(TokenId::Laguna)
-	}
-
 	fn account_fee_source_priority(
 		account: &<T as frame_system::Config>::AccountId,
 	) -> Option<<T::FeeSource as FeeSource>::AssetId> {
+		// TODO: inject account preference selection here
 		None
 	}
 }
@@ -91,11 +84,12 @@ where
 		}
 
 		let preferred_fee_asset =
-			Self::account_fee_source_priority(who).unwrap_or_else(|| Self::default_fee_source());
+			Self::account_fee_source_priority(who).unwrap_or_else(|| T::DefaultFeeAsset::get());
 
-		// check if preferenced fee source is accepted
-		T::FeeSource::accepted(&preferred_fee_asset)
-			.map_err(|e| TransactionValidityError::from(InvalidTransaction::Payment))?;
+		// check if preferenced fee source is both listed and accepted
+		T::FeeSource::listed(&preferred_fee_asset)
+			.and_then(|_| T::FeeSource::accepted(who, &preferred_fee_asset))
+			.map_err(|_| TransactionValidityError::from(InvalidTransaction::Payment))?;
 
 		let withdraw_reason = if tip.is_zero() {
 			WithdrawReasons::TRANSACTION_PAYMENT
@@ -107,7 +101,7 @@ where
 
 		match T::FeeDispatch::withdraw(who, &preferred_fee_asset, &amounts, &withdraw_reason) {
 			Ok(_) => {
-				log::info!(target: "fee withdrawn", "succsefully withdrawn using native_currency");
+				log::debug!(target: "fluent_fee::withdrawn", "succsefully withdrawn using native_currency");
 				Ok(())
 			},
 			Err(_) => Err(InvalidTransaction::Payment.into()),
@@ -124,10 +118,10 @@ where
 	) -> Result<(), frame_support::unsigned::TransactionValidityError> {
 		// TODO: execute refund plan from already_withdrawn
 
-		log::info!(target: "fee correction", "deposit without refund");
+		log::debug!(target: "fluent_fee::post_deposit", "deposit without refund");
 
 		let preferred_fee_asset =
-			Self::account_fee_source_priority(who).unwrap_or_else(|| Self::default_fee_source());
+			Self::account_fee_source_priority(who).unwrap_or_else(|| T::DefaultFeeAsset::get());
 
 		match T::FeeDispatch::post_info_correction(&preferred_fee_asset, post_info) {
 			Ok(_) => Ok(()),

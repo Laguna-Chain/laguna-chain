@@ -136,26 +136,20 @@ parameter_types! {
 pub struct DummyFeeSource;
 
 impl FeeSource for DummyFeeSource {
+	type AccountId = AccountId;
 	type AssetId = CurrencyId;
 
-	type Balance = Balance;
-
-	fn accepted(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+	fn accepted(
+		who: &Self::AccountId,
+		id: &Self::AssetId,
+	) -> Result<(), traits::fee::InvalidFeeSource> {
 		match id {
 			CurrencyId::NativeToken(TokenId::FeeToken | TokenId::Laguna) => Ok(()),
 			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
 		}
 	}
 
-	fn listing_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
-	}
-
-	fn denounce_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
-	}
-
-	fn disable_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+	fn listed(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
 		todo!()
 	}
 }
@@ -207,8 +201,14 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	}
 }
 
+parameter_types! {
+	pub const NativeAssetId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+}
+
 impl Config for Runtime {
 	type Event = Event;
+
+	type DefaultFeeAsset = NativeAssetId;
 
 	type MultiCurrency = Tokens;
 

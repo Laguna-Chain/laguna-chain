@@ -1,6 +1,6 @@
-use frame_support::{parameter_types, traits::Currency};
-use orml_tokens::CurrencyAdapter;
-use primitives::{AccountId, Amount, BlockNumber, CurrencyId, TokenId};
+use frame_support::parameter_types;
+
+use primitives::{AccountId, CurrencyId, TokenId};
 use sp_runtime::traits::{Convert, ConvertInto};
 
 use crate::{ContractAssetsRegistry, Runtime, Tokens};

@@ -3,8 +3,8 @@
 use primitives::{AccountId, CurrencyId, TokenId};
 
 use laguna_runtime::{
-	constants::LAGUNAS, AuraConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
-	TokensConfig, WASM_BINARY,
+	constants::LAGUNAS, AuraConfig, FeeEnablementConfig, GenesisConfig, GrandpaConfig, SudoConfig,
+	SystemConfig, TokensConfig, WASM_BINARY,
 };
 
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -12,7 +12,7 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 
 use super::util::{authority_keys_from_seed, get_account_id_from_seed};
 use sc_service::ChainType;
-use sp_core::{sr25519, H160, U256};
+use sp_core::sr25519;
 
 // Spec derived from runtiem GenisisConfig
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
@@ -102,6 +102,9 @@ fn testnet_genesis(
 				.cloned()
 				.map(|k| (k, CurrencyId::NativeToken(TokenId::Laguna), 1 << 60))
 				.collect(),
+		},
+		fee_enablement: FeeEnablementConfig {
+			enabled: vec![(CurrencyId::NativeToken(TokenId::Laguna), true)],
 		},
 	}
 }

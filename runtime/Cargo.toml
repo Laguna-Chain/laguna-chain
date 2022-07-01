@@ -19,6 +19,7 @@ pallet-randomness-collective-flip = {default-features = false, git = 'https://gi
 
 pallet-contract-asset-registry = {path = "../pallets/contract-asset-registry", default-features = false}
 pallet-currencies = {path = "../pallets/currencies", default-features = false}
+pallet-fee-enablement = {path = "../pallets/fee-enablement", default-features = false}
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
 
 pallet-grandpa = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
@@ -61,6 +62,9 @@ hex-literal = {version = '0.3.1'}
 pallet-currencies-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
 traits = {version = "0.1.0", path = "../pallets/traits", default-features = false}
+
+# workaround for https://github.com/paritytech/substrate/issues/11706
+syn = {version = "=1.0.96"}
 
 # build dependency for the wasm runtime
 [build-dependencies.substrate-wasm-builder]
@@ -116,6 +120,7 @@ std = [
   'pallet-contracts-primitives/std',
   'pallet-contracts-rpc-runtime-api/std',
   'pallet-randomness-collective-flip/std',
+  'pallet-fee-enablement/std',
   'traits/std',
   'pallet-contract-asset-registry/std',
 ]

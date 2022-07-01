@@ -4,6 +4,15 @@
 //!
 //! 1. native tokens
 //! 2. contract-based tokens
+//!
+//! For single-token use cases, the BasicCurrency* and fungible::* traits are implemented for this
+//! pallet. It's pointing to the NativeCurrencyId specified in Config
+//!
+//! For multi-token use cases, the MultiCurrency* and fungibles::* traits are implemented for this
+//! pallet. When trying to operate on native tokens, the T::MultiCurrency associate type will be
+//! used. When trying to operate on contract based tokens, the T::ContractAssets associate type will
+//! be used, be cautious that not all features are enabled for contrat based tokens due to their
+//! natural differences in design.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -15,16 +24,18 @@ use frame_support::{
 use frame_system::pallet_prelude::*;
 
 use orml_traits::{
-	currency::TransferAll, BalanceStatus, BasicCurrency, BasicCurrencyExtended,
-	BasicLockableCurrency, BasicReservableCurrency, MultiCurrency, MultiCurrencyExtended,
-	MultiLockableCurrency, MultiReservableCurrency,
+	currency::TransferAll, BasicCurrency, BasicCurrencyExtended, BasicLockableCurrency,
+	BasicReservableCurrency, MultiCurrency, MultiCurrencyExtended, MultiLockableCurrency,
+	MultiReservableCurrency,
 };
 
 pub use pallet::*;
-use pallet_contract_asset_registry::TokenAccess;
 use primitives::CurrencyId;
 use sp_core::U256;
 use sp_runtime::traits::{CheckedAdd, Convert, Saturating, Zero};
+use traits::currencies::TokenAccess;
+
+pub mod adapters;
 
 /// +++++++++++++++++++++++
 /// specifying type alises.
@@ -242,6 +253,162 @@ impl<T: Config> BasicReservableCurrency<AccountIdOf<T>> for Pallet<T> {
 	}
 }
 
+impl<T: Config> fungible::Inspect<AccountIdOf<T>> for Pallet<T> {
+	type Balance = BalanceOf<T>;
+
+	fn total_issuance() -> Self::Balance {
+		<T::MultiCurrency as fungibles::Inspect<_>>::total_issuance(T::NativeCurrencyId::get())
+	}
+
+	fn minimum_balance() -> Self::Balance {
+		<T::MultiCurrency as fungibles::Inspect<_>>::minimum_balance(T::NativeCurrencyId::get())
+	}
+
+	fn balance(who: &AccountIdOf<T>) -> Self::Balance {
+		<T::MultiCurrency as fungibles::Inspect<_>>::balance(T::NativeCurrencyId::get(), who)
+	}
+
+	fn reducible_balance(who: &AccountIdOf<T>, keep_alive: bool) -> Self::Balance {
+		<T::MultiCurrency as fungibles::Inspect<_>>::reducible_balance(
+			T::NativeCurrencyId::get(),
+			who,
+			keep_alive,
+		)
+	}
+
+	fn can_deposit(who: &AccountIdOf<T>, amount: Self::Balance, mint: bool) -> DepositConsequence {
+		<T::MultiCurrency as fungibles::Inspect<_>>::can_deposit(
+			T::NativeCurrencyId::get(),
+			who,
+			amount,
+			mint,
+		)
+	}
+
+	fn can_withdraw(
+		who: &AccountIdOf<T>,
+		amount: Self::Balance,
+	) -> WithdrawConsequence<Self::Balance> {
+		<T::MultiCurrency as fungibles::Inspect<_>>::can_withdraw(
+			T::NativeCurrencyId::get(),
+			who,
+			amount,
+		)
+	}
+}
+
+impl<T: Config> fungible::Mutate<AccountIdOf<T>> for Pallet<T> {
+	fn mint_into(who: &AccountIdOf<T>, amount: Self::Balance) -> DispatchResult {
+		<T::MultiCurrency as fungibles::Mutate<_>>::mint_into(
+			T::NativeCurrencyId::get(),
+			who,
+			amount,
+		)
+	}
+
+	fn burn_from(
+		who: &AccountIdOf<T>,
+		amount: Self::Balance,
+	) -> Result<Self::Balance, DispatchError> {
+		<T::MultiCurrency as fungibles::Mutate<_>>::burn_from(
+			T::NativeCurrencyId::get(),
+			who,
+			amount,
+		)
+	}
+}
+
+impl<T: Config> fungible::Transfer<AccountIdOf<T>> for Pallet<T> {
+	fn transfer(
+		source: &AccountIdOf<T>,
+		dest: &AccountIdOf<T>,
+		amount: Self::Balance,
+		keep_alive: bool,
+	) -> Result<Self::Balance, DispatchError> {
+		<T::MultiCurrency as fungibles::Transfer<_>>::transfer(
+			T::NativeCurrencyId::get(),
+			source,
+			dest,
+			amount,
+			keep_alive,
+		)
+	}
+}
+
+impl<T: Config> fungible::Unbalanced<AccountIdOf<T>> for Pallet<T> {
+	fn set_balance(who: &AccountIdOf<T>, amount: Self::Balance) -> DispatchResult {
+		<T::MultiCurrency as fungibles::Unbalanced<_>>::set_balance(
+			T::NativeCurrencyId::get(),
+			who,
+			amount,
+		)
+	}
+
+	fn set_total_issuance(amount: Self::Balance) {
+		<T::MultiCurrency as fungibles::Unbalanced<_>>::set_total_issuance(
+			T::NativeCurrencyId::get(),
+			amount,
+		)
+	}
+}
+
+impl<T: Config> fungible::InspectHold<AccountIdOf<T>> for Pallet<T> {
+	fn balance_on_hold(who: &AccountIdOf<T>) -> Self::Balance {
+		<T::MultiCurrency as fungibles::InspectHold<_>>::balance_on_hold(
+			T::NativeCurrencyId::get(),
+			who,
+		)
+	}
+
+	fn can_hold(who: &AccountIdOf<T>, amount: Self::Balance) -> bool {
+		<T::MultiCurrency as fungibles::InspectHold<_>>::can_hold(
+			T::NativeCurrencyId::get(),
+			who,
+			amount,
+		)
+	}
+}
+
+impl<T: Config> fungible::MutateHold<AccountIdOf<T>> for Pallet<T> {
+	fn hold(who: &AccountIdOf<T>, amount: Self::Balance) -> DispatchResult {
+		<T::MultiCurrency as fungibles::MutateHold<_>>::hold(
+			T::NativeCurrencyId::get(),
+			who,
+			amount,
+		)
+	}
+
+	fn release(
+		who: &AccountIdOf<T>,
+		amount: Self::Balance,
+		best_effort: bool,
+	) -> Result<Self::Balance, DispatchError> {
+		<T::MultiCurrency as fungibles::MutateHold<_>>::release(
+			T::NativeCurrencyId::get(),
+			who,
+			amount,
+			best_effort,
+		)
+	}
+
+	fn transfer_held(
+		source: &AccountIdOf<T>,
+		dest: &AccountIdOf<T>,
+		amount: Self::Balance,
+		best_effort: bool,
+		on_held: bool,
+	) -> Result<Self::Balance, DispatchError> {
+		<T::MultiCurrency as fungibles::MutateHold<_>>::transfer_held(
+			T::NativeCurrencyId::get(),
+			source,
+			dest,
+			amount,
+			best_effort,
+			on_held,
+		)
+	}
+}
+
 /// when used as multi-token currency provider, T::MultiCurrency will be used, noted that
 /// contract-based operation is done via T::TokenAccess
 impl<T: Config> MultiCurrency<AccountIdOf<T>> for Pallet<T>
@@ -302,6 +469,10 @@ where
 		who: &AccountIdOf<T>,
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
+		if amount.is_zero() {
+			return Ok(())
+		}
+
 		match currency_id {
 			CurrencyId::NativeToken(_) =>
 				T::MultiCurrency::ensure_can_withdraw(currency_id, who, amount),
@@ -329,6 +500,9 @@ where
 		match currency_id {
 			CurrencyId::NativeToken(_) => T::MultiCurrency::transfer(currency_id, from, to, amount),
 			CurrencyId::Erc20(addr) => {
+				if amount.is_zero() {
+					return Ok(())
+				}
 				let asset = T::ConvertIntoAccountId::convert(addr);
 
 				T::ContractAssets::transfer(asset, from.clone(), to.clone(), amount.into())
@@ -505,7 +679,10 @@ where
 	) -> Self::Balance {
 		match currency_id {
 			CurrencyId::NativeToken(_) => <T::MultiCurrency>::unreserve(currency_id, who, value),
-			CurrencyId::Erc20(_) => Default::default(),
+			CurrencyId::Erc20(_) => {
+				log::debug!("not amount will be unreserved for contract based assets");
+				Default::default()
+			},
 		}
 	}
 
@@ -538,11 +715,17 @@ where
 	type Balance = BalanceOf<T>;
 
 	fn total_issuance(asset: Self::AssetId) -> Self::Balance {
-		<T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::total_issuance(asset)
+		match asset {
+			CurrencyId::Erc20(_) => <Self as MultiCurrency<AccountIdOf<T>>>::total_issuance(asset),
+			_ => <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::total_issuance(asset),
+		}
 	}
 
 	fn minimum_balance(asset: Self::AssetId) -> Self::Balance {
-		<T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::minimum_balance(asset)
+		match asset {
+			CurrencyId::Erc20(_) => <Self as MultiCurrency<AccountIdOf<T>>>::minimum_balance(asset),
+			_ => <T::MultiCurrency as fungibles::Inspect<AccountIdOf<T>>>::minimum_balance(asset),
+		}
 	}
 
 	fn balance(asset: Self::AssetId, who: &AccountIdOf<T>) -> Self::Balance {
@@ -627,7 +810,10 @@ where
 		who: &AccountIdOf<T>,
 		amount: Self::Balance,
 	) -> DispatchResult {
-		<Self as MultiCurrency<_>>::deposit(asset, who, amount)
+		match asset {
+			CurrencyId::Erc20(_) => <Self as MultiCurrency<_>>::deposit(asset, who, amount),
+			_ => <T::MultiCurrency as MultiCurrency<_>>::deposit(asset, who, amount),
+		}
 	}
 
 	fn burn_from(
@@ -635,13 +821,9 @@ where
 		who: &AccountIdOf<T>,
 		amount: Self::Balance,
 	) -> Result<Self::Balance, DispatchError> {
-		if amount.is_zero() {
-			return Ok(amount)
-		}
-
 		match asset {
-			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-
+			CurrencyId::Erc20(_) =>
+				<Self as MultiCurrency<_>>::withdraw(asset, who, amount).map(|_| amount),
 			_ => <T::MultiCurrency as fungibles::Mutate<_>>::burn_from(asset, who, amount),
 		}
 	}
@@ -663,8 +845,8 @@ where
 		}
 
 		match asset {
-			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-
+			CurrencyId::Erc20(_) =>
+				<Self as MultiCurrency<_>>::transfer(asset, source, dest, amount).map(|_| amount),
 			_ => <T::MultiCurrency as fungibles::Transfer<_>>::transfer(
 				asset, source, dest, amount, keep_alive,
 			),
@@ -701,9 +883,7 @@ where
 {
 	fn hold(asset: Self::AssetId, who: &AccountIdOf<T>, amount: Self::Balance) -> DispatchResult {
 		match asset {
-			CurrencyId::Erc20(_) =>
-				<Self as MultiReservableCurrency<_>>::reserve(asset, who, amount),
-
+			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::hold(asset, who, amount),
 		}
 	}
@@ -715,22 +895,7 @@ where
 		best_effort: bool,
 	) -> Result<Self::Balance, DispatchError> {
 		match asset {
-			CurrencyId::Erc20(_) => {
-				if amount.is_zero() {
-					return Ok(amount)
-				}
-				ensure!(
-					best_effort ||
-						amount <=
-							<Self as MultiReservableCurrency<_>>::reserved_balance(
-								asset, who
-							),
-					Error::<T>::BalanceTooLow
-				);
-				let gap = <Self as MultiReservableCurrency<_>>::unreserve(asset, who, amount);
-				Ok(amount.saturating_sub(gap))
-			},
-
+			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::release(
 				asset,
 				who,
@@ -749,26 +914,7 @@ where
 		on_hold: bool,
 	) -> Result<Self::Balance, DispatchError> {
 		match asset {
-			CurrencyId::Erc20(_) => {
-				if amount.is_zero() {
-					return Ok(amount)
-				}
-				ensure!(
-					best_effort ||
-						amount <=
-							<Self as fungibles::InspectHold<_>>::balance_on_hold(
-								asset, source
-							),
-					Error::<T>::BalanceTooLow
-				);
-
-				let status = if on_hold { BalanceStatus::Reserved } else { BalanceStatus::Free };
-				let gap = <Self as MultiReservableCurrency<_>>::repatriate_reserved(
-					asset, source, dest, amount, status,
-				)?;
-				Ok(amount.saturating_sub(gap))
-			},
-
+			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 			_ => <T::MultiCurrency as fungibles::MutateHold<_>>::transfer_held(
 				asset,
 				source,
@@ -791,16 +937,19 @@ where
 		amount: Self::Balance,
 	) -> DispatchResult {
 		match asset {
-			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
-
+			CurrencyId::Erc20(_) => {
+				log::warn!("setting balance for contract based asset is not allowed");
+				Err(Error::<T>::InvalidContractOperation.into())
+			},
 			_ => <T::MultiCurrency as fungibles::Unbalanced<_>>::set_balance(asset, who, amount),
 		}
 	}
 
 	fn set_total_issuance(asset: Self::AssetId, amount: Self::Balance) {
 		match asset {
-			CurrencyId::Erc20(_) => {},
-
+			CurrencyId::Erc20(_) => {
+				log::warn!("no action will be executed for contract based assets");
+			},
 			_ => <T::MultiCurrency as fungibles::Unbalanced<_>>::set_total_issuance(asset, amount),
 		}
 	}

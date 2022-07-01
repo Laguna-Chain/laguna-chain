@@ -3,6 +3,7 @@ use laguna_runtime::{Runtime, System};
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
 
 pub mod contracts;
+pub mod fees;
 pub mod native_token;
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
@@ -14,17 +15,23 @@ pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Lagu
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, CurrencyId, Balance)>,
 	sudo: Option<AccountId>,
+	fee_sources: Vec<(CurrencyId, bool)>,
 }
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { balances: vec![], sudo: None }
+		Self { balances: vec![], sudo: None, fee_sources: vec![] }
 	}
 }
 
 impl ExtBuilder {
 	pub fn balances(mut self, balances: Vec<(AccountId, CurrencyId, Balance)>) -> Self {
 		self.balances = balances;
+		self
+	}
+
+	pub fn enable_fee_source(mut self, fee_sources: Vec<(CurrencyId, bool)>) -> Self {
+		self.fee_sources = fee_sources;
 		self
 	}
 
@@ -49,6 +56,14 @@ impl ExtBuilder {
 			pallet_sudo::GenesisConfig::<Runtime> { key: Some(key) }
 				.assimilate_storage(&mut t)
 				.unwrap();
+		}
+
+		if !self.fee_sources.is_empty() {
+			<pallet_fee_enablement::GenesisConfig as GenesisBuild<Runtime>>::assimilate_storage(
+				&pallet_fee_enablement::GenesisConfig { enabled: self.fee_sources.clone() },
+				&mut t,
+			)
+			.unwrap();
 		}
 
 		let mut ext = sp_io::TestExternalities::new(t);

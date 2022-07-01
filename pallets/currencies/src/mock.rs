@@ -191,13 +191,15 @@ parameter_types! {
 }
 
 impl pallet_contract_asset_registry::Config for Runtime {
+	type AllowedOrigin = EnsureRoot<AccountId>;
+
 	type PalletId = PId;
 
 	type MaxGas = MaxGas;
 
 	type ContractDebugFlag = DebugFlag;
 
-	type AllowedOrigin = EnsureRoot<AccountId>;
+	type WeightInfo = ();
 }
 
 orml_traits::parameter_type_with_key! {

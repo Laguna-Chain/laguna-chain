@@ -1,17 +1,20 @@
-use core::marker::PhantomData;
-
-use crate::{Call, Currencies, Event, Runtime};
+use crate::{
+	impl_pallet_currencies::NativeCurrencyId, ContractAssetsRegistry, Currencies, Event,
+	FeeEnablement, Runtime,
+};
 use frame_support::pallet_prelude::InvalidTransaction;
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
 use traits::fee::{FeeDispatch, FeeMeasure, FeeSource};
 
 impl pallet_fluent_fee::Config for Runtime {
+	type DefaultFeeAsset = NativeCurrencyId;
+
 	type Event = Event;
 
 	type MultiCurrency = Currencies;
 
-	type FeeSource = StaticImpl;
+	type FeeSource = FeeEnablement;
 
 	type FeeMeasure = StaticImpl;
 
@@ -19,31 +22,6 @@ impl pallet_fluent_fee::Config for Runtime {
 }
 
 pub struct StaticImpl;
-
-impl FeeSource for StaticImpl {
-	type AssetId = CurrencyId;
-
-	type Balance = Balance;
-
-	fn accepted(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		match id {
-			CurrencyId::NativeToken(TokenId::Laguna) => Ok(()),
-			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
-		}
-	}
-
-	fn listing_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
-	}
-
-	fn denounce_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
-	}
-
-	fn disable_asset(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
-	}
-}
 
 impl FeeMeasure for StaticImpl {
 	type AssetId = CurrencyId;
