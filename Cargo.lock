@@ -4295,6 +4295,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-fee-measurement"
+version = "0.1.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "log",
+ "orml-tokens",
+ "orml-traits",
+ "pallet-balances",
+ "pallet-transaction-payment",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "traits",
+]
+
+[[package]]
 name = "pallet-fluent-fee"
 version = "0.1.0"
 dependencies = [

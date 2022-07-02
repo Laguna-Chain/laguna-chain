@@ -1,0 +1,42 @@
+[package]
+edition = "2021"
+name = "pallet-fee-measurement"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}
+log = "0.4.14"
+scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
+
+orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', default-features = false, branch = "polkadot-v0.9.22"}
+primitives = {path = "../../primitives", default-features = false}
+traits = {version = "0.1.0", path = "../traits", default-features = false}
+
+frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+
+frame-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", optional = true}
+
+[dev-dependencies]
+orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', branch = "polkadot-v0.9.22"}
+pallet-balances = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-core = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-io = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-runtime = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-std = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+
+[features]
+default = ["std"]
+runtime-benchmarks = ["frame-benchmarking"]
+std = [
+  "codec/std",
+  "scale-info/std",
+  "frame-support/std",
+  "frame-system/std",
+  "primitives/std",
+  "orml-traits/std",
+  "traits/std",
+]

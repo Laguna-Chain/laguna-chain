@@ -6,7 +6,7 @@ pub use sp_runtime::traits::IdentifyAccount;
 use sp_runtime::{
 	generic,
 	traits::{BlakeTwo256, Verify},
-	MultiSignature,
+	FixedU128, MultiSignature,
 };
 
 pub(crate) mod currency;
@@ -24,6 +24,8 @@ pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::Account
 pub type AccountPublic = <Signature as Verify>::Signer;
 
 pub type Balance = u128;
+
+pub type Price = FixedU128;
 
 pub type Amount = i128;
 
