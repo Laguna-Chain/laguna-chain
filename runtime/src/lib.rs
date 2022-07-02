@@ -43,6 +43,7 @@ pub mod impl_orml_tokens;
 pub mod impl_pallet_aura;
 pub mod impl_pallet_contract_asset_registry;
 pub mod impl_pallet_contracts;
+pub mod impl_pallet_fee_measurement;
 
 pub mod impl_pallet_currencies;
 pub mod impl_pallet_fee_enablement;
@@ -129,6 +130,7 @@ construct_runtime!(
 			TransactionPayment: pallet_transaction_payment ,
 			FluentFee: pallet_fluent_fee,
 			FeeEnablement: pallet_fee_enablement,
+			FeeMeasurement: pallet_fee_measurement,
 
 			// conseus mechanism
 			Aura: pallet_aura ,

@@ -11,27 +11,31 @@ primitives = {path = "../primitives", default-features = false}
 
 # runtime's basic pallet impl
 pallet-aura = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-pallet-balances = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-grandpa = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-scheduler = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-sudo = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-timestamp = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+
+# smart contracts
 pallet-contracts = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contracts-primitives = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
+# mometary system
+orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
+pallet-balances = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contract-asset-registry = {path = "../pallets/contract-asset-registry", default-features = false}
 pallet-currencies = {path = "../pallets/currencies", default-features = false}
-pallet-fee-enablement = {path = "../pallets/fee-enablement", default-features = false}
-pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
 
-pallet-grandpa = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-pallet-scheduler = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-pallet-sudo = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-pallet-timestamp = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+# fee and validator
+pallet-fee-enablement = {path = "../pallets/fee-enablement", default-features = false}
+pallet-fee-measurement = {path = "../pallets/fee-measurement", default-features = false}
+pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
 pallet-transaction-payment = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-transaction-payment-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # orml
-orml-currencies = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
-orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
 orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
 
 # interface for pallet build with frame
@@ -86,7 +90,6 @@ runtime-benchmarks = [
 std = [
   "orml-tokens/std",
   "orml-traits/std",
-  "orml-currencies/std",
   "codec/std",
   "scale-info/std",
   "frame-support/std",
@@ -121,6 +124,7 @@ std = [
   'pallet-contracts-rpc-runtime-api/std',
   'pallet-randomness-collective-flip/std',
   'pallet-fee-enablement/std',
+  'pallet-fee-measurement/std',
   'traits/std',
   'pallet-contract-asset-registry/std',
 ]

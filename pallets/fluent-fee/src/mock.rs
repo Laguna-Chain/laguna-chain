@@ -74,18 +74,6 @@ parameter_types! {
 	pub const ExistentialDeposit: u64 = 2;
 }
 
-impl pallet_balances::Config for Runtime {
-	type Balance = Balance;
-	type DustRemoval = ();
-	type Event = Event;
-	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = frame_system::Pallet<Runtime>;
-	type MaxLocks = ();
-	type MaxReserves = ();
-	type ReserveIdentifier = [u8; 8];
-	type WeightInfo = ();
-}
-
 pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
@@ -128,6 +116,7 @@ impl orml_tokens::Config for Runtime {
 }
 
 pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+pub const FEE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::FeeToken);
 
 parameter_types! {
 	pub const NativeCurrencyId: CurrencyId = NATIVE_CURRENCY_ID;
@@ -150,7 +139,7 @@ impl FeeSource for DummyFeeSource {
 	}
 
 	fn listed(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-		todo!()
+		Ok(())
 	}
 }
 
@@ -238,7 +227,6 @@ construct_runtime!(
 	{
 		System: frame_system,
 		Tokens: orml_tokens,
-		Balances: pallet_balances,
 		FluentFee: pallet,
 		Payment: pallet_transaction_payment
 	}
@@ -269,24 +257,8 @@ impl ExtBuilder {
 		// construct test storage for the mock runtime
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
-		pallet_balances::GenesisConfig::<Runtime> {
-			balances: self
-				.balances
-				.clone()
-				.into_iter()
-				.filter(|(_, currency_id, _)| *currency_id == NATIVE_CURRENCY_ID)
-				.map(|(account_id, _, initial_balance)| (account_id, initial_balance))
-				.collect::<Vec<_>>(),
-		}
-		.assimilate_storage(&mut t)
-		.unwrap();
-
 		orml_tokens::GenesisConfig::<Runtime> {
-			balances: self
-				.balances
-				.into_iter()
-				.filter(|(_, currency_id, _)| *currency_id != NATIVE_CURRENCY_ID)
-				.collect::<Vec<_>>(),
+			balances: self.balances.into_iter().collect::<Vec<_>>(),
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();
