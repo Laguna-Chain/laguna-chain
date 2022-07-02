@@ -81,6 +81,37 @@ impl<'a> NativeFeeRunner<'a> {
 		// holds enough balance on behalf of alice, then it will be used for covering alice's
 		// transaction fee
 
+		// TODO: call an extrinsic
+
+		let treasury_balance_after_tx = self
+			.api
+			.storage()
+			.tokens()
+			.accounts(&treasury_account, &c_id(t_id), None)
+			.await?
+			.free;
+
+		let alice_balance_after_tx = self
+			.api
+			.storage()
+			.tokens()
+			.accounts(&alice.account_id(), &c_id(t_id), None)
+			.await?
+			.free;
+		// Alice's balance must remain the same as the Treasury will pay for the tx on behalf of
+		// Alice
+		println!(
+			"Alice balance before tx, after tx: {}, {}",
+			alice_balance_before_tx, alice_balance_after_tx
+		);
+		assert!(alice_balance_before_tx == alice_balance_after_tx);
+		// Treasury balance must decrease as it pays for the tx cost on behalf of Alice
+		println!(
+			"Treasury balance before tx, after tx: {}, {}",
+			treasury_balance_after_prepay, treasury_balance_after_tx
+		);
+		assert!(treasury_balance_after_prepay > treasury_balance_after_tx);
+
 		Ok(())
 	}
 }
