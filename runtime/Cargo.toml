@@ -21,6 +21,7 @@ pallet-contract-asset-registry = {path = "../pallets/contract-asset-registry", d
 pallet-currencies = {path = "../pallets/currencies", default-features = false}
 pallet-fee-enablement = {path = "../pallets/fee-enablement", default-features = false}
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
+pallet-call-scheduler = {path = "../pallets/call-scheduler", default-features = false}
 
 pallet-grandpa = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-scheduler = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
@@ -123,4 +124,5 @@ std = [
   'pallet-fee-enablement/std',
   'traits/std',
   'pallet-contract-asset-registry/std',
+  'pallet-call-scheduler/std',
 ]
