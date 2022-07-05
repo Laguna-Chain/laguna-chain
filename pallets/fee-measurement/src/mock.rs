@@ -138,8 +138,8 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
+		Tokens: orml_tokens,
 		FeeMeasurement: crate,
-		Tokens: orml_tokens
 
 	}
 );

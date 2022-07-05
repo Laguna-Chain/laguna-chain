@@ -52,23 +52,27 @@ impl<T: Config> FeeMeasure for Pallet<T> {
 		balance: Self::Balance,
 	) -> Result<Self::Balance, TransactionValidityError> {
 		match id {
+			// no conversion needed for native token
 			CurrencyId::NativeToken(TokenId::Laguna) => Ok(balance),
+			// get conversion rate for pre-paid token
 			CurrencyId::NativeToken(TokenId::FeeToken) => {
-				let native_to_fee_ratio = T::PrepaidConversionRate::get();
+				let native_to_prepaid_ratio = T::PrepaidConversionRate::get();
 
-				native_to_fee_ratio
+				native_to_prepaid_ratio
 					.checked_mul_int(balance)
 					.ok_or(TransactionValidityError::Invalid(InvalidTransaction::Payment))
 			},
-			CurrencyId::NativeToken(_) | CurrencyId::Erc20(_) => {
-				let native_to_alt_ratio =
-					T::AltConversionRate::get_price(CurrencyId::NativeToken(TokenId::Laguna), *id)
-						.ok_or(TransactionValidityError::Invalid(InvalidTransaction::Payment))?;
+			// contract based assets's are not enabled for now
+			// CurrencyId::NativeToken(_) | CurrencyId::Erc20(_) => {
+			// 	let native_to_alt_ratio =
+			// 		T::AltConversionRate::get_price(CurrencyId::NativeToken(TokenId::Laguna), *id)
+			// 			.ok_or(TransactionValidityError::Invalid(InvalidTransaction::Payment))?;
 
-				native_to_alt_ratio
-					.checked_mul_int(balance)
-					.ok_or(TransactionValidityError::Invalid(InvalidTransaction::Payment))
-			},
+			// 	native_to_alt_ratio
+			// 		.checked_mul_int(balance)
+			// 		.ok_or(TransactionValidityError::Invalid(InvalidTransaction::Payment))
+			// },
+			_ => Err(TransactionValidityError::Invalid(InvalidTransaction::Payment)),
 		}
 	}
 }
