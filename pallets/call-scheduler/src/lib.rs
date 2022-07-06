@@ -64,10 +64,6 @@ pub mod pallet {
     #[pallet::storage]
     pub type AvgTargetedFeeAdjustment<T: Config> = StorageValue<_, BalanceOf<T>, ValueQuery>;
 
-    // The average base extrinsic fee computed across blocks
-    #[pallet::storage]
-    pub type AvgBaseFee<T: Config> = StorageValue<_, BalanceOf<T>, ValueQuery>;
-
     // Scheduled calls to be executed, indexed by block number that they should be executed on.
     #[pallet::storage]
     pub type CallsScheduled<T: Config> = StorageMap<_, Twox64Concat, T::BlockNumber, Vec<Option<ScheduleInfo<T>>>, ValueQuery>;
@@ -90,13 +86,13 @@ pub mod pallet {
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
         // execute the scheduled tasks
         fn on_initialize(now: T::BlockNumber) -> Weight {
+            // schedule logic
         }
 
         // perform bookkeeping 
         fn on_finalize(now: T::BlockNumber) {
             let current_fee_multipler = T::TransactionPayment::next_fee_multiplier();
             let running_avg = BalanceOf<T>::from(NextFeeMultiplier::get().into_inner()) / n + AvgTargetedFeeAdjustment::get() * BalanceOf<T>::from((now - 1) / now);
-            let base_fee_running = 
         }
     }
     #[pallet::call]
