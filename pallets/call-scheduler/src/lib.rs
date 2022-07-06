@@ -4,15 +4,24 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{pallet_prelude::*, dispatch::{Dispatchable, DispatchError, DispatchResult, Parameter}, traits::{schedule::{self, DispatchTime}, Get, IsType}, weights::{GetDispatchInfo, Weight}};
-use orml_traits::MultiCurrency;
-use pallet_transaction_payment::{OnChargeTransaction, MultiplierUpdate};
+use frame_support::{
+	dispatch::{DispatchError, DispatchResult, Dispatchable, Parameter},
+	pallet_prelude::*,
+	traits::{
+		schedule::{self, DispatchTime},
+		Get, IsType,
+	},
+	weights::{GetDispatchInfo, Weight},
+};
+use frame_system::pallet_prelude::*;
+use orml_traits::{arithmetic::One, MultiCurrency};
+use pallet_transaction_payment::{MultiplierUpdate, OnChargeTransaction};
 use primitives::{CurrencyId, TokenId};
 
 pub use pallet::*;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
-pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccoundIdOf<T>>>::Balance;
+pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountIdOf<T>>>::Balance;
 
 #[cfg(test)]
 mod mock;
@@ -23,24 +32,25 @@ mod tests;
 #[frame_support::pallet]
 pub mod pallet {
 
-    use super::*;
+	use super::*;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-        type Call: Dispatchable + Parameter + GetDispatchInfo;
+		type Call: Dispatchable + Parameter + GetDispatchInfo;
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
-        // The transaction_payment pallet
-        type TransactionPayment: OnChargeTransaction + MultiplierUpdate;
+		// The transaction_payment pallet
+		type TransactionPayment: OnChargeTransaction + MultiplierUpdate;
 
 		#[pallet::constant]
 		type MaxCallsPerBlock: Get<u32>;
 
-        // The account that pays for the scheduled calls, this balance can be topped up from the locked funds from ScheduleReserve 
+		// The account that pays for the scheduled calls, this balance can be topped up from the
+		// locked funds from ScheduleReserve
 		#[pallet::constant]
 		type SchedulePrepayAccountId: Get<Self::AccountId>;
 
-        // The Account where users lock funds for prepaying their scheduled calls
+		// The Account where users lock funds for prepaying their scheduled calls
 		#[pallet::constant]
 		type ScheduleReserveAccountId: Get<Self::AccountId>;
 	}
@@ -60,56 +70,75 @@ pub mod pallet {
 		InsufficientScheduleBalance,
 	}
 
-    // The average targeted fee adjustment computed across blocks based on the network congestion
-    #[pallet::storage]
-    pub type AvgTargetedFeeAdjustment<T: Config> = StorageValue<_, BalanceOf<T>, ValueQuery>;
+	// The average targeted fee adjustment computed across blocks based on the network congestion
+	#[pallet::storage]
+	#[pallet::getter(fn avg_next_multiplier_fee)]
+	pub type AvgNextFeeMultiplier<T: Config> = StorageValue<_, u128, ValueQuery>;
 
-    // Scheduled calls to be executed, indexed by block number that they should be executed on.
-    #[pallet::storage]
-    pub type CallsScheduled<T: Config> = StorageMap<_, Twox64Concat, T::BlockNumber, Vec<Option<ScheduleInfo<T>>>, ValueQuery>;
+	// Scheduled calls to be executed, indexed by block number that they should be executed on.
+	#[pallet::storage]
+	pub type CallsScheduled<T: Config> =
+		StorageMap<_, Twox64Concat, T::BlockNumber, Vec<Option<ScheduleInfo<T>>>, ValueQuery>;
 
-    // Scheduled calls halted due to insufficient funds, indexed by the dispatch owner
-    #[pallet::storage]
-    pub type HaltedQueue<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, ScheduleInfo<T>, ValueQuery>;
+	// Scheduled calls halted due to insufficient funds, indexed by the dispatch owner
+	#[pallet::storage]
+	pub type HaltedQueue<T: Config> =
+		StorageMap<_, Twox64Concat, T::AccountId, ScheduleInfo<T>, ValueQuery>;
 
-    // Tracks the funds locked in by users to prepay/top-up their scheduled calls
-    #[pallet::storage]
-    pub type ScheduleReserveBalances<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>, ValueQuery>;
+	// Tracks the funds locked in by users to prepay/top-up their scheduled calls
+	#[pallet::storage]
+	pub type ScheduleReserveBalances<T: Config> =
+		StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>, ValueQuery>;
 
-    // Keeps track of the user balance for the scheduled calls
-    #[pallet::storage]
-    pub type SchedulePrepayBalances<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>, ValueQuery>;
+	// Keeps track of the user balance for the scheduled calls
+	#[pallet::storage]
+	pub type SchedulePrepayBalances<T: Config> =
+		StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>, ValueQuery>;
 
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		// execute the scheduled tasks
+		// fn on_initialize(now: T::BlockNumber) -> Weight {
+		// 	// schedule logic
+		// 	0u64
+		// }
 
-
-    #[pallet::hooks]
-    impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
-        // execute the scheduled tasks
-        fn on_initialize(now: T::BlockNumber) -> Weight {
-            // schedule logic
-        }
-
-        // perform bookkeeping 
-        fn on_finalize(now: T::BlockNumber) {
-            let current_fee_multipler = T::TransactionPayment::next_fee_multiplier();
-            let running_avg = BalanceOf<T>::from(NextFeeMultiplier::get().into_inner()) / n + AvgTargetedFeeAdjustment::get() * BalanceOf<T>::from((now - 1) / now);
-        }
-    }
-    #[pallet::call]
-    impl<T: Config> Pallet<T> {
-        #[pallet::weight(1000_000)]
-        pub fn schedule_call(origin: OriginFor<T>, call: Box<T::Call>, maybe_periodic: T) -> DispatchResult {
-            let info = call.get_dispatch_info();
-            // Base Fee Calculation: find capped base extrinsic weight , then compute weight_to_fee. 
-            let base_weight: Weight = (T::BlockWeights::get().get(info.class).base_extrinsic).min(T::BlockWeights::get().max_block);
-            let base_fee = T::TransactionPayment::WeightToFee::calc(&base_weight);
-            // Compute the len fee
-            let len_fee = T::TransactionPayment::LengthToFee::calc(&(call.encoded_size() as u32 as Weight));
-            // Get the average next multiplier fee
-            let avg_next_multiplier_fee = Self::AvgTargetedFeeAdjustment::get();
-            // Compute the weight fee
-            let weight_fee = T::TransactionPayment::WeightToFee::calc(&info.weight.min(T::BlockWeights::get().max_block));
-            let total_fee = base_fee + len_fee + (avg_next_multiplier_fee * weight_fee);
-        }
-    }
+		// perform bookkeeping
+		fn on_finalize(now: T::BlockNumber) {
+			let current_fee_multipler = T::TransactionPayment::next_fee_multiplier().into_inner();
+			let running_avg: u128 = current_fee_multiplier.saturating_div(now as u128).saturating_add(
+				Self::avg_next_fee_multiplier()
+					.saturating_mul((now as u128 - 1u128).saturating_div(now as u128)),
+			);
+			<AvgNextFeeMultiplier<T>>::insert(running_avg);
+		}
+	}
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
+		#[pallet::weight(1000_000)]
+		pub fn schedule_call(
+			origin: OriginFor<T>,
+			when: T::BlockNumber,
+			call: <T as pallet::Config>::Call,
+			maybe_periodic: Option<schedule::Period<T::BlockNumber>>,
+			priority: schedule::Priority,
+		) -> DispatchResult {
+			let info = call.get_dispatch_info();
+			// Base Fee Calculation: find capped base extrinsic weight , then compute weight_to_fee.
+			// let base_weight: Weight = (T::BlockWeights::get().get(info.class).base_extrinsic)
+			// 	.min(T::BlockWeights::get().max_block);
+			// let base_fee = T::TransactionPayment::WeightToFee::calc(&base_weight);
+			// // Compute the len fee
+			// let len_fee =
+			// 	T::TransactionPayment::LengthToFee::calc(&(call.encoded_size() as u32 as Weight));
+			// // Get the average next multiplier fee
+			// let avg_next_multiplier_fee = Self::AvgTargetedFeeAdjustment::get();
+			// // Compute the weight fee
+			// let weight_fee = T::TransactionPayment::WeightToFee::calc(
+			// 	&info.weight.min(T::BlockWeights::get().max_block),
+			// );
+			// let total_fee = base_fee + len_fee + (avg_next_multiplier_fee * weight_fee);
+			Ok(())
+		}
+	}
 }

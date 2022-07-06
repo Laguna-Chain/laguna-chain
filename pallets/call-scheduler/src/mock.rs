@@ -72,110 +72,159 @@ impl frame_system::Config for Runtime {
 pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
-    fn contains(t: AccountId) -> bool {
-        // TODO: all accounts are possible to be dust-removed now
-        false
-    }
+	fn contains(t: AccountId) -> bool {
+		// TODO: all accounts are possible to be dust-removed now
+		false
+	}
 }
 
 orml_traits::paramater_type_with_key! {
-    pub ExistentialDeposits: |currency: CurrencyId| -> Balance {
-        Balance::min_value()
-    };
+	pub ExistentialDeposits: |currency: CurrencyId| -> Balance {
+		Balance::min_value()
+	};
 }
 
 pub type ReserveIdentifier = [u8; 8];
 
 impl orml_tokens::Config for Runtime {
-    type Event = Event;
-    type Balance = Balance;
-    type Amount = Amount;
-    type CurrencyId = CurrencyId;
-    type WeightInfo = ();
-    type ExistentialDeposits = ExistentialDeposits;
-    type OnDust = ();
-    type MaxLocks = ();
-    type DustRemovalWhitelist = DustRemovalWhitelist;
-    type MaxReserves = ConstU32<2>;
-    type ReserveIdentifier = ReserveIdentifier;
+	type Event = Event;
+	type Balance = Balance;
+	type Amount = Amount;
+	type CurrencyId = CurrencyId;
+	type WeightInfo = ();
+	type ExistentialDeposits = ExistentialDeposits;
+	type OnDust = ();
+	type MaxLocks = ();
+	type DustRemovalWhitelist = DustRemovalWhitelist;
+	type MaxReserves = ConstU32<2>;
+	type ReserveIdentifier = ReserveIdentifier;
 }
 
-// Configure FluentFee 
+// Configure FluentFee
 pub struct DummyFeeSource;
 
 impl FeeSource for DummyFeeSource {
-    type AccountId = AccountId;
-    type AssetId = CurrencyId;
+	type AccountId = AccountId;
+	type AssetId = CurrencyId;
 
-    fn accepted(
-        who: &Self::AccountId,
-        id: &Self::AssetId
-    ) -> Result<(), traits::fee::InvalidFeeSource> {
-        match id {
-            CurrencyId::NativeToken(TokenId::FeeToken | TokenId::Laguna) => Ok(()),
-            _ => Err(traits::fee::InvalidFeeSource::Unlisted),
-        }
-    }
+	fn accepted(
+		who: &Self::AccountId,
+		id: &Self::AssetId,
+	) -> Result<(), traits::fee::InvalidFeeSource> {
+		match id {
+			CurrencyId::NativeToken(TokenId::FeeToken | TokenId::Laguna) => Ok(()),
+			_ => Err(traits::fee::InvalidFeeSource::Unlisted),
+		}
+	}
 
-    fn listed(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
-        todo!()
-    }
+	fn listed(id: &Self::AssetId) -> Result<(), traits::fee::InvalidFeeSource> {
+		todo!()
+	}
 }
 
 pub struct DummyFeeMeasure;
 
 impl FeeMeasure for DummyFeeMeasure {
-    type AssetId = CurrencyId;
-    type Balance = Balance;
+	type AssetId = CurrencyId;
+	type Balance = Balance;
 
-    fn measure(id: &Self::AssetId, balance: Self::Balance) -> Result<Self::Balance, TransactionValidityError> {
-        match id {
-            CurrencyId::NativeToken(TokenId::Laguna) => Ok(balance),
-            // demo 5% reduction
-            CurrencyId::NativeToken(TokenId::FeeToken) => Ok(balance.saturating_mul(95).saturating_div(100)),
-            _ => Err(InvalidTransaction::Payment.into()),
-        }
-    }
+	fn measure(
+		id: &Self::AssetId,
+		balance: Self::Balance,
+	) -> Result<Self::Balance, TransactionValidityError> {
+		match id {
+			CurrencyId::NativeToken(TokenId::Laguna) => Ok(balance),
+			// demo 5% reduction
+			CurrencyId::NativeToken(TokenId::FeeToken) =>
+				Ok(balance.saturating_mul(95).saturating_div(100)),
+			_ => Err(InvalidTransaction::Payment.into()),
+		}
+	}
 }
 
 pub struct DummyFeeDispatch<T> {
-    _type: PhantomData<T>,
+	_type: PhantomData<T>,
+}
+
+pub trait CallFilter<T>
+where
+	T: frame_system::Config,
+{
+	fn filter_scheduled_call(call: &<T as frame_system::Config>::Call) -> bool;
+	fn charge_fee(call: &<T as frame_system::Config>::Call) -> Balance;
+}
+
+impl CallFilter<Runtime> for DummyFeeDispatch<Tokens> {
+	fn filter_scheduled_call(call: &<T as frame_system::Config>::Call) -> bool {
+		match call {
+			Call::Scheduler(pallet_call_scheduler::schedule_call { .. }) => true,
+			_ => false,
+		}
+	}
+
+	fn charge_fee(call: &<T as frame_system::Config>::Call) -> Balance {
+		match call {
+			Call::Scheduler(pallet::schedule_call {
+				origin,
+				when,
+				call,
+				maybe_periodic,
+				priority,
+			}) => {
+				let info = call.get_dispatch_info();
+				// Base Fee Calculation: find capped base extrinsic weight , then compute
+				// weight_to_fee.
+				let base_weight: Weight = (T::BlockWeights::get().get(info.class).base_extrinsic)
+					.min(T::BlockWeights::get().max_block);
+				let base_fee = TransactionPayment::WeightToFee::calc(&base_weight);
+				// Compute the len fee
+				let len_fee = T::TransactionPayment::LengthToFee::calc(
+					&(call.encoded_size() as u32 as Weight),
+				);
+				// Get the average next multiplier fee
+				let avg_next_multiplier_fee = pallet::avg_next_fee_multiplier();
+				// Compute the weight fee
+				let weight_fee = TransactionPayment::WeightToFee::calc(
+					&info.weight.min(T::BlockWeights::get().max_block),
+				);
+				let total_fee = base_fee + len_fee + (avg_next_multiplier_fee * weight_fee);
+			},
+			_ => 0.into(),
+		}
+	}
 }
 
 impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
-    type AssetId = CurrencyId;
-    type Balance = Balance;
+	type AssetId = CurrencyId;
+	type Balance = Balance;
 
-    fn withdraw(
-            account: &<Runtime as frame_system::Config>::AccountId,
-            id: &Self::AssetId,
-            balance: &Self::Balance,
-            reason: &frame_support::traits::WithdrawReasons,
-        ) -> Result<(), traits::fee::InvalidFeeDispatch> {
-            
-    }
-    fn post_info_correction(
-            id: &Self::AssetId,
-            post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
-        ) -> Result<(), traits::fee::InvalidFeeDispatch> {
-            Ok(())
-    }
+	fn withdraw(
+		account: &<Runtime as frame_system::Config>::AccountId,
+		id: &Self::AssetId,
+		call: &<Runtime as frame_system::Config>::Call,
+		balance: &Self::Balance,
+		reason: &frame_support::traits::WithdrawReasons,
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+	}
+	fn post_info_correction(
+		id: &Self::AssetId,
+		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		Ok(())
+	}
 }
 
-
-
-
 construct_runtime!(
-    pub enum Runtime where 
-    Block = Block,
-    NodeBlock = Block,
-    UncheckedExtrinsic = UncheckedExtrinsic,
-    {
-        System: frame_system, 
-        Balances: pallet_balances,
-        Tokens: orml_tokens,
-        Scheduler: pallet,
-        TransactionPayment: pallet_transaction_payment,
-        FluentFee: pallet_fluent_fee,
-    }
-)
+	pub enum Runtime where
+	Block = Block,
+	NodeBlock = Block,
+	UncheckedExtrinsic = UncheckedExtrinsic,
+	{
+		System: frame_system,
+		Balances: pallet_balances,
+		Tokens: orml_tokens,
+		Scheduler: pallet,
+		TransactionPayment: pallet_transaction_payment,
+		FluentFee: pallet_fluent_fee,
+	}
+);
