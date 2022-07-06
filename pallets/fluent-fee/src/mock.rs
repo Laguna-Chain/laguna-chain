@@ -193,6 +193,7 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
+		call: &<T as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
