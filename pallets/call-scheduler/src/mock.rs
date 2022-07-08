@@ -157,7 +157,7 @@ where
 impl CallFilter<Runtime> for DummyFeeDispatch<Tokens> {
 	fn filter_scheduled_call(call: &<T as frame_system::Config>::Call) -> bool {
 		match call {
-			Call::Scheduler(pallet_call_scheduler::schedule_call { .. }) => true,
+			Call::Scheduler(pallet::schedule_call { .. }) => true,
 			_ => false,
 		}
 	}
@@ -205,6 +205,7 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		balance: &Self::Balance,
 		reason: &frame_support::traits::WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		Ok(())
 	}
 	fn post_info_correction(
 		id: &Self::AssetId,
@@ -228,3 +229,41 @@ construct_runtime!(
 		FluentFee: pallet_fluent_fee,
 	}
 );
+pub const ALICE: AccountId = AccountId::new([1u8; 32]);
+pub const BOB: AccountId = AccountId::new([2u8; 32]);
+pub const EVA: AccountId = AccountId::new([5u8; 32]);
+pub const ID_1: LockIdentifier = *b"1       ";
+
+pub struct ExtBuilder {
+	balances: Vec<(AccountId, CurrencyId, Balance)>,
+}
+
+impl Default for ExtBuilder {
+	fn default() -> Self {
+		Self { balances: vec![] }
+	}
+}
+
+impl ExtBuilder {
+	pub fn balances(mut self, balances: Vec<(AccountId, CurrencyId, Balance)>) -> Self {
+		self.balances = balances;
+		self
+	}
+
+	pub fn build(self) -> sp_io::TestExternalities {
+		// construct test storage for the mock runtime
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+
+		orml_tokens::GenesisConfig::<Runtime> {
+			balances: self
+				.balances
+				.into_iter()
+				.filter(|(_, currency_id, _)| *currency_id != NATIVE_CURRENCY_ID)
+				.collect::<Vec<_>>(),
+		}
+		.assimilate_storage(&mut t)
+		.unwrap();
+
+		t.into()
+	}
+}

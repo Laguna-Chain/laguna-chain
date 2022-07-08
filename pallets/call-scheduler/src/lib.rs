@@ -4,24 +4,46 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+use codec::{Codec, Decode, Encode};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult, Dispatchable, Parameter},
 	pallet_prelude::*,
+	sp_runtime::FixedPointNumber,
 	traits::{
 		schedule::{self, DispatchTime},
-		Get, IsType,
+		EstimateCallFee, Get, IsType, StorageVersion,
 	},
 	weights::{GetDispatchInfo, Weight},
 };
 use frame_system::pallet_prelude::*;
 use orml_traits::{arithmetic::One, MultiCurrency};
-use pallet_transaction_payment::{MultiplierUpdate, OnChargeTransaction};
+use pallet_transaction_payment::NextFeeMultiplier;
 use primitives::{CurrencyId, TokenId};
+use scale_info::TypeInfo;
+use sp_std::marker::PhantomData;
 
 pub use pallet::*;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountIdOf<T>>>::Balance;
+// information regarding a call to be scheduled in future
+#[cfg_attr(any(feature = "std", test), derive(PartialEq, Eq))]
+#[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo)]
+pub struct Scheduled<Call, BlockNumber, PalletsOrigin, AccountId> {
+	maybe_id: Option<Vec<u8>>,
+	priority: schedule::Priority,
+	call: Call,
+	maybe_periodic: Option<schedule::Period<BlockNumber>>,
+	origin: PalletsOrigin,
+	_phantom: PhantomData<AccountId>,
+}
+
+pub type ScheduleInfo<T> = Scheduled<
+	<T as Config>::Call,
+	<T as frame_system::Config>::BlockNumber,
+	<T as Config>::PalletsOrigin,
+	<T as frame_system::Config>::AccountId,
+>;
 
 #[cfg(test)]
 mod mock;
@@ -35,12 +57,17 @@ pub mod pallet {
 	use super::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_transaction_payment::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		type Call: Dispatchable + Parameter + GetDispatchInfo;
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
-		// The transaction_payment pallet
-		type TransactionPayment: OnChargeTransaction + MultiplierUpdate;
+
+		/// The caller origin, overarching type of all pallets origins.
+		type PalletsOrigin: From<frame_system::RawOrigin<Self::AccountId>>
+			+ Codec
+			+ Clone
+			+ Eq
+			+ TypeInfo;
 
 		#[pallet::constant]
 		type MaxCallsPerBlock: Get<u32>;
@@ -55,7 +82,13 @@ pub mod pallet {
 		type ScheduleReserveAccountId: Get<Self::AccountId>;
 	}
 
+	/// The current storage version.
+	const STORAGE_VERSION: StorageVersion = StorageVersion::new(3);
+
 	#[pallet::pallet]
+	// #[pallet::generate_store(pub(super) trait Store)]
+	// #[pallet::storage_version(STORAGE_VERSION)]
+	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
 	#[pallet::event]
@@ -72,7 +105,7 @@ pub mod pallet {
 
 	// The average targeted fee adjustment computed across blocks based on the network congestion
 	#[pallet::storage]
-	#[pallet::getter(fn avg_next_multiplier_fee)]
+	#[pallet::getter(fn avg_next_fee_multiplier)]
 	pub type AvgNextFeeMultiplier<T: Config> = StorageValue<_, u128, ValueQuery>;
 
 	// Scheduled calls to be executed, indexed by block number that they should be executed on.
@@ -83,7 +116,7 @@ pub mod pallet {
 	// Scheduled calls halted due to insufficient funds, indexed by the dispatch owner
 	#[pallet::storage]
 	pub type HaltedQueue<T: Config> =
-		StorageMap<_, Twox64Concat, T::AccountId, ScheduleInfo<T>, ValueQuery>;
+		StorageMap<_, Twox64Concat, T::AccountId, ScheduleInfo<T>, OptionQuery>;
 
 	// Tracks the funds locked in by users to prepay/top-up their scheduled calls
 	#[pallet::storage]
@@ -105,12 +138,13 @@ pub mod pallet {
 
 		// perform bookkeeping
 		fn on_finalize(now: T::BlockNumber) {
-			let current_fee_multipler = T::TransactionPayment::next_fee_multiplier().into_inner();
-			let running_avg: u128 = current_fee_multiplier.saturating_div(now as u128).saturating_add(
-				Self::avg_next_fee_multiplier()
-					.saturating_mul((now as u128 - 1u128).saturating_div(now as u128)),
-			);
-			<AvgNextFeeMultiplier<T>>::insert(running_avg);
+			let current_fee_multipler = NextFeeMultiplier::<T>::get().into_inner();
+			let running_avg: u128 = unsafe {
+				current_fee_multipler.saturating_div(now as u128).saturating_add(
+					Self::avg_next_fee_multiplier()
+						.saturating_mul((now as u128 - 1u128).saturating_div(now as u128)),
+				)};
+			AvgNextFeeMultiplier::<T>::put(running_avg);
 		}
 	}
 	#[pallet::call]
