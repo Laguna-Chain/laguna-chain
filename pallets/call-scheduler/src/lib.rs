@@ -6,12 +6,14 @@
 
 use codec::{Codec, Decode, Encode};
 use frame_support::{
-	dispatch::{DispatchError, DispatchResult, Dispatchable, Parameter},
+	dispatch::{
+		DispatchError, DispatchResult, DispatchResultWithPostInfo, Dispatchable, Parameter,
+	},
 	pallet_prelude::*,
 	sp_runtime::FixedPointNumber,
 	traits::{
 		schedule::{self, DispatchTime},
-		EstimateCallFee, Get, IsType, StorageVersion,
+		EnsureOrigin, Get, IsType, OriginTrait, StorageVersion,
 	},
 	weights::{GetDispatchInfo, Weight},
 };
@@ -26,6 +28,10 @@ pub use pallet::*;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountIdOf<T>>>::Balance;
+/// Just a simple index for naming period tasks.
+pub type PeriodicIndex = u32;
+/// The location of a scheduled task that can be used to remove it.
+pub type TaskAddress<BlockNumber> = (BlockNumber, u32);
 // information regarding a call to be scheduled in future
 #[cfg_attr(any(feature = "std", test), derive(PartialEq, Eq))]
 #[derive(Clone, Encode, Decode, RuntimeDebug, TypeInfo)]
@@ -57,7 +63,7 @@ pub mod pallet {
 	use super::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_transaction_payment::Config {
+	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		type Call: Dispatchable + Parameter + GetDispatchInfo;
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
@@ -69,8 +75,22 @@ pub mod pallet {
 			+ Eq
 			+ TypeInfo;
 
+		/// The aggregated origin which the dispatch will take.
+		type Origin: OriginTrait<PalletsOrigin = Self::PalletsOrigin>
+			+ From<Self::PalletsOrigin>
+			+ IsType<<Self as frame_system::Config>::Origin>;
+
+		/// Required origin to schedule or cancel calls.
+		type ScheduleOrigin: EnsureOrigin<<Self as frame_system::Config>::Origin>;
+
 		#[pallet::constant]
 		type MaxCallsPerBlock: Get<u32>;
+
+		#[pallet::constant]
+		type MaxScheduledPerBlock: Get<u32>;
+
+		#[pallet::constant]
+		type MaximumWeight: Get<Weight>;
 
 		// The account that pays for the scheduled calls, this balance can be topped up from the
 		// locked funds from ScheduleReserve
@@ -79,7 +99,7 @@ pub mod pallet {
 
 		// The Account where users lock funds for prepaying their scheduled calls
 		#[pallet::constant]
-		type ScheduleReserveAccountId: Get<Self::AccountId>;
+		type ScheduleLockedFundAccountId: Get<Self::AccountId>;
 	}
 
 	/// The current storage version.
@@ -96,12 +116,23 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		// call scheduled
 		Scheduled {},
+		/// Dispatched some task.
+		Dispatched {
+			task: TaskAddress<T::BlockNumber>,
+			id: Option<Vec<u8>>,
+			result: DispatchResult,
+		},
 	}
 
 	#[pallet::error]
 	pub enum Error<T> {
 		InsufficientScheduleBalance,
 	}
+
+	/// Lookup from identity to the block number and index of the task.
+	#[pallet::storage]
+	pub(crate) type Lookup<T: Config> =
+		StorageMap<_, Twox64Concat, Vec<u8>, TaskAddress<T::BlockNumber>>;
 
 	// The average targeted fee adjustment computed across blocks based on the network congestion
 	#[pallet::storage]
@@ -110,7 +141,7 @@ pub mod pallet {
 
 	// Scheduled calls to be executed, indexed by block number that they should be executed on.
 	#[pallet::storage]
-	pub type CallsScheduled<T: Config> =
+	pub type ScheduledCalls<T: Config> =
 		StorageMap<_, Twox64Concat, T::BlockNumber, Vec<Option<ScheduleInfo<T>>>, ValueQuery>;
 
 	// Scheduled calls halted due to insufficient funds, indexed by the dispatch owner
@@ -120,11 +151,13 @@ pub mod pallet {
 
 	// Tracks the funds locked in by users to prepay/top-up their scheduled calls
 	#[pallet::storage]
-	pub type ScheduleReserveBalances<T: Config> =
+	#[pallet::getter(fn scheduled_locked_funds_balances)]
+	pub type ScheduleLockedFundBalances<T: Config> =
 		StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>, ValueQuery>;
 
 	// Keeps track of the user balance for the scheduled calls
 	#[pallet::storage]
+	#[pallet::getter(fn schedule_prepay_balances)]
 	pub type SchedulePrepayBalances<T: Config> =
 		StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>, ValueQuery>;
 
@@ -132,20 +165,113 @@ pub mod pallet {
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
 		// execute the scheduled tasks
 		// fn on_initialize(now: T::BlockNumber) -> Weight {
-		// 	// schedule logic
-		// 	0u64
+		// schedule logic
+		// let limit = T::MaximumWeight::get();
+
+		// let mut queued = ScheduledCalls::<T>::take(now)
+		// 	.into_iter()
+		// 	.enumerate()
+		// 	.filter_map(|(index, s)| Some((index as u32, s?)))
+		// 	.collect::<Vec<_>>();
+
+		// if queued.len() as u32 > T::MaxScheduledPerBlock::get() {
+		// 	log::warn!(
+		// 		target: "runtime::scheduler",
+		// 		"Warning: This block has more items queued in Scheduler than \
+		// 		expected from the runtime configuration. An update might be needed."
+		// 	);
+		// }
+
+		// queued.sort_by_key(|(_, s)| s.priority);
+		// let next = now + One::one();
+
+		// let mut total_weight: Weight = 0 as Weight;
+
+		// for (order, (index, mut s)) in queued.into_iter().enumerate() {
+		// 	let named = if let Some(ref id) = s.maybe_id {
+		// 		Lookup::<T>::remove(id);
+		// 		true
+		// 	} else {
+		// 		false
+		// 	};
+
+		// 	let periodic = s.maybe_periodic.is_some();
+		// 	let call_weight = s.call.get_dispatch_info().weight;
+		// 	// let mut item_weight = T::WeightInfo::item(periodic, named, Some(resolved));
+		// 	let origin =
+		// 		<<T as Config>::Origin as From<T::PalletsOrigin>>::from(s.origin.clone())
+		// 			.into();
+		// 	if ensure_signed(origin).is_ok() {
+		// 		// Weights of Signed dispatches expect their signing account to be whitelisted.
+		// 		item_weight.saturating_accrue(T::DbWeight::get().reads_writes(1, 1));
+		// 	}
+		// 	// We allow a scheduled call if any is true:
+		// 	// - It's priority is `HARD_DEADLINE`
+		// 	// - It does not push the weight past the limit.
+		// 	// - It is the first item in the schedule
+		// 	let hard_deadline = s.priority <= schedule::HARD_DEADLINE;
+		// 	let test_weight =
+		// 		total_weight.saturating_add(call_weight).saturating_add(item_weight);
+		// 	if !hard_deadline && order > 0 && test_weight > limit {
+		// 		// Cannot be scheduled this block - postpone until next.
+		// 		total_weight.saturating_accrue(T::WeightInfo::item(false, named, None));
+		// 		if let Some(ref id) = s.maybe_id {
+		// 			// NOTE: We could reasonably not do this (in which case there would be one
+		// 			// block where the named and delayed item could not be referenced by name),
+		// 			// but we will do it anyway since it should be mostly free in terms of
+		// 			// weight and it is slightly cleaner.
+		// 			let index = ScheduledCalls::<T>::decode_len(next).unwrap_or(0);
+		// 			Lookup::<T>::insert(id, (next, index as u32));
+		// 		}
+		// 		ScheduledCalls::<T>::append(next, Some(s));
+		// 		continue
+		// 	}
+
+		// 	let dispatch_origin = s.origin.clone().into();
+		// 	let (maybe_actual_call_weight, result) = match s.call.dispatch(dispatch_origin) {
+		// 		Ok(post_info) => (post_info.actual_weight, Ok(())),
+		// 		Err(error_and_info) =>
+		// 			(error_and_info.post_info.actual_weight, Err(error_and_info.error)),
+		// 	};
+		// 	let actual_call_weight = maybe_actual_call_weight.unwrap_or(call_weight);
+		// 	// total_weight.saturating_accrue(item_weight);
+		// 	// total_weight.saturating_accrue(actual_call_weight);
+
+		// 	Self::deposit_event(Event::Dispatched {
+		// 		task: (now, index),
+		// 		id: s.maybe_id.clone(),
+		// 		result,
+		// 	});
+
+		// 	if let &Some((period, count)) = &s.maybe_periodic {
+		// 		if count > 1 {
+		// 			s.maybe_periodic = Some((period, count - 1));
+		// 		} else {
+		// 			s.maybe_periodic = None;
+		// 		}
+		// 		let wake = now + period;
+		// 		// If scheduled is named, place its information in `Lookup`
+		// 		if let Some(ref id) = s.maybe_id {
+		// 			let wake_index = ScheduledCalls::<T>::decode_len(wake).unwrap_or(0);
+		// 			// Lookup::<T>::insert(id, (wake, wake_index as u32));
+		// 		}
+		// 		ScheduledCalls::<T>::append(wake, Some(s));
+		// 	}
+		// }
+		// total_weight
 		// }
 
 		// perform bookkeeping
-		fn on_finalize(now: T::BlockNumber) {
-			let current_fee_multipler = NextFeeMultiplier::<T>::get().into_inner();
-			let running_avg: u128 = unsafe {
-				current_fee_multipler.saturating_div(now as u128).saturating_add(
-					Self::avg_next_fee_multiplier()
-						.saturating_mul((now as u128 - 1u128).saturating_div(now as u128)),
-				)};
-			AvgNextFeeMultiplier::<T>::put(running_avg);
-		}
+		// fn on_finalize(now: T::BlockNumber) {
+		// 	let current_fee_multipler = NextFeeMultiplier::<T>::get().into_inner();
+		// 	let running_avg: u128 = unsafe {
+		// 		current_fee_multipler.saturating_div(now as u128).saturating_add(
+		// 			Self::avg_next_fee_multiplier()
+		// 				.saturating_mul((now as u128 - 1u128).saturating_div(now as u128)),
+		// 		)
+		// 	};
+		// 	AvgNextFeeMultiplier::<T>::put(running_avg);
+		// }
 	}
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -173,6 +299,19 @@ pub mod pallet {
 			// );
 			// let total_fee = base_fee + len_fee + (avg_next_multiplier_fee * weight_fee);
 			Ok(())
+		}
+		#[pallet::weight(1000_000)]
+		pub fn schedule_call_exec(
+			origin: OriginFor<T>,
+			call: <T as pallet::Config>::Call,
+		) -> DispatchResult {
+			T::ScheduleOrigin::ensure_origin(origin.clone())?;
+			let origin: T::PalletsOrigin = <T as Config>::Origin::from(origin).caller().clone();
+			let dispatch_origin = origin.clone().into();
+			match call.dispatch(dispatch_origin) {
+				Ok(_) => Ok(()),
+				Err(_) => Err(DispatchError::Other("Scheduled call dispatch error")),
+			}
 		}
 	}
 }
