@@ -4121,6 +4121,7 @@ dependencies = [
  "orml-tokens",
  "orml-traits",
  "pallet-balances",
+ "pallet-fluent-fee",
  "pallet-transaction-payment",
  "parity-scale-codec",
  "primitives",

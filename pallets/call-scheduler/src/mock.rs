@@ -173,7 +173,6 @@ impl CallFilter<Runtime> for DummyFeeDispatch<Tokens> {
 
 	fn estimate_fee(call: &<Runtime as frame_system::Config>::Call) -> Balance {
 		if let Call::Scheduler(pallet::Call::<Runtime>::schedule_call {
-			origin,
 			when,
 			call,
 			maybe_periodic,
@@ -324,6 +323,8 @@ impl Config for Runtime {
 	type ScheduleLockedFundAccountId = ScheduleLockedFundAccountId;
 
 	type MultiCurrency = Tokens;
+
+	type NativeAssetId = NativeAssetId;
 
 	type SchedulePrepayAccountId = SchedulePrepayAccountId;
 
