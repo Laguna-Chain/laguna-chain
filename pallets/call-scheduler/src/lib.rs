@@ -13,9 +13,8 @@ use frame_support::{
 		schedule::{self, DispatchTime},
 		EnsureOrigin, Get, IsType, OriginTrait, StorageVersion,
 	},
-	weights::{GetDispatchInfo, Weight},
+	weights::{GetDispatchInfo, Weight, PostDispatchInfo},
 };
-
 use frame_system::pallet_prelude::*;
 use orml_traits::MultiCurrency;
 use pallet_transaction_payment::NextFeeMultiplier;
@@ -68,7 +67,11 @@ pub mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type Call: Dispatchable + Parameter + GetDispatchInfo;
+		type Call: Parameter
+			+ Dispatchable<Origin = <Self as Config>::Origin, PostInfo = PostDispatchInfo>
+			+ GetDispatchInfo
+			+ From<frame_system::Call<Self>>;
+
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
 
 		/// The caller origin, overarching type of all pallets origins.
@@ -90,13 +93,10 @@ pub mod pallet {
 		type NativeAssetId: Get<CurrencyId>;
 
 		#[pallet::constant]
-		type MaxCallsPerBlock: Get<u32>;
-
-		#[pallet::constant]
 		type MaxScheduledPerBlock: Get<u32>;
 
-		#[pallet::constant]
-		type MaximumWeight: Get<Weight>;
+		// #[pallet::constant]
+		// type MaximumWeight: Get<Weight>;
 
 		// The account that pays for the scheduled calls, this balance can be topped up from the
 		// locked funds from ScheduleReserve
@@ -285,12 +285,14 @@ pub mod pallet {
 		pub fn schedule_call(
 			origin: OriginFor<T>,
 			when: T::BlockNumber,
-			call: <T as pallet::Config>::Call,
+			call: Box<<T as pallet::Config>::Call>,
 			maybe_periodic: Option<schedule::Period<T::BlockNumber>>,
 			priority: schedule::Priority,
 		) -> DispatchResult {
 			T::ScheduleOrigin::ensure_origin(origin.clone())?;
 			let origin = <T as Config>::Origin::from(origin);
+			// Dereference the call
+			let call = *call;
 			// generate a unique identity to the scheduled call, i.e., hash
 			let hash = <T as frame_system::Config>::Hashing::hash_of(&call);
 			let when = Self::resolve_time(DispatchTime::At(when))?;
@@ -309,21 +311,22 @@ pub mod pallet {
 				_phantom: PhantomData::<T::AccountId>::default(),
 			});
 
-			ScheduledCallQueue::<T>::append(when, s);
+			// ScheduledCallQueue::<T>::append(when, s);
 			Ok(())
 		}
 		#[pallet::weight(1000_000)]
 		pub fn schedule_call_exec(
 			origin: OriginFor<T>,
-			call: <T as pallet::Config>::Call,
+			call: Box<<T as pallet::Config>::Call>,
 		) -> DispatchResult {
 			T::ScheduleOrigin::ensure_origin(origin.clone())?;
 			let origin: T::PalletsOrigin = <T as Config>::Origin::from(origin).caller().clone();
-			let dispatch_origin = origin.clone().into();
-			match call.dispatch(dispatch_origin) {
-				Ok(_) => Ok(()),
-				Err(_) => Err(DispatchError::Other("Scheduled call dispatch error")),
-			}
+			// let dispatch_origin = origin.clone().into();
+			// match call.dispatch(dispatch_origin) {
+			// 	Ok(_) => Ok(()),
+			// 	Err(_) => Err(DispatchError::Other("Scheduled call dispatch error")),
+			// }
+			Ok(())
 		}
 
 		#[pallet::weight(1000_000)]
@@ -345,8 +348,8 @@ pub mod pallet {
 				amount,
 			)?;
 			// Update the user's schedule locked funds details
-			let current_locked_funds = Self::scheduled_locked_funds_balances(from);
-			ScheduleLockedFundBalances::<T>::insert(from, current_locked_funds + amount);
+			let current_locked_funds = Self::scheduled_locked_funds_balances(from.clone());
+			ScheduleLockedFundBalances::<T>::insert(&from, current_locked_funds + amount);
 			Ok(())
 		}
 
@@ -360,27 +363,24 @@ pub mod pallet {
 				amount,
 			)?;
 			// Update the user's schedule prepay balance details
-			let current_prepay_balance = Self::schedule_prepay_balances(from);
-			SchedulePrepayBalances::<T>::insert(from, current_prepay_balance + amount);
+			let current_prepay_balance = Self::schedule_prepay_balances(from.clone());
+			SchedulePrepayBalances::<T>::insert(&from, current_prepay_balance + amount);
 			Ok(())
 		}
 	}
+}
+// Some internal functions
+impl<T: Config> Pallet<T> {
+	fn resolve_time(when: DispatchTime<T::BlockNumber>) -> Result<T::BlockNumber, DispatchError> {
+		let now = frame_system::Pallet::<T>::block_number();
 
-	// Some internal functions
-	impl<T: Config> Pallet<T> {
-		fn resolve_time(
-			when: DispatchTime<T::BlockNumber>,
-		) -> Result<T::BlockNumber, DispatchError> {
-			let now = frame_system::Pallet::<T>::block_number();
-
-			let when = match when {
-				DispatchTime::At(x) => x,
-				DispatchTime::After(x) => now.saturating_add(x).saturating_add(One::one()),
-			};
-			if when <= now {
-				return Err(Error::<T>::TargetBlockNumberInPast.into())
-			}
-			Ok(when)
+		let when = match when {
+			DispatchTime::At(x) => x,
+			DispatchTime::After(x) => now.saturating_add(x).saturating_add(One::one()),
+		};
+		if when <= now {
+			return Err(Error::<T>::TargetBlockNumberInPast.into())
 		}
+		Ok(when)
 	}
 }
