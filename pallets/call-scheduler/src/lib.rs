@@ -13,7 +13,7 @@ use frame_support::{
 		schedule::{self, DispatchTime},
 		EnsureOrigin, Get, IsType, OriginTrait, StorageVersion,
 	},
-	weights::{GetDispatchInfo, Weight, PostDispatchInfo},
+	weights::{GetDispatchInfo, PostDispatchInfo, Weight},
 };
 use frame_system::pallet_prelude::*;
 use orml_traits::MultiCurrency;
@@ -95,8 +95,8 @@ pub mod pallet {
 		#[pallet::constant]
 		type MaxScheduledPerBlock: Get<u32>;
 
-		// #[pallet::constant]
-		// type MaximumWeight: Get<Weight>;
+		#[pallet::constant]
+		type MaximumWeight: Get<Weight>;
 
 		// The account that pays for the scheduled calls, this balance can be topped up from the
 		// locked funds from ScheduleReserve
@@ -231,7 +231,10 @@ pub mod pallet {
 					Ok(post_info) => (post_info.actual_weight, Ok(())),
 					// If the dispatch returned an insufficient balance error, pause the scheduled
 					// call and place it in the halt queue
-					Err(traits::fee::InvalidFeeDispatch::InsufficientBalance) => {
+					Err(post_error)
+						if post_error.error ==
+							traits::fee::InvalidFeeDispatch::InsufficientBalance =>
+					{
 						// Place the scheduled call into the halted queue until recharging it /
 						// before expiry
 						HaltedQueue::<T>::insert(&s.id, s);
@@ -241,8 +244,7 @@ pub mod pallet {
 						DeathBowl::<T>::append(now + 30 * One::one(), s.id);
 						continue
 					},
-					Err(error_and_info) =>
-						(error_and_info.actual_weight, Err(error_and_info.error)),
+					Err(error_and_info) => (None, Err(error_and_info.error)),
 				};
 				let actual_call_weight = maybe_actual_call_weight.unwrap_or(call_weight);
 				// total_weight.saturating_accrue(item_weight);
@@ -321,12 +323,11 @@ pub mod pallet {
 		) -> DispatchResult {
 			T::ScheduleOrigin::ensure_origin(origin.clone())?;
 			let origin: T::PalletsOrigin = <T as Config>::Origin::from(origin).caller().clone();
-			// let dispatch_origin = origin.clone().into();
-			// match call.dispatch(dispatch_origin) {
-			// 	Ok(_) => Ok(()),
-			// 	Err(_) => Err(DispatchError::Other("Scheduled call dispatch error")),
-			// }
-			Ok(())
+			let dispatch_origin = origin.clone().into();
+			match call.dispatch(dispatch_origin) {
+				Ok(_) => Ok(()),
+				Err(_) => Err(DispatchError::Other("Scheduled call dispatch error")),
+			}
 		}
 
 		#[pallet::weight(1000_000)]

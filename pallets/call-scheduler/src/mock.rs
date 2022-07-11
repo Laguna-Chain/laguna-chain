@@ -10,6 +10,7 @@ use frame_support::{
 use frame_system::{Account, EnsureRoot, EnsureSigned, RawOrigin};
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
 use sp_core::H256;
+use sp_runtime::Perbill;
 use traits::fee::{FeeDispatch, FeeMeasure, FeeSource};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
@@ -17,12 +18,35 @@ type Block = frame_system::mocking::MockBlock<Runtime>;
 
 parameter_types! {
 	pub const BlockHashCount: BlockNumber = 250;
+	// pub BlockWeights: frame_system::limits::BlockWeights = frame_system::limits::BlockWeights::simple_max(2_000_000_000_000);
+}
+
+use sp_std::cell::RefCell;
+thread_local! {
+	static EXTRINSIC_BASE_WEIGHT: RefCell<u64> = RefCell::new(0);
+}
+
+// Copied directly from the pallet_transaction_payment's mock runtime implementation
+// TODO: Change it as per our needs
+pub struct BlockWeights;
+impl Get<frame_system::limits::BlockWeights> for BlockWeights {
+	fn get() -> frame_system::limits::BlockWeights {
+		frame_system::limits::BlockWeights::builder()
+			.base_block(0)
+			.for_class(DispatchClass::all(), |weights| {
+				weights.base_extrinsic = EXTRINSIC_BASE_WEIGHT.with(|v| *v.borrow()).into();
+			})
+			.for_class(DispatchClass::non_mandatory(), |weights| {
+				weights.max_total = 1024.into();
+			})
+			.build_or_panic()
+	}
 }
 
 impl frame_system::Config for Runtime {
 	type BaseCallFilter = Everything;
 
-	type BlockWeights = ();
+	type BlockWeights = BlockWeights;
 
 	type BlockLength = ();
 
@@ -172,38 +196,41 @@ impl CallFilter<Runtime> for DummyFeeDispatch<Tokens> {
 	}
 
 	fn estimate_fee(call: &<Runtime as frame_system::Config>::Call) -> Balance {
-		if let Call::Scheduler(pallet::Call::<Runtime>::schedule_call {
-			when,
-			call,
-			maybe_periodic,
-			priority,
-		}) = call
-		{
-			let info = call.get_dispatch_info();
-			// Base Fee Calculation: find capped base extrinsic weight , then compute
-			// weight_to_fee.
-			let base_weight: Weight = (<Runtime as frame_system::Config>::BlockWeights::get()
-				.get(info.class)
-				.base_extrinsic)
-				.min(Runtime::BlockWeights::get().max_block);
-			let base_fee =
-				<Runtime as pallet_transaction_payment::Config>::WeightToFee::calc(&base_weight);
-			// Compute the len fee
-			let len_fee = <Runtime as pallet_transaction_payment::Config>::LengthToFee::calc(
-				&(call.encoded_size() as u32 as Weight),
-			);
-			// Get the average next multiplier fee
-			let avg_next_multiplier_fee = Scheduler::avg_next_fee_multiplier();
-			// Compute the weight fee
-			let weight_fee = <Runtime as pallet_transaction_payment::Config>::WeightToFee::calc(
-				&info
-					.weight
-					.min(<Runtime as frame_system::Config>::BlockWeights::get().max_block),
-			);
-			// Get the second element from the maybe_periodic tuple
-			let num_times_to_execute = maybe_periodic.unwrap().1 as u128;
-			let total_fee = base_fee + len_fee + (avg_next_multiplier_fee * weight_fee);
-			return total_fee * 2u128
+		match call {
+			Call::Scheduler(pallet::Call::<Runtime>::schedule_call {
+				when,
+				call,
+				maybe_periodic,
+				priority,
+			}) => {
+				let info = call.get_dispatch_info();
+				// Base Fee Calculation: find capped base extrinsic weight , then compute
+				// weight_to_fee.
+				let base_weight: Weight = (<Runtime as frame_system::Config>::BlockWeights::get()
+					.get(info.class)
+					.base_extrinsic)
+					.min(<Runtime as frame_system::Config>::BlockWeights::get().max_block);
+				let base_fee = <Runtime as pallet_transaction_payment::Config>::WeightToFee::calc(
+					&base_weight,
+				);
+				// Compute the len fee
+				let len_fee = <Runtime as pallet_transaction_payment::Config>::LengthToFee::calc(
+					&(call.encoded_size() as u32 as Weight),
+				);
+				// Get the average next multiplier fee
+				let avg_next_multiplier_fee = Scheduler::avg_next_fee_multiplier();
+				// Compute the weight fee
+				let weight_fee = <Runtime as pallet_transaction_payment::Config>::WeightToFee::calc(
+					&info
+						.weight
+						.min(<Runtime as frame_system::Config>::BlockWeights::get().max_block),
+				);
+				// Get the second element from the maybe_periodic tuple
+				let num_times_to_execute = maybe_periodic.unwrap().1 as u128;
+				let total_fee = base_fee + len_fee + (avg_next_multiplier_fee * weight_fee);
+				return total_fee * 2u128
+			},
+			_ => 0,
 		}
 	}
 }
@@ -232,10 +259,10 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 				}
 				// Transfer `fee_estimate` amount of Laguna tokens from the extrinsic origin's
 				// ScheduleLockedFundAccountId to SchedulePrepayAccountId
-				Tokens::transfer(
-					<Runtime as pallet::Config>::ScheduleLockedFundAccountId::get(),
-					<Runtime as pallet::Config>::SchedulePrepayAccountId::get(),
+				<Tokens as MultiCurrency<AccountId>>::transfer(
 					*id,
+					&<Runtime as pallet::Config>::ScheduleLockedFundAccountId::get(),
+					&<Runtime as pallet::Config>::SchedulePrepayAccountId::get(),
 					fee_estimate,
 				)
 				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute);
@@ -322,8 +349,9 @@ impl pallet_fluent_fee::Config for Runtime {
 parameter_types! {
 	pub const ScheduleLockedFundAccountId: AccountId = SCHEDULE_LOCKED_FUND_ACCOUNTID;
 	pub const SchedulePrepayAccountId: AccountId = SCHEDULE_PREPAY_ACCOUNTID;
-	pub const One: u64 = 1;
+	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) * BlockWeights::get().max_block;
 }
+
 impl Config for Runtime {
 	type Event = Event;
 
@@ -344,6 +372,8 @@ impl Config for Runtime {
 	type PalletsOrigin = OriginCaller;
 
 	type MaxScheduledPerBlock = ConstU32<10>;
+
+	type MaximumWeight = MaximumSchedulerWeight;
 }
 
 impl pallet_transaction_payment::Config for Runtime {
