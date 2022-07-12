@@ -8,6 +8,7 @@ version = "0.1.0"
 [dependencies]
 # laguna-chain's primitives
 primitives = {path = "../../primitives", default-features = false}
+traits = {path = "../../pallets/traits", default-features = false}
 
 # runtime's basic pallet impl
 pallet-aura = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}

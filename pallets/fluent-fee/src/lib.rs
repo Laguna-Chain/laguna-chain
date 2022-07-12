@@ -5,6 +5,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{pallet_prelude::*, traits::WithdrawReasons};
+use frame_system::pallet_prelude::*;
 
 use orml_traits::{arithmetic::Zero, MultiCurrency};
 use primitives::{CurrencyId, TokenId};
@@ -25,6 +26,7 @@ mod tests;
 
 #[frame_support::pallet]
 pub mod pallet {
+
 	use super::*;
 
 	#[pallet::config]
@@ -44,20 +46,40 @@ pub mod pallet {
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config> {}
+	pub enum Event<T: Config> {
+		AccountPreferenceUpdated((AccountIdOf<T>, Option<CurrencyId>)),
+	}
 
-	#[pallet::error]
-	pub enum Error<T> {
-		Placeholder,
+	#[pallet::storage]
+	pub(super) type DefdaultFeeSource<T: Config> =
+		StorageMap<_, Blake2_128Concat, AccountIdOf<T>, CurrencyId>;
+
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
+		#[pallet::weight(1000)]
+		pub fn set_default(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			DefdaultFeeSource::<T>::insert(who.clone(), asset_id);
+			Self::deposit_event(Event::AccountPreferenceUpdated((who, Some(asset_id))));
+			Ok(())
+		}
+
+		#[pallet::weight(1000)]
+		pub fn unset_default(origin: OriginFor<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			DefdaultFeeSource::<T>::remove(who.clone());
+			Self::deposit_event(Event::AccountPreferenceUpdated((who, None)));
+
+			Ok(())
+		}
 	}
 }
 
 impl<T: Config> Pallet<T> {
-	fn account_fee_source_priority(
+	pub fn account_fee_source_priority(
 		account: &<T as frame_system::Config>::AccountId,
 	) -> Option<<T::FeeSource as FeeSource>::AssetId> {
-		// TODO: inject account preference selection here
-		None
+		DefdaultFeeSource::<T>::get(account)
 	}
 }
 
@@ -89,7 +111,10 @@ where
 		// check if preferenced fee source is both listed and accepted
 		T::FeeSource::listed(&preferred_fee_asset)
 			.and_then(|_| T::FeeSource::accepted(who, &preferred_fee_asset))
-			.map_err(|_| TransactionValidityError::from(InvalidTransaction::Payment))?;
+			.map_err(|e| {
+				log::debug!("{:?}", e);
+				TransactionValidityError::from(InvalidTransaction::Payment)
+			})?;
 
 		let withdraw_reason = if tip.is_zero() {
 			WithdrawReasons::TRANSACTION_PAYMENT
