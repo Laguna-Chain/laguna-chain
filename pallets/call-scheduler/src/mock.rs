@@ -3,7 +3,7 @@ use super::*;
 use frame_support::{
 	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::{ConstU32, Contains, EnsureOneOf, Everything},
+	traits::{ConstU32, ConstU8, Contains, EnsureOneOf, Everything},
 	unsigned::TransactionValidityError,
 	weights::{IdentityFee, WeightToFeePolynomial},
 };
@@ -372,6 +372,8 @@ impl Config for Runtime {
 	type PalletsOrigin = OriginCaller;
 
 	type MaxScheduledPerBlock = ConstU32<10>;
+
+	type MaxScheduledCallRetries = ConstU8<10>;
 
 	type MaximumWeight = MaximumSchedulerWeight;
 }

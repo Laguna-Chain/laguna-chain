@@ -4,7 +4,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Codec, Decode, Encode, EncodeLike};
+use codec::{Codec, Decode, Encode};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult, Dispatchable, Parameter},
 	pallet_prelude::*,
@@ -16,7 +16,7 @@ use frame_support::{
 	weights::{GetDispatchInfo, PostDispatchInfo, Weight},
 };
 use frame_system::pallet_prelude::*;
-use orml_traits::MultiCurrency;
+use orml_traits::{arithmetic::CheckedAdd, MultiCurrency};
 use pallet_transaction_payment::NextFeeMultiplier;
 use primitives::CurrencyId;
 use scale_info::TypeInfo;
@@ -42,6 +42,7 @@ pub struct Scheduled<Hash, Call, BlockNumber, PalletsOrigin, AccountId> {
 	call: Call,
 	maybe_periodic: Option<schedule::Period<BlockNumber>>,
 	origin: PalletsOrigin,
+	retry_count: u8,
 	_phantom: PhantomData<AccountId>,
 }
 
@@ -61,6 +62,8 @@ mod tests;
 
 #[frame_support::pallet]
 pub mod pallet {
+
+	use frame_system::Account;
 
 	use super::*;
 
@@ -91,6 +94,9 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type NativeAssetId: Get<CurrencyId>;
+
+		#[pallet::constant]
+		type MaxScheduledCallRetries: Get<u8>;
 
 		#[pallet::constant]
 		type MaxScheduledPerBlock: Get<u32>;
@@ -210,7 +216,7 @@ pub mod pallet {
 				let origin =
 					<<T as Config>::Origin as From<T::PalletsOrigin>>::from(s.origin.clone())
 						.into();
-				if ensure_signed(origin).is_ok() {
+				if ensure_signed(origin.clone()).is_ok() {
 					// Weights of Signed dispatches expect their signing account to be whitelisted.
 					// item_weight.saturating_accrue(T::DbWeight::get().reads_writes(1, 1));
 				}
@@ -222,33 +228,74 @@ pub mod pallet {
 				let test_weight = total_weight.saturating_add(call_weight);
 				if !hard_deadline && order > 0 && test_weight > limit {
 					// Cannot be scheduled this block - postpone until next.
-					ScheduledCallQueue::<T>::append(next, Some(s));
-					continue
+					// Increment the retry count and if it gets retried for max_retries
+					// consecutively then refund the transaction origin its remaining balance
+					// Note: the retry count is set to 0 every time the schedule call actually
+					// executes. The refund is only done if `max_retries` consecutive attempts to
+					// execute the schedule call failed.
+					if s.retry_count >= T::MaxScheduledCallRetries::get() {
+						// Refund the scheduled call prepaid balance back to the origin, if the
+						// refund somehow fails then schedule the call for the next block and retry
+						// the refund. Get the current prepay balance of the origin
+						let origin_account = ensure_signed(origin.clone()).unwrap();
+						let prepay_refund_balance = Self::schedule_prepay_balances::<AccountIdOf<T>>(
+							origin_account.clone(),
+						);
+						if T::MultiCurrency::transfer(
+							T::NativeAssetId::get(),
+							&T::SchedulePrepayAccountId::get(),
+							&T::ScheduleLockedFundAccountId::get(),
+							prepay_refund_balance,
+						)
+						.is_ok()
+						{
+							// If the refund is successful then reset the origin's balance to 0.
+							SchedulePrepayBalances::<T>::remove(origin_account.clone());
+							// Increase the ScheduleLockedFundBalances of the origin by the refunded
+							// amount
+							ScheduleLockedFundBalances::<T>::mutate(
+								origin_account.clone(),
+								|balance| {
+									*balance = balance
+										.checked_add(&prepay_refund_balance)
+										.expect("overflow when updating locked fund balance")
+								},
+							);
+							continue
+						}
+					} else {
+						s.retry_count += 1;
+						ScheduledCallQueue::<T>::append(next, Some(s));
+						continue
+					}
 				}
 
 				let dispatch_origin = s.origin.clone().into();
-				let (maybe_actual_call_weight, result) = match s.call.dispatch(dispatch_origin) {
-					Ok(post_info) => (post_info.actual_weight, Ok(())),
-					// If the dispatch returned an insufficient balance error, pause the scheduled
-					// call and place it in the halt queue
-					Err(post_error)
-						if post_error.error ==
-							traits::fee::InvalidFeeDispatch::InsufficientBalance =>
-					{
-						// Place the scheduled call into the halted queue until recharging it /
-						// before expiry
-						HaltedQueue::<T>::insert(&s.id, s);
-						// TODO: discuss with the team and decide on a good expiry duration. For
-						// now, I'm setting it to be 30 blocks At the time of expiry, the halted
-						// call is removed permanently from the HaltedQueue
-						DeathBowl::<T>::append(now + 30 * One::one(), s.id);
-						continue
-					},
-					Err(error_and_info) => (None, Err(error_and_info.error)),
-				};
+				let (maybe_actual_call_weight, result) =
+					match s.call.clone().dispatch(dispatch_origin) {
+						Ok(post_info) => (post_info.actual_weight, Ok(())),
+						// If the dispatch returned an insufficient balance error, pause the
+						// scheduled call and place it in the halt queue
+						// Err(post_error)
+						// 	if post_error.error ==
+						// 		traits::fee::InvalidFeeDispatch::InsufficientBalance =>
+						// {
+						// 	// Place the scheduled call into the halted queue until recharging it /
+						// 	// before expiry
+						// 	HaltedQueue::<T>::insert(&s.id, s);
+						// 	// TODO: discuss with the team and decide on a good expiry duration. For
+						// 	// now, I'm setting it to be 30 blocks At the time of expiry, the halted
+						// 	// call is removed permanently from the HaltedQueue
+						// 	DeathBowl::<T>::append(now + 30 * One::one(), s.id);
+						// 	continue
+						// },
+						Err(error_and_info) => (None, Err(error_and_info.error)),
+					};
+				// Reset the retry count of the scheduled call to 0 after it is executed.
+				s.retry_count = 0;
 				let actual_call_weight = maybe_actual_call_weight.unwrap_or(call_weight);
 				// total_weight.saturating_accrue(item_weight);
-				// total_weight.saturating_accrue(actual_call_weight);
+				total_weight.saturating_accrue(actual_call_weight);
 
 				Self::deposit_event(Event::Dispatched {
 					task: (now, index),
@@ -310,6 +357,7 @@ pub mod pallet {
 				call,
 				maybe_periodic,
 				origin,
+				retry_count: 0u8,
 				_phantom: PhantomData::<T::AccountId>::default(),
 			});
 
@@ -328,6 +376,14 @@ pub mod pallet {
 				Ok(_) => Ok(()),
 				Err(_) => Err(DispatchError::Other("Scheduled call dispatch error")),
 			}
+		}
+
+		#[pallet::weight(1000_000)]
+		pub fn cancel_scheduled_call(
+			origin: OriginFor<T>,
+			call_hash: ScheduleHash<T>,
+		) -> DispatchResult {
+			Ok(())
 		}
 
 		#[pallet::weight(1000_000)]
