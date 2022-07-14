@@ -166,7 +166,7 @@ pub mod pallet {
 	// Scheduled calls to be executed, indexed by block number that they should be executed on.
 	#[pallet::storage]
 	pub type ScheduledCallQueue<T: Config> =
-		StorageMap<_, Twox64Concat, T::BlockNumber, Vec<Option<ScheduleInfo<T>>>, ValueQuery>;
+		StorageMap<_, Twox64Concat, T::BlockNumber, Vec<ScheduleInfo<T>>, ValueQuery>;
 
 	// Scheduled calls halted due to insufficient funds, indexed by the dispatch owner
 	#[pallet::storage]
@@ -195,7 +195,7 @@ pub mod pallet {
 			let mut queued = ScheduledCallQueue::<T>::take(now)
 				.into_iter()
 				.enumerate()
-				.filter_map(|(index, s)| Some((index as u32, s?)))
+				.filter_map(|(index, s)| Some((index as u32, s)))
 				.collect::<Vec<_>>();
 
 			if queued.len() as u32 > T::MaxScheduledPerBlock::get() {
@@ -266,7 +266,7 @@ pub mod pallet {
 						}
 					} else {
 						s.retry_count += 1;
-						ScheduledCallQueue::<T>::append(next, Some(s));
+						ScheduledCallQueue::<T>::append(next, s);
 						continue
 					}
 				}
@@ -296,7 +296,7 @@ pub mod pallet {
 						s.maybe_periodic = None;
 					}
 					let wake = now + period;
-					ScheduledCallQueue::<T>::append(wake, Some(s));
+					ScheduledCallQueue::<T>::append(wake, s);
 				}
 			}
 			total_weight
@@ -336,7 +336,7 @@ pub mod pallet {
 				.filter(|p| p.1 > 1 && !p.0.is_zero())
 				// Remove one from the number of repetitions since we will schedule one now.
 				.map(|(p, c)| (p, c - 1));
-			let s = Some(Scheduled {
+			let s = Scheduled {
 				id: hash,
 				priority,
 				call,
@@ -344,7 +344,7 @@ pub mod pallet {
 				origin,
 				retry_count: 0u8,
 				_phantom: PhantomData::<T::AccountId>::default(),
-			});
+			};
 
 			ScheduledCallQueue::<T>::append(when, s);
 			Ok(())
