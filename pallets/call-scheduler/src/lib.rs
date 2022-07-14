@@ -8,7 +8,10 @@ use codec::{Codec, Decode, Encode};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult, Dispatchable, Parameter},
 	pallet_prelude::*,
-	sp_runtime::traits::{Hash, One, Saturating, Zero},
+	sp_runtime::{
+		traits::{Convert, Hash, One, Saturating, Zero},
+		FixedPointNumber,
+	},
 	traits::{
 		schedule::{self, DispatchTime},
 		EnsureOrigin, Get, IsType, OriginTrait, StorageVersion,
@@ -63,12 +66,10 @@ mod tests;
 #[frame_support::pallet]
 pub mod pallet {
 
-	use frame_system::Account;
-
 	use super::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_transaction_payment::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		type Call: Parameter
 			+ Dispatchable<Origin = <Self as Config>::Origin, PostInfo = PostDispatchInfo>
@@ -118,8 +119,8 @@ pub mod pallet {
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(3);
 
 	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
-	#[pallet::storage_version(STORAGE_VERSION)]
+	// #[pallet::generate_store(pub(super) trait Store)]
+	// #[pallet::storage_version(STORAGE_VERSION)]
 	#[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
@@ -274,21 +275,6 @@ pub mod pallet {
 				let (maybe_actual_call_weight, result) =
 					match s.call.clone().dispatch(dispatch_origin) {
 						Ok(post_info) => (post_info.actual_weight, Ok(())),
-						// If the dispatch returned an insufficient balance error, pause the
-						// scheduled call and place it in the halt queue
-						// Err(post_error)
-						// 	if post_error.error ==
-						// 		traits::fee::InvalidFeeDispatch::InsufficientBalance =>
-						// {
-						// 	// Place the scheduled call into the halted queue until recharging it /
-						// 	// before expiry
-						// 	HaltedQueue::<T>::insert(&s.id, s);
-						// 	// TODO: discuss with the team and decide on a good expiry duration. For
-						// 	// now, I'm setting it to be 30 blocks At the time of expiry, the halted
-						// 	// call is removed permanently from the HaltedQueue
-						// 	DeathBowl::<T>::append(now + 30 * One::one(), s.id);
-						// 	continue
-						// },
 						Err(error_and_info) => (None, Err(error_and_info.error)),
 					};
 				// Reset the retry count of the scheduled call to 0 after it is executed.
@@ -315,19 +301,18 @@ pub mod pallet {
 			}
 			total_weight
 		}
+
+		// perform bookkeeping
+		fn on_finalize(now: T::BlockNumber) {
+			let now = now.to_string().parse::<u128>().unwrap(); // This is BAD for production runtime. FIX this later.
+			let current_fee_multipler = NextFeeMultiplier::<T>::get().into_inner();
+			let running_avg = current_fee_multipler.saturating_div(now).saturating_add(
+				Self::avg_next_fee_multiplier().saturating_mul((now - 1).saturating_div(now)),
+			);
+			AvgNextFeeMultiplier::<T>::put(running_avg);
+		}
 	}
 
-	// perform bookkeeping
-	// fn on_finalize(now: T::BlockNumber) {
-	// 	let current_fee_multipler = NextFeeMultiplier::<T>::get().into_inner();
-	// 	let running_avg: u128 = unsafe {
-	// 		current_fee_multipler.saturating_div(now as u128).saturating_add(
-	// 			Self::avg_next_fee_multiplier()
-	// 				.saturating_mul((now as u128 - 1u128).saturating_div(now as u128)),
-	// 		)
-	// 	};
-	// 	AvgNextFeeMultiplier::<T>::put(running_avg);
-	// }
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(1000_000)]
@@ -361,7 +346,7 @@ pub mod pallet {
 				_phantom: PhantomData::<T::AccountId>::default(),
 			});
 
-			// ScheduledCallQueue::<T>::append(when, s);
+			ScheduledCallQueue::<T>::append(when, s);
 			Ok(())
 		}
 		#[pallet::weight(1000_000)]
