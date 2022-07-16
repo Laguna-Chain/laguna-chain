@@ -303,14 +303,14 @@ pub mod pallet {
 		}
 
 		// perform bookkeeping
-		fn on_finalize(now: T::BlockNumber) {
-			let now = now.to_string().parse::<u128>().unwrap(); // This is BAD for production runtime. FIX this later.
-			let current_fee_multipler = NextFeeMultiplier::<T>::get().into_inner();
-			let running_avg = current_fee_multipler.saturating_div(now).saturating_add(
-				Self::avg_next_fee_multiplier().saturating_mul((now - 1).saturating_div(now)),
-			);
-			AvgNextFeeMultiplier::<T>::put(running_avg);
-		}
+		// fn on_finalize(now: T::BlockNumber) {
+		// 	let now = now.to_string().parse::<u128>().unwrap(); // This is BAD for production runtime. FIX this later.
+		// 	let current_fee_multipler = NextFeeMultiplier::<T>::get().into_inner();
+		// 	let running_avg = current_fee_multipler.saturating_div(now).saturating_add(
+		// 		Self::avg_next_fee_multiplier().saturating_mul((now - 1).saturating_div(now)),
+		// 	);
+		// 	AvgNextFeeMultiplier::<T>::put(running_avg);
+		// }
 	}
 
 	#[pallet::call]
@@ -346,7 +346,7 @@ pub mod pallet {
 				_phantom: PhantomData::<T::AccountId>::default(),
 			};
 
-			ScheduledCallQueue::<T>::append(when, s);
+			// ScheduledCallQueue::<T>::append(when, s);
 			Ok(())
 		}
 		#[pallet::weight(1000_000)]
