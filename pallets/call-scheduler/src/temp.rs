@@ -9,7 +9,7 @@
 // #[cfg(test)]
 // mod tests;
 
-use codec::{Codec, Decode, Encode};
+use codec::{Codec, Decode, Encode, EncodeLike};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult, Dispatchable, Parameter, PostDispatchInfo},
 	pallet_prelude::*,
@@ -19,12 +19,12 @@ use frame_support::{
 	},
 	traits::{
 		schedule::{self, DispatchTime, LookupError, MaybeHashed},
-		EnsureOrigin, Get, IsType, OriginTrait, StorageVersion,
+		EnsureOrigin, Get, IsType, OriginTrait, PalletInfoAccess, PrivilegeCmp, StorageVersion,
 	},
 	weights::{GetDispatchInfo, Weight},
 };
 use frame_system::{self, ensure_signed, pallet_prelude::*};
-use orml_traits::{arithmetic::CheckedAdd, MultiCurrency};
+use orml_traits::MultiCurrency;
 pub use pallet::*;
 use primitives::CurrencyId;
 use scale_info::TypeInfo;
@@ -36,10 +36,6 @@ pub type PeriodicIndex = u32;
 pub type TaskAddress<BlockNumber> = (BlockNumber, u32);
 
 pub type CallOrHashOf<T> = MaybeHashed<<T as Config>::Call, <T as frame_system::Config>::Hash>;
-
-pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountIdOf<T>>>::Balance;
-
-pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 /// Information regarding an item to be executed in the future.
 #[cfg_attr(any(feature = "std", test), derive(PartialEq, Eq))]
@@ -56,7 +52,6 @@ pub struct Scheduled<Call, BlockNumber, PalletsOrigin, AccountId> {
 	/// The origin to dispatch the call.
 	origin: PalletsOrigin,
 	retry_count: u32,
-	error_count: u32,
 	_phantom: PhantomData<AccountId>,
 }
 
@@ -103,8 +98,7 @@ pub mod pallet {
 			+ Dispatchable<Origin = <Self as Config>::Origin, PostInfo = PostDispatchInfo>
 			+ GetDispatchInfo
 			+ From<frame_system::Call<Self>>;
-		/// Multicurrency
-		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
+
 		/// The maximum weight that may be scheduled per block for any dispatchables of less
 		/// priority than `schedule::HARD_DEADLINE`.
 		#[pallet::constant]
@@ -113,18 +107,6 @@ pub mod pallet {
 		/// Required origin to schedule or cancel calls.
 		type ScheduleOrigin: EnsureOrigin<<Self as frame_system::Config>::Origin>;
 
-		#[pallet::constant]
-		type NativeAssetId: Get<CurrencyId>;
-
-		// The account that pays for the scheduled calls, this balance can be topped up from the
-		// locked funds from ScheduleReserve
-		#[pallet::constant]
-		type SchedulePrepayAccountId: Get<Self::AccountId>;
-
-		// The Account where users lock funds for prepaying their scheduled calls
-		#[pallet::constant]
-		type ScheduleLockedFundAccountId: Get<Self::AccountId>;
-
 		/// The maximum number of scheduled calls in the queue for a single block.
 		/// Not strictly enforced, but used for weight estimation.
 		#[pallet::constant]
@@ -132,9 +114,6 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type MaxScheduledCallRetries: Get<u32>;
-
-		#[pallet::constant]
-		type MaxScheduledCallErrors: Get<u32>;
 
 		// Weight information for extrinsics in this pallet.
 		// type WeightInfo: WeightInfo;
@@ -152,21 +131,9 @@ pub mod pallet {
 
 	/// Tracks who can redeem their scheduled call prepaid fee.
 	#[pallet::storage]
-	#[pallet::getter(fn check_redeem_scheduled_call_fee)]
+	#[pallet::getter(fn redeem_scheduled_call_fee)]
 	pub(crate) type RedeemScheduledCallFee<T: Config> =
 		StorageMap<_, Twox64Concat, T::AccountId, bool, OptionQuery>;
-
-	// Tracks the funds locked in by users to prepay/top-up their scheduled calls
-	#[pallet::storage]
-	#[pallet::getter(fn scheduled_locked_funds_balances)]
-	pub type ScheduleLockedFundBalances<T: Config> =
-		StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>, ValueQuery>;
-
-	// Keeps track of the user balance for the scheduled calls
-	#[pallet::storage]
-	#[pallet::getter(fn schedule_prepay_balances)]
-	pub type SchedulePrepayBalances<T: Config> =
-		StorageMap<_, Twox64Concat, T::AccountId, BalanceOf<T>, ValueQuery>;
 
 	/// Events type.
 	#[pallet::event]
@@ -177,9 +144,17 @@ pub mod pallet {
 		/// Canceled some task.
 		Canceled { when: T::BlockNumber, index: u32 },
 		/// Dispatched some task.
-		Dispatched { task: TaskAddress<T::BlockNumber>, id: Vec<u8>, result: DispatchResult },
+		Dispatched {
+			task: TaskAddress<T::BlockNumber>,
+			id: Option<Vec<u8>>,
+			result: DispatchResult,
+		},
 		/// The call for the provided hash was not found so the task has been aborted.
-		CallLookupFailed { task: TaskAddress<T::BlockNumber>, id: Vec<u8>, error: LookupError },
+		CallLookupFailed {
+			task: TaskAddress<T::BlockNumber>,
+			id: Option<Vec<u8>>,
+			error: LookupError,
+		},
 	}
 
 	#[pallet::error]
@@ -193,7 +168,7 @@ pub mod pallet {
 		/// Reschedule failed because it does not change scheduled time.
 		RescheduleNoChange,
 		/// Scheduled call is still active, so cannot redeem the fee.
-		ScheduledCallStillActiveOrNone,
+		ScheduledCallStillActive,
 	}
 
 	#[pallet::hooks]
@@ -223,13 +198,14 @@ pub mod pallet {
 			let mut total_weight: Weight = 0;
 			for (order, (index, mut s)) in queued.into_iter().enumerate() {
 				// Remove the call from the lookup table
-				Lookup::<T>::remove(s.id.clone());
+				Lookup::<T>::remove(s.id);
+				let periodic = s.maybe_periodic.is_some();
 				let call_weight = s.call.get_dispatch_info().weight;
 				// let mut item_weight = T::WeightInfo::item(periodic, named, Some(resolved));
 				let origin =
 					<<T as Config>::Origin as From<T::PalletsOrigin>>::from(s.origin.clone())
 						.into();
-				if ensure_signed(origin.clone()).is_ok() {
+				if ensure_signed(origin).is_ok() {
 					// Weights of Signed dispatches expect their signing account to be whitelisted.
 					total_weight.saturating_accrue(T::DbWeight::get().reads_writes(1, 1));
 				}
@@ -247,58 +223,44 @@ pub mod pallet {
 						// the refund. Get the current prepay balance of the origin
 						let origin_account = ensure_signed(origin.clone()).unwrap();
 						RedeemScheduledCallFee::<T>::insert(&origin_account, true);
-						continue
 					} else {
 						s.retry_count += 1;
-						let id = s.id.clone();
-						ScheduledCallQueue::<T>::mutate(next, |queue| queue.push(Some(s)));
+						ScheduledCallQueue::<T>::mutate(next.clone(), |queue| queue.push(Some(s)));
 						let index = ScheduledCallQueue::<T>::decode_len(next).unwrap_or(0);
-						Lookup::<T>::insert(id, (next, index as u32));
+						Lookup::<T>::insert(s.id, (next, index as u32));
 						continue
 					}
 				}
 
 				let dispatch_origin = s.origin.clone().into();
-				let (maybe_actual_call_weight, dispatch_result) =
-					match s.call.clone().dispatch(dispatch_origin) {
-						Ok(post_info) => (post_info.actual_weight, Ok(())),
-						Err(error_and_info) => {
-							s.error_count += 1;
-							(error_and_info.post_info.actual_weight, Err(error_and_info.error))
-						},
-					};
-
+				let (maybe_actual_call_weight, result) = match s.call.dispatch(dispatch_origin) {
+					Ok(post_info) => (post_info.actual_weight, Ok(())),
+					Err(error_and_info) =>
+						(error_and_info.post_info.actual_weight, Err(error_and_info.error)),
+				};
 				let actual_call_weight = maybe_actual_call_weight.unwrap_or(call_weight);
-				// total_weight.saturating_accrue(item_weight);
+				total_weight.saturating_accrue(item_weight);
 				total_weight.saturating_accrue(actual_call_weight);
 
 				Self::deposit_event(Event::Dispatched {
 					task: (now, index),
 					id: s.id.clone(),
-					result: dispatch_result.clone(),
+					result,
 				});
 
 				if let &Some((period, count)) = &s.maybe_periodic {
-					if let Err(_) = dispatch_result {
-						if s.error_count >= T::MaxScheduledCallErrors::get() {
-							// Refund the remaining (if any) scheduled call prepaid balance back to
-							// the origin.
-							let origin_account = ensure_signed(origin.clone()).unwrap();
-							RedeemScheduledCallFee::<T>::insert(&origin_account, true);
-						}
+					if count > 1 {
+						s.maybe_periodic = Some((period, count - 1));
 					} else {
-						// Reschedule the call if there was no threshold number of errors
-						if count > 1 {
-							s.maybe_periodic = Some((period, count - 1));
-						} else {
-							s.maybe_periodic = None;
-						}
-						let wake = now + period;
-						// If scheduled is named, place its information in `Lookup`
-						let wake_index = ScheduledCallQueue::<T>::decode_len(wake).unwrap_or(0);
-						Lookup::<T>::insert(s.id.clone(), (wake, wake_index as u32));
-						ScheduledCallQueue::<T>::mutate(wake, |queue| queue.push(Some(s)));
+						s.maybe_periodic = None;
 					}
+					let wake = now + period;
+					// If scheduled is named, place its information in `Lookup`
+					if let Some(ref id) = s.maybe_id {
+						let wake_index = Agenda::<T>::decode_len(wake).unwrap_or(0);
+						Lookup::<T>::insert(id, (wake, wake_index as u32));
+					}
+					Agenda::<T>::append(wake, Some(s));
 				}
 			}
 			total_weight
@@ -309,65 +271,32 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		/// Anonymously schedule a task.
 		#[pallet::weight(1000_000)]
-		pub fn schedule_call(
+		pub fn schedule(
 			origin: OriginFor<T>,
 			when: T::BlockNumber,
-			call: Box<<T as pallet::Config>::Call>,
-			id: Vec<u8>,
 			maybe_periodic: Option<schedule::Period<T::BlockNumber>>,
 			priority: schedule::Priority,
+			call: Box<CallOrHashOf<T>>,
 		) -> DispatchResult {
 			T::ScheduleOrigin::ensure_origin(origin.clone())?;
-			let origin = <T as Config>::Origin::from(origin).caller().clone();
-			// Dereference the call
-			let call = *call;
-			let when = Self::resolve_time(DispatchTime::At(when))?;
-
-			// sanitize maybe_periodic
-			let maybe_periodic = maybe_periodic
-				.filter(|p| p.1 > 1 && !p.0.is_zero())
-				// Remove one from the number of repetitions since we will schedule one now.
-				.map(|(p, c)| (p, c - 1));
-
-			let s = Scheduled {
-				id: id.clone(),
-				priority,
-				call,
-				maybe_periodic,
-				origin,
-				retry_count: 0u32,
-				error_count: 0u32,
-				_phantom: PhantomData::<T::AccountId>::default(),
-			};
-
-			ScheduledCallQueue::<T>::mutate(when, |queue| queue.push(Some(s)));
-			let index = ScheduledCallQueue::<T>::decode_len(when).unwrap_or(1) as u32 - 1;
-			let address = (when, index);
-			Lookup::<T>::insert(&id, &address);
-			Self::deposit_event(Event::Scheduled { when, index });
-
+			let origin = <T as Config>::Origin::from(origin);
 			Ok(())
 		}
 
+		/// Cancel an anonymously scheduled task.
 		#[pallet::weight(1000_000)]
-		pub fn schedule_call_exec(
-			origin: OriginFor<T>,
-			call: Box<<T as pallet::Config>::Call>,
-		) -> DispatchResult {
+		pub fn cancel(origin: OriginFor<T>, when: T::BlockNumber, index: u32) -> DispatchResult {
 			T::ScheduleOrigin::ensure_origin(origin.clone())?;
-			let origin: T::PalletsOrigin = <T as Config>::Origin::from(origin).caller().clone();
-			// let dispatch_origin = origin.clone().into();
-			match call.dispatch(origin.into()) {
-				Ok(_) => Ok(()),
-				Err(_) => Err(DispatchError::Other("Scheduled call dispatch error")),
-			}
+			let origin = <T as Config>::Origin::from(origin);
+			Self::do_cancel(Some(origin.caller().clone()), (when, index))?;
+			Ok(())
 		}
 
 		#[pallet::weight(1000_000)]
 		pub fn redeem_schedule_fee(origin: OriginFor<T>) -> DispatchResult {
 			let from = ensure_signed(origin)?;
-			if let None | Some(false) = Self::check_redeem_scheduled_call_fee(from.clone()) {
-				return Err(Error::<T>::ScheduledCallStillActiveOrNone.into())
+			if let None | Some(false) = Self::redeem_schedule_call_fee(from.clone()) {
+				return Err(Error::<T>::ScheduledCallStillActive.into())
 			}
 			// Get the total redeemable amount
 			let redeem_balance = Self::schedule_prepay_balances(from.clone());
@@ -387,53 +316,41 @@ pub mod pallet {
 					.checked_add(&redeem_balance)
 					.expect("overflow when updating locked fund balance")
 			});
-			// After redeeming the balance, "toggle the redemption switch"
-			RedeemScheduledCallFee::<T>::remove(from);
 			Ok(())
 		}
 
 		/// Cancel a named scheduled task.
 		#[pallet::weight(1000_000)]
-		pub fn cancel_schedule_call(origin: OriginFor<T>, id: Vec<u8>) -> DispatchResult {
+		pub fn cancel_named(origin: OriginFor<T>, id: Vec<u8>) -> DispatchResult {
 			T::ScheduleOrigin::ensure_origin(origin.clone())?;
-			let from = ensure_signed(origin.clone())?;
-			let origin = <T as Config>::Origin::from(origin).caller().clone();
-			Lookup::<T>::try_mutate_exists(id, |lookup| -> DispatchResult {
-				if let Some((when, index)) = lookup.take() {
-					let i = index as usize;
-					ScheduledCallQueue::<T>::try_mutate(when, |queue| -> DispatchResult {
-						if let Some(s) = queue.get_mut(i) {
-							if s.as_ref().unwrap().origin != origin {
-								return Err(BadOrigin.into())
-							}
-							*s = None;
-						}
-						Ok(())
-					})?;
-					Self::deposit_event(Event::Canceled { when, index });
-					// Mark the cancelled call's origin as redeemable
-					RedeemScheduledCallFee::<T>::insert(&from, true);
-					Ok(())
-				} else {
-					return Err(Error::<T>::NotFound.into())
-				}
-			})
+			let origin = <T as Config>::Origin::from(origin);
+			Self::do_cancel_named(Some(origin.caller().clone()), id)?;
+			Ok(())
 		}
-	}
-}
 
-// Some internal functions
-impl<T: Config> Pallet<T> {
-	fn resolve_time(when: DispatchTime<T::BlockNumber>) -> Result<T::BlockNumber, DispatchError> {
-		let now = frame_system::Pallet::<T>::block_number();
-
-		let when = match when {
-			DispatchTime::At(x) => x,
-			DispatchTime::After(x) => now.saturating_add(x).saturating_add(One::one()),
-		};
-		if when <= now {
-			return Err(Error::<T>::TargetBlockNumberInPast.into())
+		/// Anonymously schedule a task after a delay.
+		///
+		/// # <weight>
+		/// Same as [`schedule`].
+		/// # </weight>
+		#[pallet::weight(1000_000)]
+		pub fn schedule_after(
+			origin: OriginFor<T>,
+			after: T::BlockNumber,
+			maybe_periodic: Option<schedule::Period<T::BlockNumber>>,
+			priority: schedule::Priority,
+			call: Box<CallOrHashOf<T>>,
+		) -> DispatchResult {
+			T::ScheduleOrigin::ensure_origin(origin.clone())?;
+			let origin = <T as Config>::Origin::from(origin);
+			Self::do_schedule(
+				DispatchTime::After(after),
+				maybe_periodic,
+				priority,
+				origin.caller().clone(),
+				*call,
+			)?;
+			Ok(())
 		}
-		Ok(when)
 	}
 }

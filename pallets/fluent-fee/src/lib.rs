@@ -5,6 +5,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{pallet_prelude::*, traits::WithdrawReasons};
+use frame_system::pallet_prelude::*;
 
 use orml_traits::{arithmetic::Zero, MultiCurrency};
 use primitives::{CurrencyId, TokenId};
@@ -50,6 +51,20 @@ pub mod pallet {
 	pub enum Error<T> {
 		Placeholder,
 	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn account_preferred_fee_asset)]
+	pub type PreferredFeeAsset<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, CurrencyId, OptionQuery>;
+	
+	#[pallet::call]
+	impl<T: Config> Pallet<T> {
+		#[pallet::weight(1000_000)]
+		pub fn set_preferred_fee_asset(origin: OriginFor<T>, asset: CurrencyId) -> DispatchResult {
+			let from = ensure_signed(origin)?;
+			PreferredFeeAsset::<T>::insert(&from, asset);
+			Ok(())
+		}
+	}
 }
 
 impl<T: Config> Pallet<T> {
@@ -84,7 +99,7 @@ where
 		}
 
 		let preferred_fee_asset =
-			Self::account_fee_source_priority(who).unwrap_or_else(|| T::DefaultFeeAsset::get());
+			Self::account_preferred_fee_asset(who).unwrap_or_else(|| T::DefaultFeeAsset::get());
 
 		// check if preferenced fee source is both listed and accepted
 		T::FeeSource::listed(&preferred_fee_asset)
