@@ -2,14 +2,14 @@ use super::*;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::{ConstU32, ConstU8, Contains, EnsureOneOf, Everything},
+	sp_runtime::traits::{BlakeTwo256, Convert, IdentityLookup},
+	traits::{ConstU32, Contains, EnsureOneOf, Everything},
 	unsigned::TransactionValidityError,
 	weights::{IdentityFee, WeightToFeePolynomial},
 	PalletId,
 };
 
-use frame_system::{Account, EnsureRoot, EnsureSigned, RawOrigin};
+use frame_system::{EnsureRoot, EnsureSigned, RawOrigin};
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
 use sp_core::{H256, U256};
@@ -247,35 +247,21 @@ impl CallFilter<Runtime> for DummyFeeDispatch<Tokens> {
 			Call::Scheduler(pallet::Call::<Runtime>::schedule_call {
 				when,
 				call,
+				id,
 				maybe_periodic,
 				priority,
 			}) => {
 				let info = call.get_dispatch_info();
 				// Base Fee Calculation: find capped base extrinsic weight , then compute
 				// weight_to_fee.
-				let base_weight: Weight = (<Runtime as frame_system::Config>::BlockWeights::get()
-					.get(info.class)
-					.base_extrinsic)
-					.min(<Runtime as frame_system::Config>::BlockWeights::get().max_block);
-				let base_fee = <Runtime as pallet_transaction_payment::Config>::WeightToFee::calc(
-					&base_weight,
-				);
-				// Compute the len fee
-				let len_fee = <Runtime as pallet_transaction_payment::Config>::LengthToFee::calc(
-					&(call.encoded_size() as u32 as Weight),
-				);
-				// Get the average next multiplier fee
-				let avg_next_multiplier_fee = Scheduler::avg_next_fee_multiplier();
-				// Compute the weight fee
-				let weight_fee = <Runtime as pallet_transaction_payment::Config>::WeightToFee::calc(
-					&info
-						.weight
-						.min(<Runtime as frame_system::Config>::BlockWeights::get().max_block),
-				);
+				let fee = TransactionPayment::compute_fee(call.encoded_size() as u32, &info, 0);
 				// Get the second element from the maybe_periodic tuple
-				let num_times_to_execute = maybe_periodic.unwrap().1 as u128;
-				let total_fee = base_fee + len_fee + (avg_next_multiplier_fee * weight_fee);
-				return total_fee * 2u128
+				let num_times_to_execute = maybe_periodic.unwrap_or((1, 1)).1 as u128;
+				// charge twice the estimated fee to ensure that calls don't fail during volatile
+				// times
+				let total_fee = fee * num_times_to_execute * 2u128;
+				dbg!("Inside estimate_fee {}", total_fee.clone());
+				return total_fee
 			},
 			_ => 0,
 		}
@@ -302,6 +288,7 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 				let user_locked_fund_balance = Scheduler::scheduled_locked_funds_balances(account);
 				// Return error if the user has insufficient funds
 				if user_locked_fund_balance < fee_estimate {
+					dbg!("Insufficient funds");
 					return Err(traits::fee::InvalidFeeDispatch::InsufficientBalance)
 				}
 				// Transfer `fee_estimate` amount of Laguna tokens from the extrinsic origin's
@@ -315,23 +302,28 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
 
 				let updated_user_locked_fund_balance = user_locked_fund_balance - fee_estimate;
+				dbg!("Updating locked funds balance {}", updated_user_locked_fund_balance.clone());
+				dbg!(balance.clone());
+				dbg!(id.clone());
 				// Update the user's locked funds balances after precharging for the future
 				// scheduled call
-				pallet::ScheduleLockedFundBalances::<Runtime>::insert(
-					account,
-					updated_user_locked_fund_balance,
-				);
+				pallet::ScheduleLockedFundBalances::<Runtime>::mutate(account, |balance| {
+					*balance = updated_user_locked_fund_balance
+				});
 				// Update the user's scheduled call prepay balance
 				// This information is needed to check if the has enough balance for the scheduled
 				// call and for repayment of the remaining balance after executing all scheduled
 				// calls
 				let user_prepay_balance = Scheduler::schedule_prepay_balances(account);
 				let updated_prepay_balance = user_prepay_balance + fee_estimate;
-				pallet::SchedulePrepayBalances::<Runtime>::insert(account, updated_prepay_balance);
+				pallet::SchedulePrepayBalances::<Runtime>::mutate(account, |balance| {
+					*balance = updated_prepay_balance
+				});
 
 				// Also charge the tx fees for the transaction
 				Tokens::withdraw(*id, account, *balance)
 					.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
+				dbg!("Tx fee withdraw for scheduled call");
 			},
 			// Executing the actual scheduled calls
 			CallType::ScheduleCallExec => {
@@ -522,7 +514,9 @@ impl Config for Runtime {
 
 	type MaxScheduledPerBlock = ConstU32<10>;
 
-	type MaxScheduledCallRetries = ConstU8<10>;
+	type MaxScheduledCallRetries = ConstU32<10>;
+
+	type MaxScheduledCallErrors = ConstU32<10>;
 
 	type MaximumWeight = MaximumSchedulerWeight;
 }

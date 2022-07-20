@@ -1,14 +1,23 @@
 //! Unit test for call-scheduler
 use super::*;
-use crate::mock::{Call, Event, *};
-use core::str::FromStr;
+use crate::{
+	mock::{Call, Event, *},
+	tests::test_utils::charge_tx_fee,
+};
+
 use traits::currencies::TokenAccess;
 
 use frame_support::{assert_ok, dispatch::DispatchInfo};
 use pallet_transaction_payment::ChargeTransactionPayment;
 use primitives::{AccountId, CurrencyId};
-use sp_core::{Bytes, U256};
-use sp_runtime::{traits::SignedExtension, AccountId32};
+use sp_core::{Bytes, Hasher, U256};
+use sp_runtime::{
+	traits::{BlakeTwo256, Hash, SignedExtension},
+	AccountId32,
+};
+
+mod test_utils;
+use test_utils::*;
 
 #[test]
 fn test_erc20_fee_payment() {
@@ -61,8 +70,6 @@ fn test_erc20_fee_payment() {
 			// actual fee paid in erc20 would be fee * 0.7
 			fee = fee.saturating_mul(70).saturating_div(100);
 
-			eprintln!("########################## fee: {} ########################", fee);
-
 			let post_dispatch_amount = Currencies::free_balance(ALICE, CURRENCY_ID.clone());
 
 			assert_eq!(pre_dispatch_amount, fee + post_dispatch_amount);
@@ -86,51 +93,110 @@ fn test_erc20_fee_payment() {
 		})
 }
 
-fn create_token<T>(owner: AccountId, tkn_name: &str, tkn_symbol: &str, init_amount: T) -> AccountId
-where
-	U256: From<T>,
-{
-	let blob = std::fs::read(
-		"../../runtime/integration-tests/contracts-data/solidity/token/dist/DemoToken.wasm",
-	)
-	.expect("unable to read contract");
+#[test]
+fn test_schedule_call_prepayment_works() {
+	ExtBuilder::default()
+		.balances(vec![
+			(ALICE, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+			(BOB, NATIVE_CURRENCY_ID, 10000000000000000000000000000000000),
+		])
+		.build()
+		.execute_with(|| {
+			// prepare a call
+			let schedule_call = Call::Tokens(orml_tokens::Call::transfer {
+				dest: BOB,
+				currency_id: NATIVE_CURRENCY_ID,
+				amount: 100000,
+			});
 
-	let mut sel_constuctor = Bytes::from_str("0x835a15cb")
-		.map(|v| v.to_vec())
-		.expect("unable to parse selector");
-
-	sel_constuctor.append(&mut tkn_name.encode());
-	sel_constuctor.append(&mut tkn_symbol.encode());
-	sel_constuctor.append(&mut U256::from(init_amount).encode());
-
-	assert_ok!(Contracts::instantiate_with_code(
-		Origin::signed(owner),
-		0,
-		MaxGas::get(),
-		None, /* if not specified, it's allowed to charge the max amount of free balance of the
-		       * creator */
-		blob,
-		sel_constuctor,
-		vec![]
-	));
-
-	let evts = System::events();
-	// dbg!(evts.clone());
-	let deployed = evts
-		.iter()
-		.rev()
-		.find_map(|rec| {
-			if let Event::Contracts(pallet_contracts::Event::Instantiated {
-				deployer: _,
-				contract,
-			}) = &rec.event
-			{
-				Some(contract)
-			} else {
-				None
-			}
+			let id = BlakeTwo256::hash_of(&schedule_call).as_fixed_bytes().to_vec();
+			let call = Call::Scheduler(pallet::Call::schedule_call {
+				when: 5,
+				call: Box::new(schedule_call),
+				id,
+				maybe_periodic: None,
+				priority: 1,
+			});
+			let len = call.encoded_size();
+			let info = call.get_dispatch_info();
+			let init_locked_fund = 1000000000000000000;
+			// Fund the schedule call balance for the origin (ALICE)
+			assert_ok!(Scheduler::fund_scheduled_call(Origin::signed(ALICE), init_locked_fund));
+			// compute the fee charged for scheduling a call. NOTE: this fee does not include the
+			// schedule_call initial deposit -- this amount is calculated and charged inside the
+			// FeeDispatch::withdraw_fee()'s logic
+			let fee = TransactionPayment::compute_fee(len as u32, &info, 0);
+			let pre_dispatch_balance = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID.clone());
+			// pre_dispatch will trigger the SignedExtension
+			// via `TransactionPayment --> OnchargeTransaction --> FluentFee -> FeeDispatch`
+			// we can test fee chargin logic by calling validate once
+			charge_tx_fee(ALICE.clone(), &call, &info, len.clone());
+			// Dispatch the call
+			assert_ok!(call.dispatch(Origin::signed(ALICE)));
+			// Check if the schedule_call initial deposit has been charged
+			let update_locked_funds = Scheduler::scheduled_locked_funds_balances(ALICE);
+			assert!(update_locked_funds < init_locked_fund);
+			let post_dispatch_balance = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID.clone());
+			assert_eq!(pre_dispatch_balance, post_dispatch_balance + fee);
 		})
-		.expect("unable to find deployed contract");
-
-	deployed.clone()
 }
+
+#[test]
+fn test_schedule_call_single_time_works() {
+	ExtBuilder::default()
+		.balances(vec![
+			(ALICE, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+			(BOB, NATIVE_CURRENCY_ID, 10000000000000000000000000000000000),
+		])
+		.build()
+		.execute_with(|| {
+			// prepare a call
+			let schedule_call = Call::Tokens(orml_tokens::Call::transfer {
+				dest: BOB,
+				currency_id: NATIVE_CURRENCY_ID,
+				amount: 100000,
+			});
+
+			let id = BlakeTwo256::hash_of(&schedule_call).as_fixed_bytes().to_vec();
+			let call = Call::Scheduler(pallet::Call::schedule_call {
+				when: 5,
+				call: Box::new(schedule_call),
+				id,
+				maybe_periodic: None,
+				priority: 1,
+			});
+			let len = call.encoded_size();
+			let info = call.get_dispatch_info();
+			let init_locked_fund = 1000000000000000000;
+			// Fund the schedule call balance for the origin (ALICE)
+			assert_ok!(Scheduler::fund_scheduled_call(Origin::signed(ALICE), init_locked_fund));
+			// compute the fee charged for scheduling a call. NOTE: this fee does not include the
+			// schedule_call initial deposit -- this amount is calculated and charged inside the
+			// FeeDispatch::withdraw_fee()'s logic
+			let fee = TransactionPayment::compute_fee(len as u32, &info, 0);
+			let pre_dispatch_balance = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID.clone());
+			// pre_dispatch will trigger the SignedExtension
+			// via `TransactionPayment --> OnchargeTransaction --> FluentFee -> FeeDispatch`
+			// we can test fee chargin logic by calling validate once
+			charge_tx_fee(ALICE.clone(), &call, &info, len.clone());
+			// Dispatch the call
+			assert_ok!(call.dispatch(Origin::signed(ALICE)));
+			// Check if the schedule_call initial deposit has been charged
+			let update_locked_funds = Scheduler::scheduled_locked_funds_balances(ALICE);
+			assert!(update_locked_funds < init_locked_fund);
+			let post_dispatch_balance = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID.clone());
+			assert_eq!(pre_dispatch_balance, post_dispatch_balance + fee);
+		})
+}
+
+#[test]
+fn test_schedule_call_periodic_works() {}
+
+#[test]
+fn test_schedule_call_multiple_postponed_retries_refunded() {}
+
+#[test]
+fn test_schedule_call_multiple_errors() {}
+
+#[test]
+fn test_cancel_schedule_call() {}

@@ -4,10 +4,10 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 
-// #[cfg(test)]
-// mod mock;
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
 
 use codec::{Codec, Decode, Encode};
 use frame_support::{
@@ -34,8 +34,6 @@ use sp_std::{marker::PhantomData, prelude::*};
 pub type PeriodicIndex = u32;
 /// The location of a scheduled task that can be used to remove it.
 pub type TaskAddress<BlockNumber> = (BlockNumber, u32);
-
-pub type CallOrHashOf<T> = MaybeHashed<<T as Config>::Call, <T as frame_system::Config>::Hash>;
 
 pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountIdOf<T>>>::Balance;
 
@@ -69,6 +67,8 @@ pub type ScheduledType<T> = Scheduled<
 
 #[frame_support::pallet]
 pub mod pallet {
+	use primitives::Amount;
+
 	use super::*;
 
 	/// The current storage version.
@@ -418,6 +418,25 @@ pub mod pallet {
 					return Err(Error::<T>::NotFound.into())
 				}
 			})
+		}
+
+		#[pallet::weight(1000_000)]
+		pub fn fund_scheduled_call(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
+			let from = ensure_signed(origin)?;
+			T::MultiCurrency::transfer(
+				T::NativeAssetId::get(),
+				&from,
+				&T::ScheduleLockedFundAccountId::get(),
+				amount,
+			)?;
+			// Update the balance in the storage
+			ScheduleLockedFundBalances::<T>::mutate(from.clone(), |balance| {
+				*balance = balance
+					.checked_add(&amount)
+					.expect("overflow when updating locked fund balance")
+			});
+
+			Ok(())
 		}
 	}
 }
