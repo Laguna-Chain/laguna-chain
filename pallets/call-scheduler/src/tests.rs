@@ -283,10 +283,164 @@ fn test_schedule_call_periodic_works() {
 }
 
 #[test]
-fn test_schedule_call_multiple_postponed_retries_refunded() {}
+fn test_schedule_call_multiple_postponed_retries_refunded() {
+	// This test won't work as the MaxScheduledCallsPerBlock doesn't enforce the condition and just
+	// warns
+	ExtBuilder::default()
+		.balances(vec![
+			(ALICE, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+			(BOB, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+			(CHARLIE, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+			(EVA, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+		])
+		.build()
+		.execute_with(|| {
+			// Amount to transfer during scheduled calls
+			let schedule_transfer_amount = 100000;
+			// prepare a call
+			let schedule_call = Call::Tokens(orml_tokens::Call::transfer {
+				dest: EVA,
+				currency_id: NATIVE_CURRENCY_ID,
+				amount: schedule_transfer_amount.clone(),
+			});
+
+			let id = BlakeTwo256::hash_of(&schedule_call).as_fixed_bytes().to_vec();
+			let init_locked_fund = 1000000000000000000;
+			// Fund the schedule call balance for the origin (ALICE)
+			assert_ok!(Scheduler::fund_scheduled_call(Origin::signed(ALICE), init_locked_fund));
+			// Place the scheduled call for ALICE
+			assert_ok!(Scheduler::schedule_call(
+				Origin::signed(ALICE),
+				5,
+				Box::new(schedule_call.clone()),
+				id.clone(),
+				Some((5, 3)), /* Schedule the call every 5 blocks for 3 (2 repeates, 1
+				               * first-time scheduled) times */
+				1
+			));
+
+			// Fund the schedule call balance for the origin (BOB)
+			assert_ok!(Scheduler::fund_scheduled_call(Origin::signed(BOB), init_locked_fund));
+			// Place the scheduled call for ALICE
+			assert_ok!(Scheduler::schedule_call(
+				Origin::signed(BOB),
+				5,
+				Box::new(schedule_call.clone()),
+				id.clone(),
+				Some((5, 3)), /* Schedule the call every 5 blocks for 3 (2 repeates, 1
+				               * first-time scheduled) times */
+				1
+			));
+
+			// Fund the schedule call balance for the origin (CHARLIE)
+			assert_ok!(Scheduler::fund_scheduled_call(Origin::signed(CHARLIE), init_locked_fund));
+			// Place the scheduled call for CHARLIE
+			assert_ok!(Scheduler::schedule_call(
+				Origin::signed(CHARLIE),
+				5,
+				Box::new(schedule_call),
+				id,
+				Some((5, 3)), /* Schedule the call every 5 blocks for 3 (2 repeates, 1
+				               * first-time scheduled) times */
+				3
+			));
+		})
+}
 
 #[test]
-fn test_schedule_call_multiple_errors() {}
+fn test_schedule_call_multiple_errors() {
+	// Locks insufficient initial deposit such that the scheduled calls fails until crossing the
+	// threshold and getting removed
+	ExtBuilder::default()
+		.balances(vec![
+			(ALICE, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+			(BOB, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+		])
+		.build()
+		.execute_with(|| {
+			// Amount to transfer during scheduled calls
+			let schedule_transfer_amount = 10000000000000000000000000000000000000;
+			// prepare a call
+			let schedule_call = Call::Tokens(orml_tokens::Call::transfer {
+				dest: EVA,
+				currency_id: NATIVE_CURRENCY_ID,
+				amount: schedule_transfer_amount.clone(),
+			});
+
+			let id = BlakeTwo256::hash_of(&schedule_call).as_fixed_bytes().to_vec();
+			let init_locked_fund = 1000;
+			// Fund the schedule call balance for the origin (ALICE)
+			assert_ok!(Scheduler::fund_scheduled_call(Origin::signed(ALICE), init_locked_fund));
+			// Place the scheduled call for ALICE
+			assert_ok!(Scheduler::schedule_call(
+				Origin::signed(ALICE),
+				5,
+				Box::new(schedule_call.clone()),
+				id.clone(),
+				Some((5, 3)), /* Schedule the call every 5 blocks for 3 (2 repeates, 1
+				               * first-time scheduled) times */
+				1
+			));
+
+			// ALICE's native token balance before jumping to block 5 and executing the scheduled
+			// transfer call
+			let alice_balance_before_scheduled_call =
+				Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID.clone());
+			// Jump to #block 5
+			jump_to_block(5);
+			// ALICE's native token balance after executing the scheduled transfer call
+			let alice_balance_after_scheduled_call =
+				Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID.clone());
+			// The balance should be the same as the transfer call fails.
+			assert_eq!(alice_balance_before_scheduled_call, alice_balance_after_scheduled_call);
+
+			// Jump to #block 6 as the failed call is postponed one block forward
+			jump_to_block(6);
+			// Check if the locked funds are redeemable and is equal to the full amount deposited
+			// initially
+			assert_eq!(Scheduler::check_redeem_scheduled_call_fee(ALICE).unwrap(), true);
+			// ALICE redeem her locked balance
+			assert_ok!(Scheduler::redeem_schedule_fee(Origin::signed(ALICE)));
+			assert_eq!(init_locked_fund, Scheduler::scheduled_locked_funds_balances(ALICE));
+		})
+}
+
+#[should_panic]
+#[test]
+fn test_schedule_call_initial_deposit_charge_works() {
+	// Should prevent placing schedule call if the
+	// origin does not have enough locked funds
+	// for the initial deposit
+	// prepare a call
+	ExtBuilder::default()
+		.balances(vec![
+			(ALICE, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+			(BOB, NATIVE_CURRENCY_ID, 1000000000000000000000000000000000),
+		])
+		.build()
+		.execute_with(|| {
+			// Prepare the call
+			let schedule_call = Call::Tokens(orml_tokens::Call::transfer {
+				dest: BOB,
+				currency_id: NATIVE_CURRENCY_ID,
+				amount: 100000,
+			});
+			let init_locked_fund = 1000;
+			// Fund the schedule call balance for the origin (ALICE)
+			assert_ok!(Scheduler::fund_scheduled_call(Origin::signed(ALICE), init_locked_fund));
+			let id = BlakeTwo256::hash_of(&schedule_call).as_fixed_bytes().to_vec();
+			let call = Call::Scheduler(pallet::Call::schedule_call {
+				when: 5,
+				call: Box::new(schedule_call),
+				id,
+				maybe_periodic: None,
+				priority: 1,
+			});
+			let len = call.encoded_size();
+			let info = call.get_dispatch_info();
+			charge_tx_fee(ALICE.clone(), &call, &info, len.clone());
+		})
+}
 
 #[test]
 fn test_cancel_schedule_call() {}

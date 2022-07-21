@@ -516,11 +516,11 @@ impl Config for Runtime {
 
 	type PalletsOrigin = OriginCaller;
 
-	type MaxScheduledPerBlock = ConstU32<10>;
+	type MaxScheduledPerBlock = ConstU32<2>;
 
-	type MaxScheduledCallRetries = ConstU32<10>;
+	type MaxScheduledCallRetries = ConstU32<2>;
 
-	type MaxScheduledCallErrors = ConstU32<10>;
+	type MaxScheduledCallErrors = ConstU32<2>;
 
 	type MaximumWeight = MaximumSchedulerWeight;
 }
@@ -564,6 +564,7 @@ construct_runtime!(
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
+pub const CHARLIE: AccountId = AccountId::new([3u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
 pub const BURN_ACCOUNT: AccountId = AccountId::new([0u8; 32]);
 pub const SCHEDULE_LOCKED_FUND_ACCOUNTID: AccountId = AccountId::new([9u8; 32]);

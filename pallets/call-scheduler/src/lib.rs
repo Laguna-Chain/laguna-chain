@@ -217,7 +217,7 @@ pub mod pallet {
 			}
 
 			queued.sort_by_key(|(_, s)| s.priority);
-			dbg!(queued.len());
+			// dbg!(queued.len());
 			let next = now + One::one();
 
 			let mut total_weight: Weight = 0;
