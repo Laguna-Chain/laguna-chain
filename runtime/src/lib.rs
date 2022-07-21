@@ -365,8 +365,6 @@ impl_runtime_apis! {
 		) -> pallet_contracts_primitives::GetStorageResult {
 			Contracts::get_storage(address, key)
 		}
-
-
 	}
 
 	impl pallet_currencies_runtime_api::CurrenciesApi<Block, AccountId, Balance> for Runtime {
@@ -381,7 +379,6 @@ impl_runtime_apis! {
 		fn total_balance(account: AccountId, asset: CurrencyId) -> Option<Balance> {
 			Some(Currencies::total_balance(account, asset))
 		}
-
 	}
 
 	// TODO: add other needed runtime-api

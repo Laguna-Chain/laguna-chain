@@ -12,7 +12,7 @@ use sp_finality_grandpa::AuthorityId as GrandpaId;
 
 use super::util::{authority_keys_from_seed, get_account_id_from_seed};
 use sc_service::ChainType;
-use sp_core::{sr25519, H160, U256, crypto::AccountId32};
+use sp_core::{crypto::AccountId32, sr25519};
 
 // Spec derived from runtiem GenisisConfig
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
@@ -48,7 +48,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
-					AccountId32::new([0u8;32]),
+					AccountId32::new([0u8; 32]),
 				], // prefund accounts
 			)
 		},

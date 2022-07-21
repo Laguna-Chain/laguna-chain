@@ -4,9 +4,9 @@ use crate::{
 	constants::{LAGUNAS, MILLI_LAGUNAS},
 	impl_frame_system::BlockWeights,
 	impl_pallet_currencies::NativeCurrencyId,
-	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight, Vec,
+	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Vec, Weight,
 };
-use frame_support::{parameter_types, pallet_prelude::Decode};
+use frame_support::{pallet_prelude::Decode, parameter_types};
 use orml_tokens::CurrencyAdapter;
 use pallet_contracts::{AddressGenerator, DefaultAddressGenerator, DefaultContractAccessWeight};
 
@@ -14,8 +14,8 @@ mod chain_extensions;
 use chain_extensions::DemoExtension;
 use pallet_contracts::weights::WeightInfo;
 use primitives::Balance;
-use sp_runtime::{Perbill, AccountId32};
 use sp_core::crypto::UncheckedFrom;
+use sp_runtime::{AccountId32, Perbill};
 
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 
@@ -51,27 +51,30 @@ parameter_types! {
 // is the generated address otherwise default way of address generation is used
 pub struct CustomAddressGenerator;
 
-impl<T> AddressGenerator<T> for CustomAddressGenerator 
+impl<T> AddressGenerator<T> for CustomAddressGenerator
 where
 	T: frame_system::Config,
-	T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>, 
+	T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>,
 {
 	fn generate_address(
-		deploying_address: &T::AccountId, 
-		code_hash: &T::Hash, 
-		salt: &[u8]
+		deploying_address: &T::AccountId,
+		code_hash: &T::Hash,
+		salt: &[u8],
 	) -> T::AccountId {
-
-		let zero_address = AccountId32::new([0u8;32]);
+		let zero_address = AccountId32::new([0u8; 32]);
 		let zero_address = T::AccountId::decode(&mut zero_address.as_ref()).unwrap();
 
 		if deploying_address == &zero_address && salt.len() == 32 {
-			let salt: [u8;32] = salt.try_into().unwrap();
+			let salt: [u8; 32] = salt.try_into().unwrap();
 			let new_address = AccountId32::from(salt);
 			T::AccountId::decode(&mut new_address.as_ref())
 				.expect("Cannot create an AccountId from the given salt")
 		} else {
-			<DefaultAddressGenerator as AddressGenerator<T>>::generate_address(deploying_address, code_hash, salt)
+			<DefaultAddressGenerator as AddressGenerator<T>>::generate_address(
+				deploying_address,
+				code_hash,
+				salt,
+			)
 		}
 	}
 }

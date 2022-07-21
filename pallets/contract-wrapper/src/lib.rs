@@ -1,29 +1,25 @@
+//! ## pallet-contract-wrapper
+//!
+//! This pallet allows system contracts to be deployed at fixed addresses
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
-	use frame_support::{
-		pallet_prelude::*,
-		traits::Currency,
-	};
-	use frame_system::pallet_prelude::*;
-	use sp_runtime::AccountId32;
-	use sp_core::crypto::UncheckedFrom;
-	use sp_std::{vec::Vec, fmt::Debug};
 	use codec::HasCompact;
+	use frame_support::{pallet_prelude::*, traits::Currency};
+	use frame_system::{pallet_prelude::*, RawOrigin};
 	use pallet_contracts::weights::WeightInfo;
-	use pallet_contracts_primitives::{
-		Code,
-		CodeUploadResult,
-		ContractInstantiateResult,
-	};
-	use frame_system::RawOrigin;
+	use sp_core::crypto::UncheckedFrom;
+	use sp_runtime::AccountId32;
+	use sp_std::{fmt::Debug, vec::Vec};
 
 	type CodeHash<T> = <T as frame_system::Config>::Hash;
-	type BalanceOf<T> =
-		<<T as pallet_contracts::Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+	type BalanceOf<T> = <<T as pallet_contracts::Config>::Currency as Currency<
+		<T as frame_system::Config>::AccountId,
+	>>::Balance;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_contracts::Config {}
@@ -33,11 +29,11 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::call]
-	impl<T: Config> Pallet<T> 
+	impl<T: Config> Pallet<T>
 	where
 		T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>,
 		<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + Debug + TypeInfo + Encode,
-	{	
+	{
 		#[pallet::weight(
 			T::WeightInfo::instantiate_with_code(code.len() as u32, salt.len() as u32)
 			.saturating_add(*gas_limit)
@@ -52,7 +48,7 @@ pub mod pallet {
 			salt: Vec<u8>,
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
-			let zero_addr = AccountId32::new([0u8;32]);
+			let zero_addr = AccountId32::new([0u8; 32]);
 			let zero_addr = T::AccountId::decode(&mut zero_addr.as_ref()).unwrap();
 			let zero_addr = RawOrigin::Signed(zero_addr);
 
@@ -80,7 +76,7 @@ pub mod pallet {
 			salt: Vec<u8>,
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
-			let zero_addr = AccountId32::new([0u8;32]);
+			let zero_addr = AccountId32::new([0u8; 32]);
 			let zero_addr = T::AccountId::decode(&mut zero_addr.as_ref()).unwrap();
 			let zero_addr = RawOrigin::Signed(zero_addr);
 
@@ -91,7 +87,7 @@ pub mod pallet {
 				storage_deposit_limit,
 				code_hash,
 				data,
-				salt
+				salt,
 			)
 		}
 
@@ -102,7 +98,7 @@ pub mod pallet {
 			storage_deposit_limit: Option<<BalanceOf<T> as codec::HasCompact>::Type>,
 		) -> DispatchResult {
 			ensure_root(origin)?;
-			let zero_addr = AccountId32::new([0u8;32]);
+			let zero_addr = AccountId32::new([0u8; 32]);
 			let zero_addr = T::AccountId::decode(&mut zero_addr.as_ref()).unwrap();
 			let zero_addr = RawOrigin::Signed(zero_addr);
 
@@ -119,93 +115,53 @@ pub mod pallet {
 			code_hash: CodeHash<T>,
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
-			let zero_addr = AccountId32::new([0u8;32]);
+			let zero_addr = AccountId32::new([0u8; 32]);
 			let zero_addr = T::AccountId::decode(&mut zero_addr.as_ref()).unwrap();
 			let zero_addr = RawOrigin::Signed(zero_addr);
 
-			pallet_contracts::Pallet::<T>::remove_code(
-				zero_addr.into(),
-				code_hash,
-			)
-		}
-	}
-
-	// @dev: Is this needed?
-	impl<T:Config> Pallet<T> 
-	where
-		T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>,
-	{
-		pub fn bare_upload_code(
-			code: Vec<u8>,
-			storage_deposit_limit: Option<BalanceOf<T>>,
-		) -> CodeUploadResult<CodeHash<T>, BalanceOf<T>> {
-			let zero_addr = AccountId32::new([0u8;32]);
-			let zero_addr = T::AccountId::decode(&mut zero_addr.as_ref()).unwrap();
-
-			pallet_contracts::Pallet::<T>::bare_upload_code(
-				zero_addr,
-				code,
-				storage_deposit_limit,
-			)
-		}
-
-		pub fn bare_instantiate(
-			value: BalanceOf<T>,
-			gas_limit: Weight,
-			storage_deposit_limit: Option<BalanceOf<T>>,
-			code: Code<CodeHash<T>>,
-			data: Vec<u8>,
-			salt: Vec<u8>,
-			debug: bool,
-		) -> ContractInstantiateResult<T::AccountId, BalanceOf<T>> {
-			let zero_addr = AccountId32::new([0u8;32]);
-			let zero_addr = T::AccountId::decode(&mut zero_addr.as_ref()).unwrap();
-
-			pallet_contracts::Pallet::<T>::bare_instantiate(
-				zero_addr,
-				value,
-				gas_limit,
-				storage_deposit_limit,
-				code,
-				data,
-				salt,
-				debug
-			)
+			pallet_contracts::Pallet::<T>::remove_code(zero_addr.into(), code_hash)
 		}
 	}
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig {
-		pub addr: Vec<[u8;32]>,
+		pub addr: Vec<[u8; 32]>,
 		pub code: Vec<Vec<u8>>,
+		pub data: Vec<Vec<u8>>,
 		pub gas_limit: Weight,
 	}
 
 	#[cfg(feature = "std")]
 	impl Default for GenesisConfig {
 		fn default() -> Self {
-			Self { 
+			Self {
 				addr: Default::default(),
 				code: Default::default(),
+				data: Default::default(),
 				gas_limit: Default::default(),
 			}
 		}
 	}
 
 	#[pallet::genesis_build]
-	impl<T:Config> GenesisBuild<T> for GenesisConfig 
-	where 
-		T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>, 
+	impl<T: Config> GenesisBuild<T> for GenesisConfig
+	where
+		T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>,
 	{
 		fn build(&self) {
-			assert_eq!(self.addr.len(),self.code.len());
+			assert_eq!(self.addr.len(), self.code.len());
 			let sz = self.addr.len();
 
+			let zero_addr = AccountId32::new([0u8; 32]);
+			let zero_addr = T::AccountId::decode(&mut zero_addr.as_ref()).unwrap();
+
 			for i in 0..sz {
-				Pallet::<T>::bare_upload_code(
+				pallet_contracts::Pallet::<T>::bare_upload_code(
+					zero_addr.clone(),
 					self.code[i].clone(),
 					None,
-				).expect("Code not uploaded");
+				)
+				.expect("Code not uploaded");
 			}
 		}
 	}
