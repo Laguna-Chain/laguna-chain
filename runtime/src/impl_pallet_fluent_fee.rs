@@ -1,6 +1,6 @@
 use crate::{
 	impl_pallet_currencies::NativeCurrencyId, ContractAssetsRegistry, Currencies, Event,
-	FeeEnablement, Runtime,
+	FeeEnablement, FeeMeasurement, Runtime,
 };
 use frame_support::pallet_prelude::InvalidTransaction;
 use orml_traits::MultiCurrency;
@@ -16,7 +16,7 @@ impl pallet_fluent_fee::Config for Runtime {
 
 	type FeeSource = FeeEnablement;
 
-	type FeeMeasure = StaticImpl;
+	type FeeMeasure = FeeMeasurement;
 
 	type FeeDispatch = StaticImpl;
 }

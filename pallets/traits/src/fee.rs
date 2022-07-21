@@ -3,7 +3,10 @@ use frame_support::{
 	unsigned::TransactionValidityError,
 };
 
-#[derive(Debug)]
+use codec::{Decode, Encode};
+use scale_info::TypeInfo;
+
+#[derive(Debug, TypeInfo, Encode, Decode)]
 pub enum InvalidFeeSource {
 	Inactive,
 	Unlisted,
