@@ -256,11 +256,14 @@ impl CallFilter<Runtime> for DummyFeeDispatch<Tokens> {
 				// weight_to_fee.
 				let fee = TransactionPayment::compute_fee(call.encoded_size() as u32, &info, 0);
 				// Get the second element from the maybe_periodic tuple
-				let num_times_to_execute = maybe_periodic.unwrap_or((1, 1)).1 as u128;
+				let num_times_to_execute: u128 = match maybe_periodic {
+					None => 1,
+					Some((_, num)) => *num as u128 + 1,
+				};
 				// charge twice the estimated fee to ensure that calls don't fail during volatile
 				// times
-				let total_fee = fee * num_times_to_execute * 2u128;
-				dbg!("Inside estimate_fee {}", total_fee.clone());
+				let total_fee = fee * num_times_to_execute;
+				// dbg!("Inside estimate_fee {}", total_fee.clone());
 				return total_fee
 			},
 			_ => 0,
@@ -282,13 +285,14 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		match Self::filter_call_type(call) {
 			// Pre-charge the estimated schedule call tx fee
 			CallType::ScheduleCallCharge => {
+				dbg!(BlockWeights::get().max_block);
 				// Get the estimated fee to be paid upfront
 				let fee_estimate = Self::estimate_fee(call);
 				// Get the origin's Laguna token balance
 				let user_locked_fund_balance = Scheduler::scheduled_locked_funds_balances(account);
 				// Return error if the user has insufficient funds
 				if user_locked_fund_balance < fee_estimate {
-					dbg!("Insufficient funds");
+					// dbg!("Insufficient funds");
 					return Err(traits::fee::InvalidFeeDispatch::InsufficientBalance)
 				}
 				// Transfer `fee_estimate` amount of Laguna tokens from the extrinsic origin's
@@ -302,9 +306,9 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
 
 				let updated_user_locked_fund_balance = user_locked_fund_balance - fee_estimate;
-				dbg!("Updating locked funds balance {}", updated_user_locked_fund_balance.clone());
-				dbg!(balance.clone());
-				dbg!(id.clone());
+				// dbg!("Updating locked funds balance {}",
+				// updated_user_locked_fund_balance.clone()); dbg!(balance.clone());
+				// dbg!(id.clone());
 				// Update the user's locked funds balances after precharging for the future
 				// scheduled call
 				pallet::ScheduleLockedFundBalances::<Runtime>::mutate(account, |balance| {
@@ -323,7 +327,7 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 				// Also charge the tx fees for the transaction
 				Tokens::withdraw(*id, account, *balance)
 					.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
-				dbg!("Tx fee withdraw for scheduled call");
+				// dbg!("Tx fee withdraw for scheduled call");
 			},
 			// Executing the actual scheduled calls
 			CallType::ScheduleCallExec => {

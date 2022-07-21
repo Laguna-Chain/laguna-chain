@@ -217,7 +217,7 @@ pub mod pallet {
 			}
 
 			queued.sort_by_key(|(_, s)| s.priority);
-
+			dbg!(queued.len());
 			let next = now + One::one();
 
 			let mut total_weight: Weight = 0;
@@ -267,7 +267,12 @@ pub mod pallet {
 							(error_and_info.post_info.actual_weight, Err(error_and_info.error))
 						},
 					};
-
+				dbg!(
+					// dispatch_result.clone(),
+					// maybe_actual_call_weight.clone(),
+					now.clone(),
+					// s.call.clone()
+				);
 				let actual_call_weight = maybe_actual_call_weight.unwrap_or(call_weight);
 				// total_weight.saturating_accrue(item_weight);
 				total_weight.saturating_accrue(actual_call_weight);
@@ -277,28 +282,37 @@ pub mod pallet {
 					id: s.id.clone(),
 					result: dispatch_result.clone(),
 				});
-
-				if let &Some((period, count)) = &s.maybe_periodic {
-					if let Err(_) = dispatch_result {
-						if s.error_count >= T::MaxScheduledCallErrors::get() {
-							// Refund the remaining (if any) scheduled call prepaid balance back to
-							// the origin.
-							let origin_account = ensure_signed(origin.clone()).unwrap();
-							RedeemScheduledCallFee::<T>::insert(&origin_account, true);
-						}
+				// If the dispatch result returned an error, reschedule it to the next block if the
+				// threshold for removal has not been crossed
+				if let Err(_) = dispatch_result {
+					if s.error_count >= T::MaxScheduledCallErrors::get() {
+						// Refund the remaining (if any) scheduled call prepaid balance back to
+						// the origin.
+						let origin_account = ensure_signed(origin.clone()).unwrap();
+						RedeemScheduledCallFee::<T>::insert(&origin_account, true);
 					} else {
-						// Reschedule the call if there was no threshold number of errors
-						if count > 1 {
-							s.maybe_periodic = Some((period, count - 1));
-						} else {
-							s.maybe_periodic = None;
-						}
-						let wake = now + period;
-						// If scheduled is named, place its information in `Lookup`
+						// Schedule the call for the next block if it failed this time and the
+						// threshold for removal has not been crossed
+						let wake = now + One::one();
 						let wake_index = ScheduledCallQueue::<T>::decode_len(wake).unwrap_or(0);
 						Lookup::<T>::insert(s.id.clone(), (wake, wake_index as u32));
 						ScheduledCallQueue::<T>::mutate(wake, |queue| queue.push(Some(s)));
 					}
+					continue
+				}
+
+				if let &Some((period, count)) = &s.maybe_periodic {
+					// Reschedule the call
+					if count > 1 {
+						s.maybe_periodic = Some((period, count - 1));
+					} else {
+						s.maybe_periodic = None;
+					}
+					let wake = now + period;
+					// If scheduled is named, place its information in `Lookup`
+					let wake_index = ScheduledCallQueue::<T>::decode_len(wake).unwrap_or(0);
+					Lookup::<T>::insert(s.id.clone(), (wake, wake_index as u32));
+					ScheduledCallQueue::<T>::mutate(wake, |queue| queue.push(Some(s)));
 				}
 			}
 			total_weight

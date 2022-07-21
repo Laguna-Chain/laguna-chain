@@ -59,7 +59,13 @@ where
 	deployed.clone()
 }
 
-pub fn move_blocks() {}
+pub fn jump_to_block(num: u32) {
+	while System::block_number() < num {
+		Scheduler::on_finalize(System::block_number());
+		System::set_block_number(System::block_number() + 1);
+		Scheduler::on_initialize(System::block_number());
+	}
+}
 
 pub fn charge_tx_fee(account: AccountId, call: &Call, info: &DispatchInfo, len: usize) {
 	ChargeTransactionPayment::<Runtime>::from(0)
