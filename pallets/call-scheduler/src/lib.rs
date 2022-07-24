@@ -217,7 +217,6 @@ pub mod pallet {
 			}
 
 			queued.sort_by_key(|(_, s)| s.priority);
-			// dbg!(queued.len());
 			let next = now + One::one();
 
 			let mut total_weight: Weight = 0;
@@ -267,12 +266,7 @@ pub mod pallet {
 							(error_and_info.post_info.actual_weight, Err(error_and_info.error))
 						},
 					};
-				dbg!(
-					// dispatch_result.clone(),
-					// maybe_actual_call_weight.clone(),
-					now.clone(),
-					// s.call.clone()
-				);
+				
 				let actual_call_weight = maybe_actual_call_weight.unwrap_or(call_weight);
 				// total_weight.saturating_accrue(item_weight);
 				total_weight.saturating_accrue(actual_call_weight);

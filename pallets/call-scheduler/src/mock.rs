@@ -285,7 +285,7 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		match Self::filter_call_type(call) {
 			// Pre-charge the estimated schedule call tx fee
 			CallType::ScheduleCallCharge => {
-				dbg!(BlockWeights::get().max_block);
+				// dbg!(BlockWeights::get().max_block);
 				// Get the estimated fee to be paid upfront
 				let fee_estimate = Self::estimate_fee(call);
 				// Get the origin's Laguna token balance

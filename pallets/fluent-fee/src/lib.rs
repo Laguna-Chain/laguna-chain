@@ -51,7 +51,7 @@ pub mod pallet {
 	}
 
 	#[pallet::storage]
-	pub(super) type DefdaultFeeSource<T: Config> =
+	pub(super) type DefaultFeeSource<T: Config> =
 		StorageMap<_, Blake2_128Concat, AccountIdOf<T>, CurrencyId>;
 
 	#[pallet::call]
@@ -59,7 +59,7 @@ pub mod pallet {
 		#[pallet::weight(1000)]
 		pub fn set_default(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			DefdaultFeeSource::<T>::insert(who.clone(), asset_id);
+			DefaultFeeSource::<T>::insert(who.clone(), asset_id);
 			Self::deposit_event(Event::AccountPreferenceUpdated((who, Some(asset_id))));
 			Ok(())
 		}
@@ -67,23 +67,9 @@ pub mod pallet {
 		#[pallet::weight(1000)]
 		pub fn unset_default(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
-			DefdaultFeeSource::<T>::remove(who.clone());
+			DefaultFeeSource::<T>::remove(who.clone());
 			Self::deposit_event(Event::AccountPreferenceUpdated((who, None)));
 
-			Ok(())
-		}
-	}
-
-	#[pallet::storage]
-	#[pallet::getter(fn account_preferred_fee_asset)]
-	pub type PreferredFeeAsset<T: Config> = StorageMap<_, Twox64Concat, T::AccountId, CurrencyId, OptionQuery>;
-	
-	#[pallet::call]
-	impl<T: Config> Pallet<T> {
-		#[pallet::weight(1000_000)]
-		pub fn set_preferred_fee_asset(origin: OriginFor<T>, asset: CurrencyId) -> DispatchResult {
-			let from = ensure_signed(origin)?;
-			PreferredFeeAsset::<T>::insert(&from, asset);
 			Ok(())
 		}
 	}
@@ -93,7 +79,7 @@ impl<T: Config> Pallet<T> {
 	pub fn account_fee_source_priority(
 		account: &<T as frame_system::Config>::AccountId,
 	) -> Option<<T::FeeSource as FeeSource>::AssetId> {
-		DefdaultFeeSource::<T>::get(account)
+		DefaultFeeSource::<T>::get(account)
 	}
 }
 
@@ -120,7 +106,7 @@ where
 		}
 
 		let preferred_fee_asset =
-			Self::account_preferred_fee_asset(who).unwrap_or_else(|| T::DefaultFeeAsset::get());
+			Self::account_fee_source_priority(who).unwrap_or_else(|| T::DefaultFeeAsset::get());
 
 		// check if preferenced fee source is both listed and accepted
 		T::FeeSource::listed(&preferred_fee_asset)
