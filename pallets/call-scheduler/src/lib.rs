@@ -266,7 +266,7 @@ pub mod pallet {
 							(error_and_info.post_info.actual_weight, Err(error_and_info.error))
 						},
 					};
-				
+
 				let actual_call_weight = maybe_actual_call_weight.unwrap_or(call_weight);
 				// total_weight.saturating_accrue(item_weight);
 				total_weight.saturating_accrue(actual_call_weight);

@@ -35,10 +35,7 @@ fn test_erc20_fee_payment() {
 
 			assert_ok!(ContractAssets::register_asset(Origin::root(), deployed.clone(), true));
 			// set the ERC20 as ALICE's prioritized gas fee source
-			assert_ok!(FluentFee::set_default(
-				Origin::signed(ALICE),
-				CURRENCY_ID.clone()
-			));
+			assert_ok!(FluentFee::set_default(Origin::signed(ALICE), CURRENCY_ID.clone()));
 			// prepare a call
 			let call = Call::Tokens(orml_tokens::Call::transfer {
 				dest: BOB,
