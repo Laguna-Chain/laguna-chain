@@ -203,6 +203,7 @@ construct_runtime!(
 );
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
+pub const BURN_ADDR: AccountId = AccountId::new([0u8; 32]);
 
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, Balance)>,

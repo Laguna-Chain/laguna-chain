@@ -1,6 +1,8 @@
 use super::*;
 use frame_support::assert_ok;
-use mock::{Call, Event, ExtBuilder, Origin, Sudo, SudoContract, System, Test, ALICE, UNIT};
+use mock::{
+	Call, Event, ExtBuilder, Origin, Sudo, SudoContract, System, Test, ALICE, BURN_ADDR, UNIT,
+};
 use sp_core::Bytes;
 use sp_runtime::AccountId32;
 use std::str::FromStr;
@@ -10,7 +12,7 @@ const MAX_GAS: u64 = 200_000_000_000;
 #[test]
 fn test_fixed_address() {
 	ExtBuilder::default()
-		.balances(vec![(ALICE, UNIT)])
+		.balances(vec![(ALICE, UNIT), (BURN_ADDR, UNIT)])
 		.sudo(ALICE)
 		.build()
 		.execute_with(|| {
@@ -27,7 +29,7 @@ fn test_fixed_address() {
 			let call = Box::new(Call::SudoContract(SudoContractCall::instantiate_with_code {
 				value: 0,
 				gas_limit: MAX_GAS,
-				storage_deposit_limit: Some(UNIT.into()),
+				storage_deposit_limit: None,
 				code: blob,
 				data: sel_constructor,
 				salt: vec![0x11; 32],
@@ -38,22 +40,22 @@ fn test_fixed_address() {
 			let evts = System::events();
 
 			let deployed_addr = evts
-			    .iter()
-			    .rev()
-			    .find_map(|r| {
-			        if let Event::Contracts(pallet_contracts::Event::Instantiated {
-			            deployer,
-			            contract,
-			        }) = &r.event
-			        {
-			            Some(contract)
-			        } else {
-			            None
-			        }
-			    })
-			    .expect("unable to find contract");
+				.iter()
+				.rev()
+				.find_map(|r| {
+					if let Event::Contracts(pallet_contracts::Event::Instantiated {
+						deployer,
+						contract,
+					}) = &r.event
+					{
+						Some(contract)
+					} else {
+						None
+					}
+				})
+				.expect("unable to find contract");
 
-			assert_eq!(deployed_addr, &AccountId32::from([0x11;32]));
+			assert_eq!(deployed_addr, &AccountId32::from([0x11; 32]));
 		})
 }
 
