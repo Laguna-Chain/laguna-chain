@@ -69,6 +69,6 @@ pub fn jump_to_block(num: u32) {
 
 pub fn charge_tx_fee(account: AccountId, call: &Call, info: &DispatchInfo, len: usize) {
 	ChargeTransactionPayment::<Runtime>::from(0)
-		.pre_dispatch(&ALICE, &call, &info, len)
+		.pre_dispatch(&account, &call, &info, len)
 		.expect("should pass");
 }

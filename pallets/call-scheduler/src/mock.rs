@@ -486,6 +486,8 @@ impl pallet_fluent_fee::Config for Runtime {
 
 	type MultiCurrency = Tokens;
 
+	type Call = Call;
+
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;
 	type FeeDispatch = DummyFeeDispatch<Tokens>;

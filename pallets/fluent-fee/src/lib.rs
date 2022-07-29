@@ -4,9 +4,9 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use frame_support::{pallet_prelude::*, traits::WithdrawReasons};
+use frame_support::{pallet_prelude::*, traits::WithdrawReasons, weights::{GetDispatchInfo, PostDispatchInfo}, dispatch::Dispatchable};
 use frame_system::pallet_prelude::*;
-
+use codec::{Encode, Decode};
 use orml_traits::{arithmetic::Zero, MultiCurrency};
 use primitives::{CurrencyId, TokenId};
 
@@ -35,6 +35,7 @@ pub mod pallet {
 
 		type DefaultFeeAsset: Get<CurrencyId>;
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
+		type Call: Parameter + Dispatchable<Origin = <Self as frame_system::Config>::Origin> + From<frame_system::Call<Self>>;
 
 		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
 		type FeeMeasure: FeeMeasure<AssetId = CurrencyId, Balance = BalanceOf<Self>>;
@@ -72,6 +73,20 @@ pub mod pallet {
 
 			Ok(())
 		}
+
+		#[pallet::weight(1000)]
+		pub fn fee_sharing_wrapper(
+			origin: OriginFor<T>,
+			call:  Box<<T as pallet::Config>::Call>,
+			beneficiary: Option<AccountIdOf<T>>,
+		) -> DispatchResult {
+			let who = ensure_signed(origin.clone())?;
+			// let dispatch_origin = origin.clone().into();
+			match call.dispatch(origin) {
+				Ok(_) => Ok(()),
+				Err(_) => Err(DispatchError::Other("Scheduled call dispatch error")),
+			}
+		}
 	}
 }
 
@@ -95,8 +110,8 @@ where
 
 	fn withdraw_fee(
 		who: &T::AccountId,
-		call: &T::Call,
-		dispatch_info: &frame_support::sp_runtime::traits::DispatchInfoOf<T::Call>,
+		call: &<T as frame_system::Config>::Call,
+		dispatch_info: &frame_support::sp_runtime::traits::DispatchInfoOf<<T as frame_system::Config>::Call>,
 		fee: Self::Balance,
 		tip: Self::Balance,
 	) -> Result<Self::LiquidityInfo, TransactionValidityError> {
@@ -136,8 +151,8 @@ where
 
 	fn correct_and_deposit_fee(
 		who: &T::AccountId,
-		dispatch_info: &frame_support::sp_runtime::traits::DispatchInfoOf<T::Call>,
-		post_info: &frame_support::sp_runtime::traits::PostDispatchInfoOf<T::Call>,
+		dispatch_info: &frame_support::sp_runtime::traits::DispatchInfoOf<<T as frame_system::Config>::Call>,
+		post_info: &frame_support::sp_runtime::traits::PostDispatchInfoOf<<T as frame_system::Config>::Call>,
 		corrected_fee: Self::Balance,
 		tip: Self::Balance,
 		already_withdrawn: Self::LiquidityInfo,
