@@ -7,15 +7,12 @@ use frame_support::{
 	weights::IdentityFee,
 };
 
-use codec::Decode;
 use frame_support::pallet_prelude::{ConstU32, Weight};
-use pallet_contracts::{
-	weights::WeightInfo, AddressGenerator, DefaultAddressGenerator, DefaultContractAccessWeight,
-};
+use pallet_contract_wrapper::CustomAddressGenerator;
+use pallet_contracts::{weights::WeightInfo, DefaultContractAccessWeight};
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
-use sp_core::crypto::UncheckedFrom;
-use sp_runtime::{AccountId32, Perbill};
+use sp_runtime::Perbill;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -128,38 +125,6 @@ parameter_types! {
 		schedule.limits.code_len = 256 * 1024;
 		schedule
 	};
-}
-
-// If the deploying address is [0;32] and the salt is 32-byte length then the salt
-// is the generated address otherwise default way of address generation is used
-pub struct CustomAddressGenerator;
-
-impl<T> AddressGenerator<T> for CustomAddressGenerator
-where
-	T: frame_system::Config,
-	T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>,
-{
-	fn generate_address(
-		deploying_address: &T::AccountId,
-		code_hash: &T::Hash,
-		salt: &[u8],
-	) -> T::AccountId {
-		let zero_address = AccountId32::new([0u8; 32]);
-		let zero_address = T::AccountId::decode(&mut zero_address.as_ref()).unwrap();
-
-		if deploying_address == &zero_address && salt.len() == 32 {
-			let salt: [u8; 32] = salt.try_into().unwrap();
-			let new_address = AccountId32::from(salt);
-			T::AccountId::decode(&mut new_address.as_ref())
-				.expect("Cannot create an AccountId from the given salt")
-		} else {
-			<DefaultAddressGenerator as AddressGenerator<T>>::generate_address(
-				deploying_address,
-				code_hash,
-				salt,
-			)
-		}
-	}
 }
 
 impl pallet_contracts::Config for Test {

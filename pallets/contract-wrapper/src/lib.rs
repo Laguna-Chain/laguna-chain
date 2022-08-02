@@ -12,6 +12,9 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+mod fixed_address;
+pub use fixed_address::CustomAddressGenerator;
+
 #[frame_support::pallet]
 pub mod pallet {
 	use codec::HasCompact;
