@@ -4,14 +4,14 @@ mod cross_contract;
 
 #[cfg(test)]
 mod tests {
-	use crate::{ExtBuilder, ALICE};
+	use crate::{ExtBuilder, ALICE, BURN_ADDR};
 	use codec::{Decode, Encode};
 	use frame_support::assert_ok;
 	use laguna_runtime::{constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, System};
-	use pallet_contracts_primitives::{ContractExecResult, ExecReturnValue};
+	use pallet_contracts_primitives::ExecReturnValue;
 	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
 	use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId};
-	use sp_core::{hexdisplay::AsBytesRef, Bytes};
+	use sp_core::{crypto::AccountId32, hexdisplay::AsBytesRef, Bytes};
 	use std::str::FromStr;
 
 	const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
@@ -337,5 +337,52 @@ mod tests {
 					.filter(|rs| *rs == false)
 					.is_some());
 			});
+	}
+
+	#[test]
+	fn test_fixed_address() {
+		ExtBuilder::default()
+			.balances(vec![(ALICE, LAGUNA_TOKEN, LAGUNAS), (BURN_ADDR, LAGUNA_TOKEN, LAGUNAS)])
+			.sudo(ALICE)
+			.build()
+			.execute_with(|| {
+				let blob =
+					std::fs::read("../integration-tests/contracts-data/ink/basic/dist/basic.wasm")
+						.expect("cound not find wasm blob");
+
+				let sel_constructor = Bytes::from_str("0xed4b9d1b")
+					.map(|v| v.to_vec())
+					.expect("unable to parse hex string");
+
+				assert_ok!(laguna_runtime::SudoContracts::instantiate_with_code(
+					Origin::root(),
+					0,
+					MAX_GAS,
+					None,
+					blob,
+					sel_constructor,
+					vec![0x11; 32],
+				));
+
+				let evts = System::events();
+
+				let deployed_addr = evts
+					.iter()
+					.rev()
+					.find_map(|r| {
+						if let Event::Contracts(pallet_contracts::Event::Instantiated {
+							deployer,
+							contract,
+						}) = &r.event
+						{
+							Some(contract)
+						} else {
+							None
+						}
+					})
+					.expect("unable to find contract");
+
+				assert_eq!(deployed_addr, &AccountId32::from([0x11; 32]));
+			})
 	}
 }

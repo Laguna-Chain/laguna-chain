@@ -6,6 +6,7 @@ pub mod contracts;
 pub mod fees;
 pub mod native_token;
 
+pub const BURN_ADDR: AccountId = AccountId::new([0u8; 32]);
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
