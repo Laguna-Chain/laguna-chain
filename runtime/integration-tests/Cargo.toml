@@ -31,6 +31,7 @@ orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-lib
 
 # contract
 pallet-contracts = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-contract-wrapper = {path = "../../pallets/contract-wrapper", default-features = false}
 pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contracts-rpc-runtime-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 

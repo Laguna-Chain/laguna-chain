@@ -173,11 +173,12 @@ pub const BURN_ADDR: AccountId = AccountId::new([0u8; 32]);
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, Balance)>,
 	sudo: Option<AccountId>,
+	deploying_key: Option<AccountId>,
 }
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { balances: vec![], sudo: None }
+		Self { balances: vec![], sudo: None, deploying_key: None }
 	}
 }
 
@@ -189,6 +190,11 @@ impl ExtBuilder {
 
 	pub fn sudo(mut self, account: AccountId) -> Self {
 		self.sudo.replace(account);
+		self
+	}
+
+	pub fn deploying_key(mut self, key: AccountId) -> Self {
+		self.deploying_key.replace(key);
 		self
 	}
 
@@ -209,6 +215,17 @@ impl ExtBuilder {
 				.assimilate_storage(&mut t)
 				.unwrap();
 		}
+
+		// set deploying_key for pallet_contract_wrapper
+		match self.deploying_key {
+			Some(key) => pallet_contract_wrapper::GenesisConfig::<Test> {
+				deploying_key: key,
+				..Default::default()
+			},
+			None => pallet_contract_wrapper::GenesisConfig::<Test>::default(),
+		}
+		.assimilate_storage(&mut t)
+		.unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| System::set_block_number(1));

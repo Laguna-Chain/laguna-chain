@@ -18,11 +18,12 @@ pub struct ExtBuilder {
 	balances: Vec<(AccountId, CurrencyId, Balance)>,
 	sudo: Option<AccountId>,
 	fee_sources: Vec<(CurrencyId, bool)>,
+	deploying_key: Option<AccountId>,
 }
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { balances: vec![], sudo: None, fee_sources: vec![] }
+		Self { balances: vec![], sudo: None, fee_sources: vec![], deploying_key: None }
 	}
 }
 
@@ -39,6 +40,11 @@ impl ExtBuilder {
 
 	pub fn sudo(mut self, sudo: AccountId) -> Self {
 		self.sudo.replace(sudo);
+		self
+	}
+
+	pub fn deploying_key(mut self, key: AccountId) -> Self {
+		self.deploying_key.replace(key);
 		self
 	}
 
@@ -67,6 +73,17 @@ impl ExtBuilder {
 			)
 			.unwrap();
 		}
+
+		// set deploying_key for pallet_contract_wrapper
+		match self.deploying_key {
+			Some(key) => pallet_contract_wrapper::GenesisConfig::<Runtime> {
+				deploying_key: key,
+				..Default::default()
+			},
+			None => pallet_contract_wrapper::GenesisConfig::<Runtime>::default(),
+		}
+		.assimilate_storage(&mut t)
+		.unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| System::set_block_number(1));
