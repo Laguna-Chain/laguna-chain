@@ -1,5 +1,5 @@
 use crate::{
-	impl_pallet_currencies::NativeCurrencyId, ContractAssetsRegistry, Currencies, Event,
+	impl_pallet_currencies::NativeCurrencyId, Call, ContractAssetsRegistry, Currencies, Event,
 	FeeEnablement, FeeMeasurement, Runtime,
 };
 use frame_support::pallet_prelude::InvalidTransaction;
@@ -13,6 +13,8 @@ impl pallet_fluent_fee::Config for Runtime {
 	type Event = Event;
 
 	type MultiCurrency = Currencies;
+
+	type Call = Call;
 
 	type FeeSource = FeeEnablement;
 
@@ -45,6 +47,7 @@ impl FeeDispatch<Runtime> for StaticImpl {
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
+		call: &<Runtime as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &frame_support::traits::WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {

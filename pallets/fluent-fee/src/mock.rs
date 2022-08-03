@@ -1,12 +1,13 @@
 use super::*;
 
 use frame_support::{
-	construct_runtime, parameter_types,
+	construct_runtime,
+	dispatch::DispatchInfo,
+	parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
 	weights::IdentityFee,
-	dispatch::DispatchInfo,
 };
 
 use orml_currencies::BasicCurrencyAdapter;
