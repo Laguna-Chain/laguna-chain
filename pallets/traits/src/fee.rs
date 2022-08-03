@@ -49,6 +49,7 @@ where
 	fn withdraw(
 		account: &<T as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
+		call: &<T as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), InvalidFeeDispatch>;
@@ -81,4 +82,13 @@ pub trait Eligibility {
 	type AssetId;
 
 	fn eligible(who: &Self::AccountId, asset_id: &Self::AssetId) -> Result<(), EligibilityError>;
+}
+
+pub trait Parser<T>
+where
+	T: frame_system::Config,
+{
+	type AccountId;
+
+	fn get_beneficiary(call: &<T as frame_system::Config>::Call) -> Option<Self::AccountId>;
 }

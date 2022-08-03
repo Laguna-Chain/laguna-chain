@@ -6,6 +6,7 @@ use frame_support::{
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
 	weights::IdentityFee,
+	dispatch::DispatchInfo,
 };
 
 use orml_currencies::BasicCurrencyAdapter;
@@ -164,8 +165,41 @@ impl FeeMeasure for DummyFeeMeasure {
 	}
 }
 
+pub enum CallType {
+	FeeSharingCall,
+	NormalCall,
+}
+
+pub trait CallFilter<T>
+where
+	T: frame_system::Config,
+{
+	fn filter_call_type(call: &<T as frame_system::Config>::Call) -> CallType;
+	fn get_beneficiary_account(call: &<T as frame_system::Config>::Call) -> Option<AccountId>;
+}
+
 pub struct DummyFeeDispatch<T> {
 	_type: PhantomData<T>,
+}
+
+impl CallFilter<Runtime> for DummyFeeDispatch<Tokens> {
+	fn filter_call_type(call: &<Runtime as frame_system::Config>::Call) -> CallType {
+		match call {
+			Call::FluentFee(pallet::Call::<Runtime>::fee_sharing_wrapper { .. }) =>
+				CallType::FeeSharingCall,
+			_ => CallType::NormalCall,
+		}
+	}
+	fn get_beneficiary_account(
+		call: &<Runtime as frame_system::Config>::Call,
+	) -> Option<AccountId> {
+		match call {
+			Call::FluentFee(pallet::Call::<Runtime>::fee_sharing_wrapper {
+				beneficiary, ..
+			}) => beneficiary.clone(),
+			_ => None,
+		}
+	}
 }
 
 impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
@@ -182,11 +216,55 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
+		call: &<Runtime as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Tokens::withdraw(*id, account, *balance)
-			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+		match Self::filter_call_type(call) {
+			CallType::FeeSharingCall => {
+				let beneficiary_exists = Self::get_beneficiary_account(&call);
+				match beneficiary_exists {
+					Some(beneficiary_account) => {
+						// Get the fee equivalent to 1 unit of weight that can be shared with the
+						// beneficiary
+						let fee_details = Payment::compute_fee_details(
+							0,
+							&DispatchInfo {
+								pays_fee: Pays::Yes,
+								weight: 1u64,
+								class: DispatchClass::Normal,
+							},
+							0,
+						);
+						// unpack the fee_details struct to get the adjusted_weight_fee
+						let unit_weight_fee =
+							fee_details.inclusion_fee.unwrap().adjusted_weight_fee;
+						// let unit_weight_fee = <Runtime as
+						// pallet_transaction_payment::Config>::WeightToFee::weight_to_fee(1u64);
+						// Send the unit weight fee to the beneficiary account
+						<Tokens as MultiCurrency<AccountId>>::transfer(
+							*id,
+							account,
+							&beneficiary_account,
+							unit_weight_fee,
+						)
+						.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
+						// normal transaction fee withdrawal
+						// NOTE: `balance` already includes `unit_weight_fee` as computed in the
+						// SignedExtension, so we need to subtract that amount before paying the
+						// validators
+						Tokens::withdraw(*id, account, *balance - unit_weight_fee)
+							.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+					},
+					None => Tokens::withdraw(*id, account, *balance)
+						.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute),
+				}
+
+				// Ok(())
+			},
+			CallType::NormalCall => Tokens::withdraw(*id, account, *balance)
+				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute),
+		}
 	}
 }
 
@@ -200,6 +278,7 @@ impl Config for Runtime {
 	type DefaultFeeAsset = NativeAssetId;
 
 	type MultiCurrency = Tokens;
+	type Call = Call;
 
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;
