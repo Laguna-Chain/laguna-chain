@@ -10,7 +10,8 @@ use frame_support::{
 };
 
 use orml_traits::MultiCurrency;
-use pallet_transaction_payment::{ChargeTransactionPayment, OnChargeTransaction};
+// use pallet_transaction_payment::{ChargeTransactionPayment, OnChargeTransaction};
+use crate::signed_extension::ChargeFeeSharingTransactionPayment as ChargeTransactionPayment;
 use primitives::{CurrencyId, TokenId};
 use sp_runtime::traits::SignedExtension;
 use traits::fee::FeeMeasure;

@@ -24,6 +24,8 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
+mod signed_extension;
+
 #[frame_support::pallet]
 pub mod pallet {
 

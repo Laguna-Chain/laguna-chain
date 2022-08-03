@@ -4,11 +4,22 @@ use frame_support::{
 	construct_runtime,
 	dispatch::DispatchInfo,
 	parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
+	sp_runtime::{
+		traits::{
+			BlakeTwo256, DispatchInfoOf, Dispatchable, IdentityLookup, One, PostDispatchInfoOf,
+			SaturatedConversion, Saturating, SignedExtension,
+		},
+		transaction_validity::{
+			TransactionPriority, TransactionValidity, TransactionValidityError, ValidTransaction,
+		},
+		FixedPointOperand,
+	},
 	traits::{Contains, Everything},
-	unsigned::TransactionValidityError,
 	weights::IdentityFee,
 };
+
+use codec::{Decode, Encode};
+use scale_info::TypeInfo;
 
 use orml_currencies::BasicCurrencyAdapter;
 use orml_traits::LockIdentifier;
@@ -251,7 +262,10 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 						)
 						.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
 						// normal transaction fee withdrawal
-						Tokens::withdraw(*id, account, *balance)
+						// NOTE: `balance` already includes `unit_weight_fee` as computed in the
+						// SignedExtension, so we need to subtract that amount before paying the
+						// validators
+						Tokens::withdraw(*id, account, *balance - unit_weight_fee)
 							.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 					},
 					None => Tokens::withdraw(*id, account, *balance)
