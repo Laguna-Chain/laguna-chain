@@ -18,5 +18,6 @@ members = [
   'pallets/currencies',
   'pallets/currencies/rpc',
   'pallets/currencies/rpc/runtime-api',
+  'pallets/call-scheduler'
 ] 
 resolver = "2" # use the new resolver for better dependency resolution

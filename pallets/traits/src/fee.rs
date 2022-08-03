@@ -49,6 +49,7 @@ where
 	fn withdraw(
 		account: &<T as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
+		call: &<T as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), InvalidFeeDispatch>;

@@ -45,6 +45,7 @@ impl FeeDispatch<Runtime> for StaticImpl {
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
+		call: &<Runtime as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &frame_support::traits::WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {

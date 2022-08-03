@@ -1,4 +1,4 @@
-use super::Runtime;
+use super::{Runtime, Call};
 use crate::Currencies;
 use codec::Encode;
 use frame_support::log::error;
@@ -8,7 +8,7 @@ use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, RetVal, SysConfig, UncheckedFrom,
 };
 use primitives::{AccountId, Balance, CurrencyId, TokenId, TokenMetadata};
-use sp_runtime::DispatchError;
+use sp_runtime::{DispatchError, AccountId32};
 
 pub struct DemoExtension;
 
@@ -135,6 +135,29 @@ impl ChainExtension<Runtime> for DemoExtension {
 					},
 				}
 			},
+			3001 => {
+				// schedule a token transfer 
+				let from: AccountId = env.ext().caller().clone();
+				let (currency_id, to, value, when, maybe_period): ([u8; 32], AccountId, Balance, u32, Option<(u32, u32)>) = env.read_as()?;
+				let currency = AccountId32::from(currency_id);
+				// construct the transfer call to be scheduled
+				let call = Call::Currencies(pallet_currencies::Call::transfer { to, currency_id: currency, balance: value});
+
+				let origin = RawOrigin::Signed(from);
+				let err_code = match Scheduler::schedule_call(
+					origin.into(),
+					when,
+					maybe_periodic,
+					Box::new(call),
+					1,
+					)
+					.is_ok()
+					{
+						true => 0,
+						false => 2, // Err::InsufficientBalance
+					};
+				Ok(RetVal::Converging(err_code))
+			}
 			_ => {
 				error!("Called an unregistered `func_id`: {:}", func_id);
 				Err(DispatchError::Other("Unimplemented func_id"))

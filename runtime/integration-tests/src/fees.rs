@@ -134,8 +134,8 @@ mod tests {
 
 				let post_dispatch_amount = Currencies::free_balance(ALICE, FEE_TOKEN);
 
-				let targeted =
-					FeeMeasurement::measure(&FEE_TOKEN, fee).expect("unable to get convert rate");
+				let targeted = fee.saturating_mul(110).saturating_div(100);
+				// FeeMeasurement::measure(&FEE_TOKEN, fee).expect("unable to get convert rate");
 				assert_eq!(pre_dispatch_amount - post_dispatch_amount, targeted);
 
 				let post =
