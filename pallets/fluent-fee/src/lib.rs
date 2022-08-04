@@ -13,7 +13,7 @@ use primitives::{CurrencyId, TokenId};
 
 pub use pallet::*;
 use pallet_transaction_payment::OnChargeTransaction;
-use traits::fee::{FeeDispatch, FeeMeasure, FeeSource};
+use traits::fee::{FeeDispatch, FeeMeasure, FeeSource, IsFeeSharingCall};
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
@@ -42,6 +42,9 @@ pub mod pallet {
 			+ Dispatchable<Origin = <Self as frame_system::Config>::Origin>
 			+ From<frame_system::Call<Self>>
 			+ GetDispatchInfo;
+
+		type IsFeeSharingCall: IsFeeSharingCall<Self, AccountId = AccountIdOf<Self>>;
+
 		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
 		type FeeMeasure: FeeMeasure<AssetId = CurrencyId, Balance = BalanceOf<Self>>;
 		type FeeDispatch: FeeDispatch<Self, AssetId = CurrencyId, Balance = BalanceOf<Self>>;
@@ -54,6 +57,8 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		AccountPreferenceUpdated((AccountIdOf<T>, Option<CurrencyId>)),
+		FeeSharingBeneficiaryIncluded(Option<AccountIdOf<T>>),
+		FeeSharedWithTheBeneficiary((Option<AccountIdOf<T>>, BalanceOf<T>)),
 	}
 
 	#[pallet::storage]
@@ -78,7 +83,7 @@ pub mod pallet {
 
 			Ok(())
 		}
-
+		// If the transaction specifies
 		#[pallet::weight({
 			let dispatch_info = call.get_dispatch_info();
 			let unit_weight = if beneficiary.is_some() {1} else {0};
@@ -94,6 +99,9 @@ pub mod pallet {
 			beneficiary: Option<AccountIdOf<T>>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin.clone())?;
+			if beneficiary.is_some() {
+				Self::deposit_event(Event::FeeSharingBeneficiaryIncluded(beneficiary));
+			}
 			match call.dispatch(origin) {
 				Ok(_) => Ok(()),
 				Err(_) => Err(DispatchError::Other("Fee sharing type dispatch failed")),
