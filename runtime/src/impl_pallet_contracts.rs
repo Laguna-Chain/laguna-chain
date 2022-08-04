@@ -8,7 +8,7 @@ use crate::{
 };
 use frame_support::parameter_types;
 use orml_tokens::CurrencyAdapter;
-use pallet_contract_wrapper::CustomAddressGenerator;
+use pallet_system_contract_deployer::CustomAddressGenerator;
 use pallet_contracts::DefaultContractAccessWeight;
 
 mod chain_extensions;

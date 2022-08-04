@@ -74,13 +74,13 @@ impl ExtBuilder {
 			.unwrap();
 		}
 
-		// set deploying_key for pallet_contract_wrapper
+		// set deploying_key for pallet_system_contract_deployer
 		match self.deploying_key {
-			Some(key) => pallet_contract_wrapper::GenesisConfig::<Runtime> {
+			Some(key) => pallet_system_contract_deployer::GenesisConfig::<Runtime> {
 				deploying_key: key,
 				..Default::default()
 			},
-			None => pallet_contract_wrapper::GenesisConfig::<Runtime>::default(),
+			None => pallet_system_contract_deployer::GenesisConfig::<Runtime>::default(),
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

@@ -1,5 +1,5 @@
 [package]
-name = "pallet-contract-wrapper"
+name = "pallet-system-contract-deployer"
 version = "0.1.0"
 edition = "2021"
 

@@ -1,4 +1,4 @@
-//! ## pallet-contract-wrapper
+//! ## pallet-system-contract-deployer
 //!
 //! This pallet allows system contracts to be deployed at fixed addresses
 

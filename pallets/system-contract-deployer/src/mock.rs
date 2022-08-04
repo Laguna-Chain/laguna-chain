@@ -1,4 +1,4 @@
-use crate as pallet_contract_wrapper;
+use crate as pallet_system_contract_deployer;
 
 use frame_support::{
 	construct_runtime, parameter_types,
@@ -8,7 +8,7 @@ use frame_support::{
 };
 
 use frame_support::pallet_prelude::{ConstU32, Weight};
-use pallet_contract_wrapper::CustomAddressGenerator;
+use pallet_system_contract_deployer::CustomAddressGenerator;
 use pallet_contracts::{weights::WeightInfo, DefaultContractAccessWeight};
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
@@ -147,7 +147,7 @@ impl pallet_contracts::Config for Test {
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 }
 
-impl pallet_contract_wrapper::Config for Test {}
+impl pallet_system_contract_deployer::Config for Test {}
 
 construct_runtime!(
 
@@ -163,7 +163,7 @@ construct_runtime!(
 		Timestamp: pallet_timestamp,
 		Payment: pallet_transaction_payment,
 		Contracts: pallet_contracts,
-		SudoContract: pallet_contract_wrapper
+		SudoContract: pallet_system_contract_deployer
 	}
 );
 
@@ -216,13 +216,13 @@ impl ExtBuilder {
 				.unwrap();
 		}
 
-		// set deploying_key for pallet_contract_wrapper
+		// set deploying_key for pallet_system_contract_deployer
 		match self.deploying_key {
-			Some(key) => pallet_contract_wrapper::GenesisConfig::<Test> {
+			Some(key) => pallet_system_contract_deployer::GenesisConfig::<Test> {
 				deploying_key: key,
 				..Default::default()
 			},
-			None => pallet_contract_wrapper::GenesisConfig::<Test>::default(),
+			None => pallet_system_contract_deployer::GenesisConfig::<Test>::default(),
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

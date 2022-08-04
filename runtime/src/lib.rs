@@ -55,7 +55,7 @@ pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
-impl pallet_contract_wrapper::Config for Runtime {}
+impl pallet_system_contract_deployer::Config for Runtime {}
 
 pub mod constants;
 
@@ -138,7 +138,7 @@ construct_runtime!(
 			Grandpa: pallet_grandpa ,
 
 			Contracts: pallet_contracts,
-			SudoContracts: pallet_contract_wrapper,
+			SudoContracts: pallet_system_contract_deployer,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 
 		}
