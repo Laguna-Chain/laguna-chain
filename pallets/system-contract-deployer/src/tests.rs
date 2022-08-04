@@ -32,7 +32,7 @@ fn test_fixed_address() {
 				storage_deposit_limit: None,
 				code: blob,
 				data: sel_constructor,
-				salt: vec![0x11; 32],
+				destined_address: [0x11; 32],
 			}));
 
 			assert_ok!(Sudo::sudo(Origin::signed(ALICE), call));
@@ -78,7 +78,7 @@ fn test_only_root_access() {
 			None,
 			blob,
 			sel_constructor,
-			vec![0x11; 32],
+			[0x11; 32],
 		)
 		.is_err());
 	})

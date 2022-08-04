@@ -48,7 +48,7 @@ pub mod pallet {
 		<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + Debug + TypeInfo + Encode,
 	{
 		#[pallet::weight(
-			T::WeightInfo::instantiate_with_code(code.len() as u32, salt.len() as u32)
+			T::WeightInfo::instantiate_with_code(code.len() as u32, 32_u32)
 			.saturating_add(*gas_limit)
 		)]
 		pub fn instantiate_with_code(
@@ -58,7 +58,7 @@ pub mod pallet {
 			storage_deposit_limit: Option<<BalanceOf<T> as codec::HasCompact>::Type>,
 			code: Vec<u8>,
 			data: Vec<u8>,
-			salt: Vec<u8>,
+			destined_address: [u8; 32],
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 
@@ -69,12 +69,12 @@ pub mod pallet {
 				storage_deposit_limit,
 				code,
 				data,
-				salt,
+				destined_address.to_vec(),
 			)
 		}
 
 		#[pallet::weight(
-			T::WeightInfo::instantiate(salt.len() as u32).saturating_add(*gas_limit)
+			T::WeightInfo::instantiate(32_u32).saturating_add(*gas_limit)
 		)]
 		pub fn instantiate(
 			origin: OriginFor<T>,
@@ -83,7 +83,7 @@ pub mod pallet {
 			storage_deposit_limit: Option<<BalanceOf<T> as codec::HasCompact>::Type>,
 			code_hash: CodeHash<T>,
 			data: Vec<u8>,
-			salt: Vec<u8>,
+			destined_address: [u8; 32],
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 
@@ -94,7 +94,7 @@ pub mod pallet {
 				storage_deposit_limit,
 				code_hash,
 				data,
-				salt,
+				destined_address.to_vec(),
 			)
 		}
 

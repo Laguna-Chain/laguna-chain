@@ -361,7 +361,7 @@ mod tests {
 					None,
 					blob,
 					sel_constructor,
-					vec![0x11; 32],
+					[0x11; 32],
 				));
 
 				let evts = System::events();

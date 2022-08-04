@@ -16,21 +16,21 @@ where
 	fn generate_address(
 		deploying_address: &T::AccountId,
 		code_hash: &T::Hash,
-		destined_addr: &[u8],
+		salt: &[u8],
 	) -> T::AccountId {
 		if let Some(key) = crate::Pallet::<T>::deploying_key() {
-			if deploying_address == &key && destined_addr.len() == 32 {
-				let destined_addr: [u8; 32] = destined_addr.try_into().unwrap();
-				let contract_addr = AccountId32::from(destined_addr);
+			if deploying_address == &key && salt.len() == 32 {
+				let salt: [u8; 32] = salt.try_into().unwrap();
+				let contract_addr = AccountId32::from(salt);
 				return T::AccountId::decode(&mut contract_addr.as_ref())
-					.expect("Cannot create an AccountId from the given destined_addr")
+					.expect("Cannot create an AccountId from the given salt")
 			}
 		}
 
 		<DefaultAddressGenerator as AddressGenerator<T>>::generate_address(
 			deploying_address,
 			code_hash,
-			destined_addr,
+			salt,
 		)
 	}
 }
