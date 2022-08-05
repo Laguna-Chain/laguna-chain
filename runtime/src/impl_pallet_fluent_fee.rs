@@ -5,7 +5,8 @@ use crate::{
 use frame_support::pallet_prelude::InvalidTransaction;
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
-use traits::fee::{FeeDispatch, FeeMeasure, FeeSource, IsFeeSharingCall};
+use sp_runtime::traits::PostDispatchInfoOf;
+use traits::fee::{FeeDispatch, FeeMeasure, IsFeeSharingCall};
 
 impl pallet_fluent_fee::Config for Runtime {
 	type DefaultFeeAsset = NativeCurrencyId;
@@ -54,13 +55,36 @@ impl FeeDispatch<Runtime> for StaticImpl {
 		reason: &frame_support::traits::WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		Currencies::withdraw(*id, account, *balance)
-			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+			.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+
+		// TODO: ERC20 don't support withdrawn, we need to use a delegate account to temporary carry
+		// the withdrawn amount
+	}
+
+	fn refund(
+		account: &<Runtime as frame_system::Config>::AccountId,
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		Currencies::withdraw(*id, account, *balance)
+			.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+			.map(|_| *balance)
+	}
+
+	fn tip(
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		// TODO: need to find block author.
+		Ok(0)
 	}
 
 	fn post_info_correction(
 		id: &Self::AssetId,
-		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
+		corret_withdrawn: &Self::Balance,
+		post_info: &PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		// TODO: need to find block author.
 		Ok(())
 	}
 }
@@ -73,7 +97,7 @@ impl IsFeeSharingCall<Runtime> for DummyFeeSharingCall {
 	type AccountId = AccountId;
 
 	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Option<Self::AccountId> {
-		if let Call::FluentFee(pallet_fluent_fee::Call::<Runtime>::fee_sharing_wrapper {
+		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::fee_sharing_wrapper {
 			beneficiary,
 			..
 		}) = call

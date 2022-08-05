@@ -10,7 +10,6 @@ use frame_support::{
 	weights::IdentityFee,
 };
 
-use orml_currencies::BasicCurrencyAdapter;
 use orml_traits::LockIdentifier;
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
 use sp_core::H256;
@@ -198,13 +197,6 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	type AssetId = CurrencyId;
 	type Balance = Balance;
 
-	fn post_info_correction(
-		id: &Self::AssetId,
-		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
-	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Ok(())
-	}
-
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
@@ -233,12 +225,14 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 			// a tip given to the beneficiary of the signer's choice.
 			// NOTE: We emit an event to indicate that unit weight fee transfer to the beneficiary
 			// succeeded.
-			if let Ok(_) = <Tokens as MultiCurrency<AccountId>>::transfer(
+			if <Tokens as MultiCurrency<AccountId>>::transfer(
 				*id,
 				account,
 				&beneficiary,
-				unit_weight_fee.clone(),
-			) {
+				unit_weight_fee,
+			)
+			.is_ok()
+			{
 				FluentFee::deposit_event(pallet::Event::FeeSharedWithTheBeneficiary((
 					Some(beneficiary),
 					unit_weight_fee,
@@ -247,11 +241,39 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 
 			// normal transaction fee withdrawal
 			Tokens::withdraw(*id, account, *balance)
-				.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+				.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 		} else {
-			Tokens::withdraw(*id, account, *balance)
-				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+			match id {
+				CurrencyId::NativeToken(_) => Tokens::withdraw(*id, account, *balance)
+					.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute),
+				CurrencyId::Erc20(_) => unimplemented!("erc20 need carrier not enabled right now"),
+			}
 		}
+	}
+
+	fn refund(
+		account: &<Runtime as frame_system::Config>::AccountId,
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		Tokens::withdraw(*id, account, *balance)
+			.map(|_| *balance)
+			.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+	}
+
+	fn tip(
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		Ok(0)
+	}
+
+	fn post_info_correction(
+		id: &Self::AssetId,
+		corret_withdrawn: &Self::Balance,
+		post_info: &PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		Ok(())
 	}
 }
 

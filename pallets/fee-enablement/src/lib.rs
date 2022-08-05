@@ -71,7 +71,7 @@ mod pallet {
 			asset_id: CurrencyId,
 			enabled: bool,
 		) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+			T::AllowedOrigin::ensure_origin(origin)?;
 
 			FeeAssets::<T>::insert(asset_id, enabled);
 			Ok(())
@@ -79,7 +79,7 @@ mod pallet {
 
 		#[pallet::weight(T::WeightInfo::enable_asset())]
 		pub fn enable_asset(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+			T::AllowedOrigin::ensure_origin(origin)?;
 
 			FeeAssets::<T>::mutate(asset_id, |val| *val = Some(true));
 
@@ -88,7 +88,7 @@ mod pallet {
 
 		#[pallet::weight(T::WeightInfo::disable_asset())]
 		pub fn disable_asset(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+			T::AllowedOrigin::ensure_origin(origin)?;
 			FeeAssets::<T>::mutate(asset_id, |val| *val = Some(false));
 
 			Ok(())
@@ -96,15 +96,9 @@ mod pallet {
 	}
 
 	#[pallet::genesis_config]
+	#[cfg_attr(feature = "std", derive(Default))]
 	pub struct GenesisConfig {
 		pub enabled: Vec<(CurrencyId, bool)>,
-	}
-
-	#[cfg(feature = "std")]
-	impl Default for GenesisConfig {
-		fn default() -> Self {
-			Self { enabled: vec![] }
-		}
 	}
 
 	#[pallet::genesis_build]

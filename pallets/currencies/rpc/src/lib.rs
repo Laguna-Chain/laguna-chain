@@ -2,11 +2,7 @@ use std::{marker::PhantomData, ops::Deref, sync::Arc};
 
 use codec::Codec;
 
-use jsonrpsee::{
-	core::{async_trait, Error as JsonRpseeError, RpcResult},
-	proc_macros::rpc,
-	types::error::{CallError, ErrorCode, ErrorObject},
-};
+use jsonrpsee::{core::RpcResult, proc_macros::rpc, types::error::CallError};
 
 pub use pallet_currencies_runtime_api::CurrenciesApi as CurrenciesRuntimeApi;
 
@@ -49,8 +45,6 @@ impl<Client, Block> CurrenciesRpc<Client, Block> {
 		Self { client, _marker: Default::default() }
 	}
 }
-
-const RUNTIME_ERROR: i32 = 1000;
 
 impl<Client, Block, AccountId, Balance>
 	CurrenciesApiServer<

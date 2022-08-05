@@ -46,6 +46,7 @@ where
 	type AssetId;
 	type Balance;
 
+	/// handle withdrawn
 	fn withdraw(
 		account: &<T as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
@@ -54,8 +55,22 @@ where
 		reason: &WithdrawReasons,
 	) -> Result<(), InvalidFeeDispatch>;
 
+	/// handle overcharged amount
+	fn refund(
+		account: &<T as frame_system::Config>::AccountId,
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, InvalidFeeDispatch>;
+
+	/// tip the block_author if exists
+	fn tip(
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, InvalidFeeDispatch>;
+
 	fn post_info_correction(
 		id: &Self::AssetId,
+		corret_withdrawn: &Self::Balance,
 		post_info: &PostDispatchInfoOf<T::Call>,
 	) -> Result<(), InvalidFeeDispatch>;
 }

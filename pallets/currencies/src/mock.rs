@@ -13,11 +13,9 @@ use frame_support::{
 	PalletId,
 };
 
-use frame_system::{EnsureRoot, EnsureSigned};
-use orml_currencies::BasicCurrencyAdapter;
+use frame_system::EnsureRoot;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use primitives::{AccountId, Amount, Balance, BlockNumber, Hash, Header, Index, TokenId};
-use sp_core::hexdisplay::AsBytesRef;
 use sp_runtime::Perbill;
 
 use orml_tokens::CurrencyAdapter as TokenCurrencyAdapter;
@@ -297,7 +295,7 @@ impl ExtBuilder {
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
 		orml_tokens::GenesisConfig::<Runtime> {
-			balances: self.balances.clone().into_iter().collect::<Vec<_>>(),
+			balances: self.balances.into_iter().collect::<Vec<_>>(),
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

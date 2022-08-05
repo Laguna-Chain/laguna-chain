@@ -10,14 +10,14 @@ pub trait WeightInfo {
 
 impl WeightInfo for () {
 	fn register_asset() -> Weight {
-		1000_u64 as _
+		1000_u64
 	}
 
 	fn unregister_asset() -> Weight {
-		1000_u64 as _
+		1000_u64
 	}
 
 	fn suspend_asset() -> Weight {
-		1000_u64 as _
+		1000_u64
 	}
 }
