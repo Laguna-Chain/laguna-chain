@@ -1,7 +1,9 @@
 use super::*;
 
 use frame_support::{
-	construct_runtime, parameter_types,
+	construct_runtime,
+	dispatch::DispatchInfo,
+	parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
@@ -12,6 +14,8 @@ use orml_currencies::BasicCurrencyAdapter;
 use orml_traits::LockIdentifier;
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
 use sp_core::H256;
+
+use traits::fee::IsFeeSharingCall;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -164,6 +168,28 @@ impl FeeMeasure for DummyFeeMeasure {
 	}
 }
 
+pub struct DummyFeeSharingCall<T> {
+	_type: PhantomData<T>,
+}
+
+impl IsFeeSharingCall<Runtime> for DummyFeeSharingCall<Tokens> {
+	type AccountId = AccountId;
+
+	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Option<Self::AccountId> {
+		if let Call::FluentFee(pallet::Call::<Runtime>::fee_sharing_wrapper {
+			beneficiary, ..
+		}) = call
+		{
+			beneficiary.clone()
+		} else {
+			None
+		}
+	}
+}
+
+// alias
+type IsSharingCall<T> = <T as pallet::Config>::IsFeeSharingCall;
+
 pub struct DummyFeeDispatch<T> {
 	_type: PhantomData<T>,
 }
@@ -182,11 +208,50 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
+		call: &<Runtime as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Tokens::withdraw(*id, account, *balance)
-			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+		// If the transaction is of fee sharing type, transfer unit weight worth of fees to the
+		// given beneficiary
+		if let Some(beneficiary) =
+			<IsSharingCall<Runtime> as IsFeeSharingCall<Runtime>>::is_call(call)
+		{
+			// Get the fee equivalent to 1 unit of weight that can be shared with the
+			// beneficiary
+			let fee_details = Payment::compute_fee_details(
+				0,
+				&DispatchInfo { pays_fee: Pays::Yes, weight: 1u64, class: DispatchClass::Normal },
+				0,
+			);
+			// unpack the fee_details struct to get the adjusted_weight_fee
+			let unit_weight_fee = fee_details.inclusion_fee.unwrap().adjusted_weight_fee;
+
+			// Send the unit weight fee to the beneficiary account
+			// NOTE: we are not reverting the transaction if the transfer to the beneficiary
+			// fails as it does not constitute core logic expressed by the transaction but is merely
+			// a tip given to the beneficiary of the signer's choice.
+			// NOTE: We emit an event to indicate that unit weight fee transfer to the beneficiary
+			// succeeded.
+			if let Ok(_) = <Tokens as MultiCurrency<AccountId>>::transfer(
+				*id,
+				account,
+				&beneficiary,
+				unit_weight_fee.clone(),
+			) {
+				FluentFee::deposit_event(pallet::Event::FeeSharedWithTheBeneficiary((
+					Some(beneficiary),
+					unit_weight_fee,
+				)));
+			}
+
+			// normal transaction fee withdrawal
+			Tokens::withdraw(*id, account, *balance)
+				.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+		} else {
+			Tokens::withdraw(*id, account, *balance)
+				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+		}
 	}
 }
 
@@ -200,6 +265,9 @@ impl Config for Runtime {
 	type DefaultFeeAsset = NativeAssetId;
 
 	type MultiCurrency = Tokens;
+	type Call = Call;
+
+	type IsFeeSharingCall = DummyFeeSharingCall<Tokens>;
 
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;
