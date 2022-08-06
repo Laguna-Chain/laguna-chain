@@ -233,10 +233,10 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 			)
 			.is_ok()
 			{
-				FluentFee::deposit_event(pallet::Event::FeeSharedWithTheBeneficiary((
-					Some(beneficiary),
-					unit_weight_fee,
-				)));
+				FluentFee::deposit_event(pallet::Event::FeeSharedWithTheBeneficiary {
+					amount: unit_weight_fee,
+					beneficiary,
+				});
 			}
 
 			// normal transaction fee withdrawal
@@ -271,9 +271,9 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 	fn post_info_correction(
 		id: &Self::AssetId,
 		corret_withdrawn: &Self::Balance,
-		post_info: &PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
+		benefitiary: &Option<<Runtime as frame_system::Config>::AccountId>,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Ok(())
+		todo!()
 	}
 }
 

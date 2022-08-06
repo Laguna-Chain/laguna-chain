@@ -2717,6 +2717,7 @@ dependencies = [
  "orml-tokens",
  "orml-traits",
  "pallet-aura",
+ "pallet-authorship",
  "pallet-balances",
  "pallet-contract-asset-registry",
  "pallet-contracts",

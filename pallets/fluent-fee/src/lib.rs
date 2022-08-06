@@ -37,6 +37,7 @@ pub mod pallet {
 
 	use super::*;
 	use frame_support::weights::GetDispatchInfo;
+	use frame_system::Account;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -61,11 +62,15 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::event]
-	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	#[pallet::generate_deposit(pub fn deposit_event)]
 	pub enum Event<T: Config> {
-		AccountPreferenceUpdated((AccountIdOf<T>, Option<CurrencyId>)),
-		FeeSharingBeneficiaryIncluded(Option<AccountIdOf<T>>),
-		FeeSharedWithTheBeneficiary((Option<AccountIdOf<T>>, BalanceOf<T>)),
+		AccountPreferenceUpdated { account: AccountIdOf<T>, currency: Option<CurrencyId> },
+		FeeSharingBeneficiaryIncluded { beneficiary: Option<AccountIdOf<T>> },
+		FeeSharedWithTheBeneficiary { beneficiary: AccountIdOf<T>, amount: BalanceOf<T> },
+		FeeWithdrawn { currency: CurrencyId, amount: BalanceOf<T> },
+		FeeRefunded { currency: CurrencyId, amount: BalanceOf<T> },
+		FeePayout { receiver: AccountIdOf<T>, currency: CurrencyId, amount: BalanceOf<T> },
+		FeeCorrected,
 	}
 
 	#[pallet::storage]
@@ -79,7 +84,10 @@ pub mod pallet {
 		pub fn set_default(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			DefdaultFeeSource::<T>::insert(who.clone(), asset_id);
-			Self::deposit_event(Event::AccountPreferenceUpdated((who, Some(asset_id))));
+			Self::deposit_event(Event::AccountPreferenceUpdated {
+				account: who,
+				currency: Some(asset_id),
+			});
 			Ok(())
 		}
 
@@ -88,7 +96,7 @@ pub mod pallet {
 		pub fn unset_default(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			DefdaultFeeSource::<T>::remove(who.clone());
-			Self::deposit_event(Event::AccountPreferenceUpdated((who, None)));
+			Self::deposit_event(Event::AccountPreferenceUpdated { account: who, currency: None });
 
 			Ok(())
 		}
@@ -110,7 +118,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			ensure_signed(origin.clone())?;
 			if beneficiary.is_some() {
-				Self::deposit_event(Event::FeeSharingBeneficiaryIncluded(beneficiary));
+				Self::deposit_event(Event::FeeSharingBeneficiaryIncluded { beneficiary });
 			}
 			match call.dispatch(origin) {
 				Ok(_) => Ok(()),
@@ -150,6 +158,7 @@ pub struct MultiCurrencyPayout<T: Config> {
 	request_amount_native: BalanceOf<T>,
 	// equivalent withdrawn
 	withdrawn_source_amount: BalanceOf<T>,
+	beneficiary: Option<AccountIdOf<T>>,
 }
 
 impl<T> OnChargeTransaction<T> for Pallet<T>
@@ -191,17 +200,23 @@ where
 			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
 		};
 
-		let amounts = T::FeeMeasure::measure(&preferred_fee_asset, fee)?;
+		let amount = T::FeeMeasure::measure(&preferred_fee_asset, fee)?;
 
-		match T::FeeDispatch::withdraw(who, &preferred_fee_asset, call, &amounts, &withdraw_reason)
-		{
+		match T::FeeDispatch::withdraw(who, &preferred_fee_asset, call, &amount, &withdraw_reason) {
 			Ok(_) => {
 				let payout_info = MultiCurrencyPayout {
 					source_asset_id: preferred_fee_asset,
 					request_amount_native: fee,
-					withdrawn_source_amount: amounts,
+					withdrawn_source_amount: amount,
+					beneficiary: T::IsFeeSharingCall::is_call(call),
 				};
 				log::debug!(target: "fluent_fee::withdrawn", "succsefully withdrawn from {preferred_fee_asset:?}");
+
+				Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
+					currency: preferred_fee_asset,
+					amount,
+				});
+
 				Ok(Some(payout_info))
 			},
 			Err(_) => Err(InvalidTransaction::Payment.into()),
@@ -222,6 +237,7 @@ where
 			source_asset_id,
 			request_amount_native,
 			withdrawn_source_amount,
+			beneficiary,
 		}) = already_withdrawn
 		{
 			// overcharged amount in native
@@ -238,6 +254,10 @@ where
 				if let Ok(refunded) = T::FeeDispatch::refund(who, &source_asset_id, &amounts_source)
 				{
 					corrected_withdrawn = withdrawn_source_amount.saturating_sub(refunded);
+					Pallet::<T>::deposit_event(Event::<T>::FeeRefunded {
+						currency: source_asset_id,
+						amount: refunded,
+					});
 				}
 			}
 
@@ -247,12 +267,19 @@ where
 				corrected_withdrawn = corrected_withdrawn.saturating_sub(tip_amount_source);
 			}
 
-			T::FeeDispatch::post_info_correction(&source_asset_id, &corrected_withdrawn, post_info)
-				.map_err(|_| {
-					frame_support::unsigned::TransactionValidityError::Invalid(
-						InvalidTransaction::Payment,
-					)
-				})?;
+			// splits the remaining balances between all needed parties.
+			T::FeeDispatch::post_info_correction(
+				&source_asset_id,
+				&corrected_withdrawn,
+				&beneficiary,
+			)
+			.map_err(|_| {
+				frame_support::unsigned::TransactionValidityError::Invalid(
+					InvalidTransaction::Payment,
+				)
+			})?;
+
+			Pallet::<T>::deposit_event(Event::<T>::FeeCorrected);
 		}
 
 		Ok(())

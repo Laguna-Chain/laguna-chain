@@ -11,6 +11,7 @@ primitives = {path = "../primitives", default-features = false}
 
 # runtime's basic pallet impl
 pallet-aura = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-authorship = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-grandpa = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-scheduler = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-sudo = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
@@ -109,6 +110,7 @@ std = [
   "sp-session/std",
   "primitives/std",
   "pallet-aura/std",
+  "pallet-authorship/std",
   "pallet-grandpa/std",
   "pallet-sudo/std",
   "pallet-balances/std",

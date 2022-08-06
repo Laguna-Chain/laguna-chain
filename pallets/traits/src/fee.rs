@@ -71,7 +71,7 @@ where
 	fn post_info_correction(
 		id: &Self::AssetId,
 		corret_withdrawn: &Self::Balance,
-		post_info: &PostDispatchInfoOf<T::Call>,
+		benefitiary: &Option<<T as frame_system::Config>::AccountId>,
 	) -> Result<(), InvalidFeeDispatch>;
 }
 
