@@ -1,9 +1,5 @@
-use orml_traits::{DataProvider, DefaultPriceProvider, PriceProvider};
-use primitives::{Balance, CurrencyId, Price, TokenId};
-use sp_runtime::{
-	traits::{CheckedDiv, CheckedMul},
-	FixedPointNumber,
-};
+use primitives::{CurrencyId, TokenId};
+use sp_runtime::FixedPointNumber;
 use traits::fee::FeeMeasure;
 
 use crate::mock::*;
@@ -11,7 +7,7 @@ use crate::mock::*;
 #[test]
 fn test_measure() {
 	ExtBuilder::default().build().execute_with(|| {
-		let native_required = 1000 as Balance;
+		let native_required = 1000_u128;
 
 		assert_eq!(
 			FeeMeasurement::measure(&CurrencyId::NativeToken(TokenId::Laguna), native_required),

@@ -37,30 +37,22 @@ pub(crate) type FullClient =
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
+type Partial = sc_service::PartialComponents<
+	FullClient,
+	FullBackend,
+	FullSelectChain,
+	sc_consensus::DefaultImportQueue<Block, FullClient>,
+	sc_transaction_pool::FullPool<Block, FullClient>,
+	(
+		sc_finality_grandpa::GrandpaBlockImport<FullBackend, Block, FullClient, FullSelectChain>,
+		sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
+		Option<Telemetry>,
+	), // additional requirement
+>;
+
 // TODO: trait bond on runtime-api for cleaner abstraction
 /// create service with partial components required to run a chain
-pub fn new_partial(
-	config: &Configuration,
-) -> Result<
-	sc_service::PartialComponents<
-		FullClient,
-		FullBackend,
-		FullSelectChain,
-		sc_consensus::DefaultImportQueue<Block, FullClient>,
-		sc_transaction_pool::FullPool<Block, FullClient>,
-		(
-			sc_finality_grandpa::GrandpaBlockImport<
-				FullBackend,
-				Block,
-				FullClient,
-				FullSelectChain,
-			>,
-			sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
-			Option<Telemetry>,
-		), // additional requirement
-	>,
-	ServiceError,
-> {
+pub fn new_partial(config: &Configuration) -> Result<Partial, ServiceError> {
 	// optional telemetry setup
 	let telemetry = config
 		.telemetry_endpoints
@@ -84,7 +76,7 @@ pub fn new_partial(
 	// setup components parts
 	let (client, backend, keystore_container, task_manager) =
 		sc_service::new_full_parts::<Block, RuntimeApi, _>(
-			&config,
+			config,
 			telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()),
 			executor,
 		)?;
@@ -275,7 +267,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		let aura = sc_consensus_aura::start_aura::<AuraPair, _, _, _, _, _, _, _, _, _, _, _>(
 			StartAuraParams {
 				slot_duration,
-				client: client.clone(),
+				client,
 				select_chain,
 				block_import,
 				proposer_factory,

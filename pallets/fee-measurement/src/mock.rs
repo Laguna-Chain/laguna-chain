@@ -6,10 +6,9 @@ use frame_support::{
 	traits::{Contains, Everything},
 };
 
-use frame_system::EnsureRoot;
-use orml_traits::{DataFeeder, DataProvider, DefaultPriceProvider, LockIdentifier};
-use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
-use sp_core::{crypto::Dummy, H256};
+use orml_traits::{DataProvider, DefaultPriceProvider, LockIdentifier};
+use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, Price};
+use sp_core::H256;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -75,14 +74,14 @@ parameter_types! {
 pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
-	fn contains(t: &AccountId) -> bool {
+	fn contains(_t: &AccountId) -> bool {
 		// TODO: all account are possible to be dust-removed now
 		false
 	}
 }
 
 orml_traits::parameter_type_with_key! {
-	pub ExistentialDeposits: |currency: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency: CurrencyId| -> Balance {
 		Balance::min_value()
 	};
 }
@@ -147,20 +146,14 @@ construct_runtime!(
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
-pub const ID_1: LockIdentifier = *b"1       ";
 
+#[derive(Default)]
 pub struct ExtBuilder {}
-
-impl Default for ExtBuilder {
-	fn default() -> Self {
-		Self {}
-	}
-}
 
 impl ExtBuilder {
 	pub fn build(self) -> sp_io::TestExternalities {
 		// construct test storage for the mock runtime
-		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+		let t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| System::set_block_number(1));

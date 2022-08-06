@@ -3,8 +3,8 @@
 use primitives::{AccountId, CurrencyId, TokenId};
 
 use laguna_runtime::{
-	constants::LAGUNAS, AuraConfig, FeeEnablementConfig, GenesisConfig, GrandpaConfig, SudoConfig,
-	SystemConfig, TokensConfig, WASM_BINARY,
+	AuraConfig, FeeEnablementConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
+	TokensConfig, WASM_BINARY,
 };
 
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;

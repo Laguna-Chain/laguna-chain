@@ -141,7 +141,7 @@ fn test_total_supply() {
 			));
 
 			assert_eq!(
-				ContractTokenRegistry::balance_of(deployed.clone(), BOB),
+				ContractTokenRegistry::balance_of(deployed, BOB),
 				Some(init_amount as u128 * 90 / 1000)
 			);
 		});
@@ -162,7 +162,7 @@ fn test_register() {
 				true
 			));
 
-			assert_eq!(ContractTokenRegistry::get_registered(deployed.clone()), Some(true));
+			assert_eq!(ContractTokenRegistry::get_registered(deployed), Some(true));
 		});
 }
 
@@ -185,7 +185,7 @@ fn test_suspend() {
 
 			assert_ok!(ContractTokenRegistry::suspend_asset(Origin::root(), deployed.clone(),));
 
-			assert_eq!(ContractTokenRegistry::get_registered(deployed.clone()), Some(false));
+			assert_eq!(ContractTokenRegistry::get_registered(deployed), Some(false));
 		});
 }
 
@@ -208,6 +208,6 @@ fn test_unregister() {
 
 			assert_ok!(ContractTokenRegistry::unregister_asset(Origin::root(), deployed.clone(),));
 
-			assert_eq!(ContractTokenRegistry::get_registered(deployed.clone()), None);
+			assert_eq!(ContractTokenRegistry::get_registered(deployed), None);
 		});
 }

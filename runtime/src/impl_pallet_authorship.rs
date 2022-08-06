@@ -1,6 +1,6 @@
 use primitives::AccountId;
 
-use crate::{Aura, Runtime};
+use crate::Runtime;
 
 pub struct AuraAccountAdapter;
 impl frame_support::traits::FindAuthor<AccountId> for AuraAccountAdapter {

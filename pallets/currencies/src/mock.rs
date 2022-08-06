@@ -201,7 +201,7 @@ impl pallet_contract_asset_registry::Config for Runtime {
 }
 
 orml_traits::parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
 		Balance::MIN
 	};
 }
@@ -209,7 +209,7 @@ orml_traits::parameter_type_with_key! {
 pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
-	fn contains(t: &AccountId) -> bool {
+	fn contains(_t: &AccountId) -> bool {
 		false
 	}
 }
@@ -277,7 +277,6 @@ construct_runtime!(
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
-pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
 #[derive(Default)]
 pub struct ExtBuilder {

@@ -14,7 +14,7 @@ fn test_listed() {
 		.build()
 		.execute_with(|| {
 			assert!(crate::FeeAssets::<Runtime>::get(NATIVE_CURRENCY_ID).unwrap_or_default());
-			assert_eq!(crate::FeeAssets::<Runtime>::get(FEETOKEN_ID).unwrap_or_default(), false);
+			assert!(!crate::FeeAssets::<Runtime>::get(FEETOKEN_ID).unwrap_or_default());
 
 			assert_ok!(<FeeEnablement as FeeSource>::listed(&CurrencyId::NativeToken(
 				TokenId::Laguna
@@ -60,7 +60,7 @@ fn test_accepted() {
 			assert!(FeeEnablement::accepted(&BOB, &FEETOKEN_ID).is_err());
 
 			// manually raise the token for it to be in a healthy state
-			assert_ok!(Tokens::set_balance(Origin::root(), ALICE, FEETOKEN_ID, 1000_000, 0));
+			assert_ok!(Tokens::set_balance(Origin::root(), ALICE, FEETOKEN_ID, 1_000_000, 0));
 			assert_ok!(FeeEnablement::accepted(&ALICE, &FEETOKEN_ID));
 
 			// BOB was mandatory blacklisted

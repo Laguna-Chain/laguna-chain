@@ -1,4 +1,4 @@
-use std::{marker::PhantomData, ops::Deref, sync::Arc};
+use std::{marker::PhantomData, sync::Arc};
 
 use codec::Codec;
 

@@ -1,6 +1,5 @@
 use super::*;
 
-use codec::Decode;
 use frame_support::{
 	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
@@ -219,17 +218,11 @@ construct_runtime!(
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
-pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
+#[derive(Default)]
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, Balance)>,
 	sudo: Option<AccountId>,
-}
-
-impl Default for ExtBuilder {
-	fn default() -> Self {
-		Self { balances: vec![], sudo: None }
-	}
 }
 
 impl ExtBuilder {

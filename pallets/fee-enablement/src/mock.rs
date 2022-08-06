@@ -75,14 +75,14 @@ parameter_types! {
 pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
-	fn contains(t: &AccountId) -> bool {
+	fn contains(_t: &AccountId) -> bool {
 		// TODO: all account are possible to be dust-removed now
 		false
 	}
 }
 
 orml_traits::parameter_type_with_key! {
-	pub ExistentialDeposits: |currency: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency: CurrencyId| -> Balance {
 		Balance::min_value()
 	};
 }
@@ -179,14 +179,9 @@ pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
 pub const ID_1: LockIdentifier = *b"1       ";
 
+#[derive(Default)]
 pub struct ExtBuilder {
 	enabled: Vec<(CurrencyId, bool)>,
-}
-
-impl Default for ExtBuilder {
-	fn default() -> Self {
-		Self { enabled: vec![] }
-	}
 }
 
 impl ExtBuilder {
@@ -202,7 +197,7 @@ impl ExtBuilder {
 
 		if !self.enabled.is_empty() {
 			GenesisBuild::<Runtime>::assimilate_storage(
-				&crate::GenesisConfig { enabled: self.enabled.clone() },
+				&crate::GenesisConfig { enabled: self.enabled },
 				&mut t,
 			)
 			.expect("unable to build genesis");

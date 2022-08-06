@@ -33,7 +33,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call demo"))?;
 				Ok(RetVal::Converging(0))
 			},
-			_ if 2000 <= func_id && func_id < 3000 => {
+			_ if (2000..3000).contains(&func_id) => {
 				// Native token access as ERC20 token
 				let token_id: u32 = env.read_as()?;
 				let currency = CurrencyId::NativeToken(match token_id {

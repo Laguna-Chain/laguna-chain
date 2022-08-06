@@ -6,15 +6,12 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{pallet_prelude::*, sp_runtime};
-use frame_system::pallet_prelude::*;
 use orml_traits::price::PriceProvider;
-use primitives::{Balance, CurrencyId, Price, TokenId};
-use sp_runtime::{traits::CheckedMul, FixedPointNumber};
+use primitives::{Balance, CurrencyId, TokenId};
+use sp_runtime::FixedPointNumber;
 use traits::fee::FeeMeasure;
 
 pub use pallet::*;
-
-type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 #[cfg(test)]
 mod tests;
