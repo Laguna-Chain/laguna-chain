@@ -5,17 +5,15 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{
-	dispatch::{self, Dispatchable},
-	pallet_prelude::*,
-	sp_runtime::traits::Saturating,
+	dispatch::Dispatchable, pallet_prelude::*, sp_runtime::traits::Saturating,
 	traits::WithdrawReasons,
 };
 
-use frame_system::{pallet_prelude::*, Call};
+use frame_system::pallet_prelude::*;
 use scale_info::prelude::boxed::Box;
 
 use orml_traits::{arithmetic::Zero, MultiCurrency};
-use primitives::{CurrencyId, TokenId};
+use primitives::CurrencyId;
 
 use frame_support::sp_runtime::traits::{DispatchInfoOf, PostDispatchInfoOf};
 use pallet_transaction_payment::OnChargeTransaction;
@@ -37,7 +35,6 @@ pub mod pallet {
 
 	use super::*;
 	use frame_support::weights::GetDispatchInfo;
-	use frame_system::Account;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -104,9 +101,8 @@ pub mod pallet {
 		// dynamically add one unit of weight if beneficiary is_some
 		#[pallet::weight({
 			let dispatch_info = call.get_dispatch_info();
-			let unit_weight = if beneficiary.is_some() {1} else {0};
 			(
-				dispatch_info.weight.saturating_add(unit_weight),
+				dispatch_info.weight,
 				dispatch_info.class,
 				dispatch_info.pays_fee,
 			)
