@@ -8,11 +8,6 @@ use primitives::{AccountId, Balance, CurrencyId, TokenId};
 use sp_runtime::{self, FixedPointNumber, FixedU128};
 use traits::fee::{FeeDispatch, FeeMeasure, IsFeeSharingCall};
 
-parameter_types! {
-	pub const SplitRatio: (i32, i32) = (50, 50);
-	pub const SplitRatioShared: (i32, i32, i32 ) = (34, 33, 33);
-}
-
 impl pallet_fluent_fee::Config for Runtime {
 	type DefaultFeeAsset = NativeCurrencyId;
 

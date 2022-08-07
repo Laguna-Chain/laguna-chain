@@ -4,7 +4,7 @@ use primitives::{AccountId, CurrencyId, TokenId};
 
 use laguna_runtime::{
 	AuraConfig, FeeEnablementConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
-	TokensConfig, WASM_BINARY,
+	TokensConfig, TreasuryConfig, WASM_BINARY,
 };
 
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
@@ -106,5 +106,6 @@ fn testnet_genesis(
 		fee_enablement: FeeEnablementConfig {
 			enabled: vec![(CurrencyId::NativeToken(TokenId::Laguna), true)],
 		},
+		treasury: TreasuryConfig {},
 	}
 }
