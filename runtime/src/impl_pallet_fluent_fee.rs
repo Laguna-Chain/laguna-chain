@@ -145,6 +145,7 @@ impl FeeDispatch<Runtime> for StaticImpl {
 
 		let author_amount = to_author.saturating_mul_int(*corret_withdrawn);
 
+		let shared_amount = to_shared.saturating_mul_int(*corret_withdrawn);
 		if let Some(author) = Authorship::author() {
 			<Currencies as MultiCurrency<AccountId>>::deposit(*id, &author, author_amount)
 				.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
@@ -156,9 +157,6 @@ impl FeeDispatch<Runtime> for StaticImpl {
 		}
 
 		// TODO: investigate cases where block author cannot be found
-
-		let shared_amount = to_shared.saturating_mul_int(*corret_withdrawn);
-
 		if let Some(target) = benefitiary {
 			<Currencies as MultiCurrency<AccountId>>::deposit(*id, target, shared_amount)
 				.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
