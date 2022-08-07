@@ -11,8 +11,6 @@ use traits::fee::{FeeDispatch, FeeMeasure, IsFeeSharingCall};
 parameter_types! {
 	pub const SplitRatio: (i32, i32) = (50, 50);
 	pub const SplitRatioShared: (i32, i32, i32 ) = (34, 33, 33);
-
-	pub static TreasuryAccounnt: AccountId = Treasury::account_id();
 }
 
 impl pallet_fluent_fee::Config for Runtime {
@@ -127,7 +125,7 @@ impl FeeDispatch<Runtime> for StaticImpl {
 		// 2% of total corrected goes to shared by default
 		let to_shared = FixedU128::saturating_from_rational(2_u128, 100_u128);
 
-		let treasury_account_id = TreasuryAccounnt::get();
+		let treasury_account_id = Treasury::account_id();
 
 		let treasury_amount = to_treasury.saturating_mul_int(*corret_withdrawn);
 		<Currencies as MultiCurrency<AccountId>>::deposit(
@@ -145,7 +143,6 @@ impl FeeDispatch<Runtime> for StaticImpl {
 
 		let author_amount = to_author.saturating_mul_int(*corret_withdrawn);
 
-		let shared_amount = to_shared.saturating_mul_int(*corret_withdrawn);
 		if let Some(author) = Authorship::author() {
 			<Currencies as MultiCurrency<AccountId>>::deposit(*id, &author, author_amount)
 				.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
@@ -155,6 +152,8 @@ impl FeeDispatch<Runtime> for StaticImpl {
 				currency: *id,
 			});
 		}
+
+		let shared_amount = to_shared.saturating_mul_int(*corret_withdrawn);
 
 		// TODO: investigate cases where block author cannot be found
 		if let Some(target) = benefitiary {
