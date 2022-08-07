@@ -1,32 +1,21 @@
-use crate::*;
-use codec::Encode;
-use frame_support::{
-	assert_ok,
-	dispatch::{DispatchInfo, Dispatchable, GetDispatchInfo, PostDispatchInfo, Weight},
-	sp_runtime::traits::SignedExtension,
-	weights::Pays,
-};
-use laguna_runtime::{
-	constants::LAGUNAS, Currencies, FeeMeasurement, FluentFee, Origin, TransactionPayment,
-};
-use pallet_transaction_payment::ChargeTransactionPayment;
-
-use traits::fee::FeeMeasure;
-
-pub fn info_from_weight(w: Weight) -> DispatchInfo {
-	// pays_fee: Pays::Yes -- class: DispatchClass::Normal
-	DispatchInfo { weight: w, ..Default::default() }
-}
-
 #[cfg(test)]
 mod tests {
 
-	use frame_support::traits::fungible::Balanced;
-	use laguna_runtime::FeeEnablement;
-	use orml_traits::MultiCurrency;
-	use pallet_transaction_payment::OnChargeTransaction;
+	use crate::*;
+	use codec::Encode;
+	use frame_support::{
+		assert_ok,
+		dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo, Weight},
+		sp_runtime::traits::SignedExtension,
+		weights::Pays,
+	};
+	use laguna_runtime::{
+		constants::LAGUNAS, Currencies, FeeEnablement, FeeMeasurement, FluentFee, Origin,
+		TransactionPayment,
+	};
+	use pallet_transaction_payment::ChargeTransactionPayment;
 
-	use super::*;
+	use traits::fee::FeeMeasure;
 
 	#[test]
 	fn test_basic_fee_payout() {
@@ -39,7 +28,7 @@ mod tests {
 				let call = laguna_runtime::Call::Currencies(pallet_currencies::Call::transfer {
 					to: BOB,
 					currency_id: NATIVE_CURRENCY_ID,
-					balance: 1 * LAGUNAS,
+					balance: LAGUNAS,
 				});
 
 				let len = call.encoded_size();
@@ -67,8 +56,7 @@ mod tests {
 
 				assert_eq!(pre_dispatch_amount, post_dispatch_amount + fee);
 
-				let post =
-					call.clone().dispatch(Origin::signed(ALICE)).expect("should be dispatched");
+				let post = call.dispatch(Origin::signed(ALICE)).expect("should be dispatched");
 
 				// TODO: refund logic and payout to validator etc should work
 				assert_ok!(ChargeTransactionPayment::<Runtime>::post_dispatch(
@@ -82,7 +70,7 @@ mod tests {
 				// expected final states
 				assert_eq!(
 					Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID),
-					10 * LAGUNAS - 1 * LAGUNAS - fee
+					(10 - 1) * LAGUNAS - fee
 				);
 			});
 	}
@@ -108,7 +96,7 @@ mod tests {
 				let call = laguna_runtime::Call::Currencies(pallet_currencies::Call::transfer {
 					to: ALICE,
 					currency_id: NATIVE_CURRENCY_ID,
-					balance: 1 * LAGUNAS,
+					balance: LAGUNAS,
 				});
 
 				let len = call.encoded_size();
@@ -138,8 +126,7 @@ mod tests {
 					FeeMeasurement::measure(&FEE_TOKEN, fee).expect("unable to get convert rate");
 				assert_eq!(pre_dispatch_amount - post_dispatch_amount, targeted);
 
-				let post =
-					call.clone().dispatch(Origin::signed(ALICE)).expect("should be dispatched");
+				let post = call.dispatch(Origin::signed(ALICE)).expect("should be dispatched");
 
 				// TODO: refund logic and payout to validator etc should work
 				assert_ok!(ChargeTransactionPayment::<Runtime>::post_dispatch(

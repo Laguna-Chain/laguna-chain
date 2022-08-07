@@ -44,6 +44,7 @@ pub mod impl_pallet_aura;
 pub mod impl_pallet_contract_asset_registry;
 pub mod impl_pallet_contracts;
 pub mod impl_pallet_fee_measurement;
+pub mod impl_pallet_treasury;
 
 pub mod impl_pallet_authorship;
 pub mod impl_pallet_currencies;
@@ -137,6 +138,9 @@ construct_runtime!(
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
 			Authorship: pallet_authorship,
+
+			// government
+			Treasury: pallet_treasury,
 
 			Contracts: pallet_contracts,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,

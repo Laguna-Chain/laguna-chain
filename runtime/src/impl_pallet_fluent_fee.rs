@@ -1,22 +1,18 @@
 use crate::{
 	impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Currencies, Event, FeeEnablement,
-	FeeMeasurement, FluentFee, Runtime,
+	FeeMeasurement, FluentFee, Runtime, Treasury,
 };
 use frame_support::{pallet_prelude::InvalidTransaction, parameter_types};
-use orml_traits::{BasicCurrency, MultiCurrency};
+use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
-use sp_runtime::{
-	traits::{PostDispatchInfoOf, Zero},
-	FixedPointNumber, FixedU128,
-};
+use sp_runtime::{self, FixedPointNumber, FixedU128};
 use traits::fee::{FeeDispatch, FeeMeasure, IsFeeSharingCall};
 
 parameter_types! {
 	pub const SplitRatio: (i32, i32) = (50, 50);
 	pub const SplitRatioShared: (i32, i32, i32 ) = (34, 33, 33);
 
-
-	pub const TreasuryAccounnt: AccountId = todo!();
+	pub static TreasuryAccounnt: AccountId = Treasury::account_id();
 }
 
 impl pallet_fluent_fee::Config for Runtime {
@@ -122,57 +118,54 @@ impl FeeDispatch<Runtime> for StaticImpl {
 			unimplemented!("currently erc20 handlign is not impelmented");
 		}
 
-		let to_treasury = if benefitiary.is_some() {
-			FixedU128::saturating_from_rational(34_u128, 100_u128)
-		} else {
-			FixedU128::saturating_from_rational(50_u128, 100_u128)
-		};
+		// 49% of total corrected goes to treasury by default
+		let to_treasury = FixedU128::saturating_from_rational(49_u128, 100_u128);
 
-		// TODO: fill in treasury account
+		// 49% of total corrected goes to validator by default
+		let to_author = FixedU128::saturating_from_rational(49_u128, 100_u128);
+
+		// 2% of total corrected goes to shared by default
+		let to_shared = FixedU128::saturating_from_rational(2_u128, 100_u128);
+
+		let treasury_account_id = TreasuryAccounnt::get();
 
 		let treasury_amount = to_treasury.saturating_mul_int(*corret_withdrawn);
-
-		let mut remaining = corret_withdrawn.saturating_sub(treasury_amount);
-
-		// pay block_author
-		let author = Authorship::author().expect("unable to find author");
-
-		let to_author = if benefitiary.is_some() {
-			FixedU128::saturating_from_rational(50_u128, 50_u128)
-		} else {
-			FixedU128::saturating_from_rational(100_u128, 100_u128)
-		};
-
-		let author_amount = to_author.saturating_mul_int(remaining);
-
-		<Currencies as MultiCurrency<AccountId>>::deposit(*id, &author, author_amount)
-			.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
+		<Currencies as MultiCurrency<AccountId>>::deposit(
+			*id,
+			&treasury_account_id,
+			treasury_amount,
+		)
+		.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
 
 		FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
-			amount: author_amount,
-			receiver: author.clone(),
+			amount: treasury_amount,
+			receiver: treasury_account_id,
 			currency: *id,
 		});
 
-		remaining = remaining.saturating_sub(author_amount);
+		let author_amount = to_author.saturating_mul_int(*corret_withdrawn);
 
-		// pay beneficiary if exists
+		if let Some(author) = Authorship::author() {
+			<Currencies as MultiCurrency<AccountId>>::deposit(*id, &author, author_amount)
+				.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
+			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
+				amount: author_amount,
+				receiver: author,
+				currency: *id,
+			});
+		}
+
+		// TODO: investigate cases where block author cannot be found
+
+		let shared_amount = to_shared.saturating_mul_int(*corret_withdrawn);
+
 		if let Some(target) = benefitiary {
-			<Currencies as MultiCurrency<AccountId>>::deposit(*id, target, remaining)
+			<Currencies as MultiCurrency<AccountId>>::deposit(*id, target, shared_amount)
 				.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
 			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
 				receiver: target.clone(),
 				currency: *id,
-				amount: remaining,
-			});
-		} else {
-			<Currencies as MultiCurrency<AccountId>>::deposit(*id, &author, remaining)
-				.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
-
-			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
-				receiver: author,
-				currency: *id,
-				amount: remaining,
+				amount: shared_amount,
 			});
 		}
 
