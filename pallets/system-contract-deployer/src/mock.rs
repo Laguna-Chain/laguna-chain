@@ -8,8 +8,8 @@ use frame_support::{
 };
 
 use frame_support::pallet_prelude::{ConstU32, Weight};
-use pallet_system_contract_deployer::CustomAddressGenerator;
 use pallet_contracts::{weights::WeightInfo, DefaultContractAccessWeight};
+use pallet_system_contract_deployer::CustomAddressGenerator;
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
 use sp_runtime::Perbill;
@@ -147,7 +147,9 @@ impl pallet_contracts::Config for Test {
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 }
 
-impl pallet_system_contract_deployer::Config for Test {}
+impl pallet_system_contract_deployer::Config for Test {
+	type Event = Event;
+}
 
 construct_runtime!(
 

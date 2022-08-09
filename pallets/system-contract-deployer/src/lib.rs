@@ -31,7 +31,9 @@ pub mod pallet {
 	>>::Balance;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_contracts::Config {}
+	pub trait Config: frame_system::Config + pallet_contracts::Config {
+		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+	}
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -40,6 +42,19 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn deploying_key)]
 	pub type DeployingKey<T: Config> = StorageValue<_, <T as frame_system::Config>::AccountId>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn is_system_contract)]
+	pub type SystemContracts<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, bool, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::event]
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		/// [contract_address]
+		Created(T::AccountId),
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
@@ -62,7 +77,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 
-			pallet_contracts::Pallet::<T>::instantiate_with_code(
+			let output = pallet_contracts::Pallet::<T>::instantiate_with_code(
 				RawOrigin::Signed(Self::deploy_key()).into(),
 				value,
 				gas_limit,
@@ -70,7 +85,19 @@ pub mod pallet {
 				code,
 				data,
 				destined_address.to_vec(),
-			)
+			);
+
+			// @dev: coupling or event extraction?
+			if output.is_ok() {
+				let contract_addr = AccountId32::from(destined_address);
+				let contract_addr = T::AccountId::decode(&mut contract_addr.as_ref())
+					.expect("Cannot create an AccountId from the given salt");
+
+				SystemContracts::<T>::insert(contract_addr.clone(), true);
+				Self::deposit_event(Event::<T>::Created(contract_addr));
+			}
+
+			output
 		}
 
 		#[pallet::weight(
@@ -87,7 +114,7 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 
-			pallet_contracts::Pallet::<T>::instantiate(
+			let output = pallet_contracts::Pallet::<T>::instantiate(
 				RawOrigin::Signed(Self::deploy_key()).into(),
 				value,
 				gas_limit,
@@ -95,7 +122,19 @@ pub mod pallet {
 				code_hash,
 				data,
 				destined_address.to_vec(),
-			)
+			);
+
+			// @dev: coupling or event extraction?
+			if output.is_ok() {
+				let contract_addr = AccountId32::from(destined_address);
+				let contract_addr = T::AccountId::decode(&mut contract_addr.as_ref())
+					.expect("Cannot create an AccountId from the given salt");
+
+				SystemContracts::<T>::insert(contract_addr.clone(), true);
+				Self::deposit_event(Event::<T>::Created(contract_addr));
+			}
+
+			output
 		}
 
 		#[pallet::weight(T::WeightInfo::upload_code(code.len() as u32))]
@@ -130,6 +169,10 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		fn deploy_key() -> T::AccountId {
 			Self::deploying_key().expect("Key is set at genesis")
+		}
+
+		pub fn get_all_system_contracts() -> Vec<T::AccountId> {
+			SystemContracts::<T>::iter_keys().collect()
 		}
 	}
 
