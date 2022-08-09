@@ -361,7 +361,7 @@ mod tests {
 					None,
 					blob,
 					sel_constructor,
-					[0x11; 32],
+					Some([0x11; 32]),
 				));
 
 				let evts = System::events();

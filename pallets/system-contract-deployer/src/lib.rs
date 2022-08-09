@@ -49,6 +49,8 @@ pub mod pallet {
 		StorageMap<_, Blake2_128Concat, T::AccountId, bool, ValueQuery>;
 
 	#[pallet::storage]
+	pub type NextAddress<T: Config> = StorageValue<_, u32>;
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -73,9 +75,11 @@ pub mod pallet {
 			storage_deposit_limit: Option<<BalanceOf<T> as codec::HasCompact>::Type>,
 			code: Vec<u8>,
 			data: Vec<u8>,
-			destined_address: [u8; 32],
+			destined_address: Option<[u8; 32]>,
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
+			let destined_address =
+				destined_address.unwrap_or_else(|| Self::get_next_available_bytes());
 
 			let output = pallet_contracts::Pallet::<T>::instantiate_with_code(
 				RawOrigin::Signed(Self::deploy_key()).into(),
@@ -110,9 +114,11 @@ pub mod pallet {
 			storage_deposit_limit: Option<<BalanceOf<T> as codec::HasCompact>::Type>,
 			code_hash: CodeHash<T>,
 			data: Vec<u8>,
-			destined_address: [u8; 32],
+			destined_address: Option<[u8; 32]>,
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
+			let destined_address =
+				destined_address.unwrap_or_else(|| Self::get_next_available_bytes());
 
 			let output = pallet_contracts::Pallet::<T>::instantiate(
 				RawOrigin::Signed(Self::deploy_key()).into(),
@@ -174,6 +180,27 @@ pub mod pallet {
 		pub fn get_all_system_contracts() -> Vec<T::AccountId> {
 			SystemContracts::<T>::iter_keys().collect()
 		}
+
+		fn get_next_available_bytes() -> [u8; 32] {
+			let mut counter = NextAddress::<T>::get().unwrap_or(1);
+			loop {
+				let hex = scale_info::prelude::format!("{:064x}", counter);
+				let mut byte = [0u8; 32];
+				hex::decode_to_slice(hex, &mut byte).unwrap();
+				let addr = AccountId32::from(byte);
+				let addr = T::AccountId::decode(&mut addr.as_ref()).unwrap();
+				if !Self::is_system_contract(addr.clone()) {
+					return byte
+				}
+				counter += 1;
+			}
+		}
+
+		pub fn get_next_available_address() -> T::AccountId {
+			let byte = Self::get_next_available_bytes();
+			let addr = AccountId32::from(byte);
+			T::AccountId::decode(&mut addr.as_ref()).unwrap()
+		}
 	}
 
 	#[pallet::genesis_config]
@@ -210,6 +237,7 @@ pub mod pallet {
 			let sz = self.addr.len();
 
 			DeployingKey::<T>::put(self.deploying_key.clone());
+			NextAddress::<T>::put(1);
 
 			for i in 0..sz {
 				pallet_contracts::Pallet::<T>::bare_upload_code(
