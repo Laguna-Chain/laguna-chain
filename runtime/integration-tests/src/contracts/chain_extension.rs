@@ -64,7 +64,7 @@ mod tests {
 				let rs =
 					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						ALICE,
-						deployed_address.clone().into(),
+						deployed_address.clone(),
 						0,
 						MAX_GAS,
 						None,

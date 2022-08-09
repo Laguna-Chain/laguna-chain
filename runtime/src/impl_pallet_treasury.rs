@@ -1,13 +1,19 @@
 use frame_support::{parameter_types, traits::ConstU32, PalletId};
 use frame_system::EnsureRoot;
 use orml_tokens::CurrencyAdapter;
-use primitives::AccountId;
+use primitives::{AccountId, Balance, BlockNumber};
+use sp_runtime::Permill;
 
 use crate::{impl_pallet_currencies::NativeCurrencyId, Event, Runtime};
 
 parameter_types! {
 
 	pub const TreasuryPalletId: PalletId = PalletId(*b"lgn/trsy");
+	pub const ProposalBond: Permill = Permill::from_percent(5);
+
+	pub const ProposalBondMinimum: Balance = 1;
+	pub const SpendPeriod: BlockNumber = 1;
+	pub const Burn: Permill = Permill::from_percent(50);
 }
 
 impl pallet_treasury::Config for Runtime {
@@ -19,11 +25,11 @@ impl pallet_treasury::Config for Runtime {
 
 	type Event = Event;
 	type OnSlash = ();
-	type ProposalBond = ();
-	type ProposalBondMinimum = ();
+	type ProposalBond = ProposalBond;
+	type ProposalBondMinimum = ProposalBondMinimum;
 	type ProposalBondMaximum = ();
-	type SpendPeriod = ();
-	type Burn = ();
+	type SpendPeriod = SpendPeriod;
+	type Burn = Burn;
 	type BurnDestination = ();
 	type SpendFunds = ();
 	type WeightInfo = ();

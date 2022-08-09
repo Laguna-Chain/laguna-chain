@@ -596,8 +596,9 @@ where
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			CurrencyId::NativeToken(_) =>
-				<T::MultiCurrency>::set_lock(lock_id, currency_id, who, amount),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiLockableCurrency<
+				AccountIdOf<T>,
+			>>::set_lock(lock_id, currency_id, who, amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
 	}
@@ -609,8 +610,9 @@ where
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			CurrencyId::NativeToken(_) =>
-				<T::MultiCurrency>::extend_lock(lock_id, currency_id, who, amount),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiLockableCurrency<
+				AccountIdOf<T>,
+			>>::extend_lock(lock_id, currency_id, who, amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
 	}
@@ -621,8 +623,9 @@ where
 		who: &AccountIdOf<T>,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			CurrencyId::NativeToken(_) =>
-				<T::MultiCurrency>::remove_lock(lock_id, currency_id, who),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiLockableCurrency<
+				AccountIdOf<T>,
+			>>::remove_lock(lock_id, currency_id, who),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
 	}

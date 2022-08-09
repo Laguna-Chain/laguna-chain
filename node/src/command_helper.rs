@@ -92,10 +92,10 @@ pub fn create_benchmark_extrinsic(
 	let signature = raw_payload.using_encoded(|e| sender.sign(e));
 
 	laguna_runtime::UncheckedExtrinsic::new_signed(
-		call.clone(),
+		call,
 		sp_runtime::AccountId32::from(sender.public()).into(),
-		primitives::Signature::Sr25519(signature.clone()),
-		extra.clone(),
+		primitives::Signature::Sr25519(signature),
+		extra,
 	)
 }
 
