@@ -117,25 +117,20 @@ fn test_fee_sharing_beneficiary_works() {
 			// get the call length and info
 			let len = wrapped_call.encoded_size();
 			let info = wrapped_call.get_dispatch_info();
+
+			let total_fee = Payment::compute_fee(len.clone() as u32, &info, 0);
 			ChargeTransactionPayment::<Runtime>::from(0)
 				.pre_dispatch(&ALICE, &wrapped_call, &info, len)
 				.expect("should pass");
 
 			// Execute the wrapped call
 			assert_ok!(wrapped_call.dispatch(Origin::signed(ALICE)));
-			// EVA should have recieved tokens equivalent to unit weight
+			// EVA should have recieved tokens equivalent to 2% of the total transaction fee
 			let eva_balance_after = Tokens::free_balance(NATIVE_CURRENCY_ID, &EVA);
-			// Compute 1 weight equivalent of fee
-			let unit_weight_fee = Payment::compute_fee_details(
-				0,
-				&DispatchInfo { pays_fee: info.pays_fee, weight: 1u64, class: info.class },
-				0,
-			)
-			.inclusion_fee
-			.unwrap()
-			.adjusted_weight_fee;
-
-			assert!(eva_balance_after == eva_balance_before + unit_weight_fee);
+			assert!(
+				eva_balance_after ==
+					eva_balance_before + total_fee.saturating_mul(2).saturating_div(100)
+			);
 		})
 }
 
@@ -200,6 +195,7 @@ fn test_fee_sharing_beneficiary_reaped_account_works() {
 			// get the call length and info
 			let len = wrapped_call.encoded_size();
 			let info = wrapped_call.get_dispatch_info();
+			let total_fee = Payment::compute_fee(len.clone() as u32, &info, 0);
 			ChargeTransactionPayment::<Runtime>::from(0)
 				.pre_dispatch(&ALICE, &wrapped_call, &info, len)
 				.expect("should pass");
@@ -208,17 +204,10 @@ fn test_fee_sharing_beneficiary_reaped_account_works() {
 			assert_ok!(wrapped_call.dispatch(Origin::signed(ALICE)));
 			// EVA should have recieved tokens equivalent to unit weight
 			let eva_balance_after = Tokens::free_balance(NATIVE_CURRENCY_ID, &EVA);
-			// Compute 1 weight equivalent of fee
-			let unit_weight_fee = Payment::compute_fee_details(
-				0,
-				&DispatchInfo { pays_fee: info.pays_fee, weight: 1u64, class: info.class },
-				0,
-			)
-			.inclusion_fee
-			.unwrap()
-			.adjusted_weight_fee;
-
 			// assert!(eva_balance_after == eva_balance_before);
-			assert!(eva_balance_after == eva_balance_before + unit_weight_fee); // this should ideally fail
+			assert!(
+				eva_balance_after ==
+					eva_balance_before + total_fee.saturating_mul(2).saturating_div(100)
+			); // this should ideally fail
 		})
 }

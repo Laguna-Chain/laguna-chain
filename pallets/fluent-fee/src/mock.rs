@@ -212,22 +212,16 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		// SHARE or BURN 2% of the transaction fee based on whether the beneficiary is set to an
+		// eligible address or None
+		let fee_shared_or_burned = balance.saturating_mul(2).saturating_div(100);
+		let fee_payout = balance - fee_shared_or_burned;
 		// If the transaction is of fee sharing type, transfer unit weight worth of fees to the
 		// given beneficiary
 		if let Some(beneficiary) =
 			<IsSharingCall<Runtime> as IsFeeSharingCall<Runtime>>::is_call(call)
 		{
-			// Get the fee equivalent to 1 unit of weight that can be shared with the
-			// beneficiary
-			let fee_details = Payment::compute_fee_details(
-				0,
-				&DispatchInfo { pays_fee: Pays::Yes, weight: 1u64, class: DispatchClass::Normal },
-				0,
-			);
-			// unpack the fee_details struct to get the adjusted_weight_fee
-			let unit_weight_fee = fee_details.inclusion_fee.unwrap().adjusted_weight_fee;
-
-			// Send the unit weight fee to the beneficiary account
+			// Send the shared fee to the beneficiary account
 			// NOTE: we are not reverting the transaction if the transfer to the beneficiary
 			// fails as it does not constitute core logic expressed by the transaction but is merely
 			// a tip given to the beneficiary of the signer's choice.
@@ -237,19 +231,25 @@ impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
 				*id,
 				account,
 				&beneficiary,
-				unit_weight_fee.clone(),
+				fee_shared_or_burned.clone(),
 			) {
 				FluentFee::deposit_event(pallet::Event::FeeSharedWithTheBeneficiary((
 					Some(beneficiary),
-					unit_weight_fee,
+					fee_shared_or_burned,
 				)));
 			}
 
 			// normal transaction fee withdrawal
-			Tokens::withdraw(*id, account, *balance)
+			Tokens::withdraw(*id, account, fee_payout)
 				.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 		} else {
-			Tokens::withdraw(*id, account, *balance)
+			// BURN a portion of the fee if no beneficiary is chosen
+			Tokens::withdraw(*id, account, fee_shared_or_burned)
+				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute);
+			// Validator payout amount
+			// NOTE: currently it is also being burned for the sake of simplicity, but with future
+			// staking upgrades it will change
+			Tokens::withdraw(*id, account, fee_payout)
 				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 		}
 	}

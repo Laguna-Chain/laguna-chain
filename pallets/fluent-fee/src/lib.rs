@@ -84,15 +84,7 @@ pub mod pallet {
 			Ok(())
 		}
 		// If the transaction specifies
-		#[pallet::weight({
-			let dispatch_info = call.get_dispatch_info();
-			let unit_weight = if beneficiary.is_some() {1} else {0};
-			(
-				dispatch_info.weight.saturating_add(unit_weight),
-				dispatch_info.class,
-				dispatch_info.pays_fee,
-			)
-		})]
+		#[pallet::weight(1000)]
 		pub fn fee_sharing_wrapper(
 			origin: OriginFor<T>,
 			call: Box<<T as pallet::Config>::Call>,
