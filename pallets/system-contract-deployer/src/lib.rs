@@ -1,6 +1,7 @@
 //! ## pallet-system-contract-deployer
 //!
-//! This pallet allows system contracts to be deployed at fixed addresses
+//! This pallet allows system contracts to be deployed at fixed addresses.
+//! It is tightly-coupled with the pallet-contract and exposes privileged extrinsics
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -47,6 +48,7 @@ pub mod pallet {
 	pub type SystemContracts<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, bool, ValueQuery>;
 
+	// Stores the next possible sequential address value in integer form
 	#[pallet::storage]
 	pub type NextAddress<T: Config> = StorageValue<_, u32>;
 
@@ -63,6 +65,11 @@ pub mod pallet {
 		T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>,
 		<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + Debug + TypeInfo + Encode,
 	{
+		/// Instantiates a new system-contract from the supplied `code` optionally transferring
+		/// some balance and optionally providing the destined address.
+		///
+		/// Setting destined_address to None evaluates the next sequential address (starts from
+		/// 0x01)
 		#[pallet::weight(
 			T::WeightInfo::instantiate_with_code(code.len() as u32, 32_u32)
 			.saturating_add(*gas_limit)
@@ -103,6 +110,10 @@ pub mod pallet {
 			output
 		}
 
+		/// Instantiates a contract from a previously deployed wasm binary.
+		///
+		/// Setting destined_address to None evaluates the next sequential address (starts from
+		/// 0x01)
 		#[pallet::weight(
 			T::WeightInfo::instantiate(32_u32).saturating_add(*gas_limit)
 		)]
@@ -142,6 +153,7 @@ pub mod pallet {
 			output
 		}
 
+		/// Upload new `code` without instantiating a contract from it.
 		#[pallet::weight(T::WeightInfo::upload_code(code.len() as u32))]
 		pub fn upload_code(
 			origin: OriginFor<T>,
@@ -157,6 +169,10 @@ pub mod pallet {
 			)
 		}
 
+		/// Remove the code stored under `code_hash` and refund the deposit to its owner.
+		///
+		/// A code can only be removed by its original uploader (its owner) and only if it is
+		/// not used by any contract.
 		#[pallet::weight(T::WeightInfo::remove_code())]
 		pub fn remove_code(
 			origin: OriginFor<T>,
@@ -172,10 +188,12 @@ pub mod pallet {
 	}
 
 	impl<T: Config> Pallet<T> {
+		/// Returns a list of system-contracts deployed on-chain
 		pub fn get_all_system_contracts() -> Vec<T::AccountId> {
 			SystemContracts::<T>::iter_keys().collect()
 		}
 
+		// Helper function used to find the bytes of the next available sequential address
 		fn get_next_available_bytes() -> [u8; 32] {
 			let mut counter = NextAddress::<T>::get().unwrap_or(1);
 			loop {
@@ -191,6 +209,7 @@ pub mod pallet {
 			}
 		}
 
+		/// Returns the next available sequential address where the contract can be deployed
 		pub fn get_next_available_address() -> T::AccountId {
 			let byte = Self::get_next_available_bytes();
 			let addr = AccountId32::from(byte);
@@ -227,6 +246,7 @@ pub mod pallet {
 			assert_eq!(self.addr.len(), self.code.len());
 			let sz = self.addr.len();
 
+			// The first available destined address is set to 0x01
 			NextAddress::<T>::put(1);
 
 			for i in 0..sz {
