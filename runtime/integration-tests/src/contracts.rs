@@ -375,10 +375,9 @@ mod tests {
 					.iter()
 					.rev()
 					.find_map(|r| {
-						if let Event::Contracts(pallet_contracts::Event::Instantiated {
-							deployer,
-							contract,
-						}) = &r.event
+						if let Event::SudoContracts(
+							pallet_system_contract_deployer::Event::Created(contract),
+						) = &r.event
 						{
 							Some(contract)
 						} else {
