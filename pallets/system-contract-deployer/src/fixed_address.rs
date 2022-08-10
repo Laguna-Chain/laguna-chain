@@ -1,7 +1,7 @@
-use frame_support::pallet_prelude::Decode;
+use frame_support::{pallet_prelude::Decode, traits::Get};
 use pallet_contracts::{AddressGenerator, DefaultAddressGenerator};
 use sp_core::crypto::UncheckedFrom;
-use sp_runtime::AccountId32;
+use sp_runtime::{traits::AccountIdConversion, AccountId32};
 
 // If the deploying address is [0;32] and the salt is 32-byte length then the salt
 // is the generated address otherwise default way of address generation is used
@@ -18,13 +18,13 @@ where
 		code_hash: &T::Hash,
 		salt: &[u8],
 	) -> T::AccountId {
-		if let Some(key) = crate::Pallet::<T>::deploying_key() {
-			if deploying_address == &key && salt.len() == 32 {
-				let salt: [u8; 32] = salt.try_into().unwrap();
-				let contract_addr = AccountId32::from(salt);
-				return T::AccountId::decode(&mut contract_addr.as_ref())
-					.expect("Cannot create an AccountId from the given salt")
-			}
+		let key = <T as crate::Config>::PalletId::get().into_account();
+
+		if deploying_address == &key && salt.len() == 32 {
+			let salt: [u8; 32] = salt.try_into().unwrap();
+			let contract_addr = AccountId32::from(salt);
+			return T::AccountId::decode(&mut contract_addr.as_ref())
+				.expect("Cannot create an AccountId from the given salt")
 		}
 
 		<DefaultAddressGenerator as AddressGenerator<T>>::generate_address(

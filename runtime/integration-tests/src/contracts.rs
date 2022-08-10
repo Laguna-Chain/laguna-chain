@@ -4,14 +4,17 @@ mod cross_contract;
 
 #[cfg(test)]
 mod tests {
-	use crate::{ExtBuilder, ALICE, BURN_ADDR};
+	use crate::{ExtBuilder, ALICE};
 	use codec::{Decode, Encode};
 	use frame_support::assert_ok;
-	use laguna_runtime::{constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, System};
+	use laguna_runtime::{
+		constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, SudoContracts, System,
+	};
 	use pallet_contracts_primitives::ExecReturnValue;
 	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
 	use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId};
 	use sp_core::{crypto::AccountId32, hexdisplay::AsBytesRef, Bytes};
+	use sp_runtime::traits::AccountIdConversion;
 	use std::str::FromStr;
 
 	const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
@@ -341,8 +344,10 @@ mod tests {
 
 	#[test]
 	fn test_fixed_address() {
+		let deploying_key =
+			<Runtime as pallet_system_contract_deployer::Config>::PalletId::get().into_account();
 		ExtBuilder::default()
-			.balances(vec![(ALICE, LAGUNA_TOKEN, LAGUNAS), (BURN_ADDR, LAGUNA_TOKEN, LAGUNAS)])
+			.balances(vec![(ALICE, LAGUNA_TOKEN, LAGUNAS), (deploying_key, LAGUNA_TOKEN, LAGUNAS)])
 			.sudo(ALICE)
 			.build()
 			.execute_with(|| {

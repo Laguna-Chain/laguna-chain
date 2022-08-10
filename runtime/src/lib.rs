@@ -51,13 +51,11 @@ pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
+pub mod impl_pallet_system_contract_deployer;
 pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
-impl pallet_system_contract_deployer::Config for Runtime {
-	type Event = Event;
-}
 
 pub mod constants;
 

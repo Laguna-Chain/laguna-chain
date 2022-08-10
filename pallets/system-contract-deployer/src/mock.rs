@@ -7,7 +7,10 @@ use frame_support::{
 	weights::IdentityFee,
 };
 
-use frame_support::pallet_prelude::{ConstU32, Weight};
+use frame_support::{
+	pallet_prelude::{ConstU32, Weight},
+	PalletId,
+};
 use pallet_contracts::{weights::WeightInfo, DefaultContractAccessWeight};
 use pallet_system_contract_deployer::CustomAddressGenerator;
 use pallet_transaction_payment::CurrencyAdapter;
@@ -147,8 +150,13 @@ impl pallet_contracts::Config for Test {
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 }
 
+parameter_types! {
+	pub const PId: PalletId = PalletId(*b"sys_depl");
+}
+
 impl pallet_system_contract_deployer::Config for Test {
 	type Event = Event;
+	type PalletId = PId;
 }
 
 construct_runtime!(
@@ -165,22 +173,20 @@ construct_runtime!(
 		Timestamp: pallet_timestamp,
 		Payment: pallet_transaction_payment,
 		Contracts: pallet_contracts,
-		SudoContract: pallet_system_contract_deployer
+		SudoContracts: pallet_system_contract_deployer
 	}
 );
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
-pub const BURN_ADDR: AccountId = AccountId::new([0u8; 32]);
 
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, Balance)>,
 	sudo: Option<AccountId>,
-	deploying_key: Option<AccountId>,
 }
 
 impl Default for ExtBuilder {
 	fn default() -> Self {
-		Self { balances: vec![], sudo: None, deploying_key: None }
+		Self { balances: vec![], sudo: None }
 	}
 }
 
@@ -192,11 +198,6 @@ impl ExtBuilder {
 
 	pub fn sudo(mut self, account: AccountId) -> Self {
 		self.sudo.replace(account);
-		self
-	}
-
-	pub fn deploying_key(mut self, key: AccountId) -> Self {
-		self.deploying_key.replace(key);
 		self
 	}
 
@@ -217,17 +218,6 @@ impl ExtBuilder {
 				.assimilate_storage(&mut t)
 				.unwrap();
 		}
-
-		// set deploying_key for pallet_system_contract_deployer
-		match self.deploying_key {
-			Some(key) => pallet_system_contract_deployer::GenesisConfig::<Test> {
-				deploying_key: key,
-				..Default::default()
-			},
-			None => pallet_system_contract_deployer::GenesisConfig::<Test>::default(),
-		}
-		.assimilate_storage(&mut t)
-		.unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| System::set_block_number(1));

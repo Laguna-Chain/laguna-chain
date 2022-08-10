@@ -1,18 +1,17 @@
 use super::*;
 use frame_support::assert_ok;
-use mock::{
-	Call, Event, ExtBuilder, Origin, Sudo, SudoContract, System, Test, ALICE, BURN_ADDR, UNIT,
-};
+use mock::{Call, Event, ExtBuilder, Origin, Sudo, SudoContracts, System, Test, ALICE, UNIT};
 use sp_core::Bytes;
-use sp_runtime::AccountId32;
+use sp_runtime::{traits::AccountIdConversion, AccountId32};
 use std::str::FromStr;
 
 const MAX_GAS: u64 = 200_000_000_000;
 
 #[test]
 fn test_fixed_address() {
+	let deploying_key = <Test as crate::Config>::PalletId::get().into_account();
 	ExtBuilder::default()
-		.balances(vec![(ALICE, UNIT), (BURN_ADDR, UNIT)])
+		.balances(vec![(ALICE, UNIT), (deploying_key, UNIT)])
 		.sudo(ALICE)
 		.build()
 		.execute_with(|| {
@@ -25,8 +24,8 @@ fn test_fixed_address() {
 				.map(|v| v.to_vec())
 				.expect("unable to parse hex string");
 
-			pub type SudoContractCall = crate::Call<Test>;
-			let call = Box::new(Call::SudoContract(SudoContractCall::instantiate_with_code {
+			pub type SudoContractsCall = crate::Call<Test>;
+			let call = Box::new(Call::SudoContracts(SudoContractsCall::instantiate_with_code {
 				value: 0,
 				gas_limit: MAX_GAS,
 				storage_deposit_limit: None,
@@ -71,7 +70,7 @@ fn test_only_root_access() {
 			.map(|v| v.to_vec())
 			.expect("unable to parse hex string");
 
-		assert!(SudoContract::instantiate_with_code(
+		assert!(SudoContracts::instantiate_with_code(
 			Origin::signed(ALICE),
 			0,
 			MAX_GAS,
