@@ -27,6 +27,7 @@ orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-lib
 pallet-balances = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contract-asset-registry = {path = "../pallets/contract-asset-registry", default-features = false}
 pallet-currencies = {path = "../pallets/currencies", default-features = false}
+pallet-system-contract-deployer = {path = "../pallets/system-contract-deployer", default-features = false}
 
 # fee and validator
 pallet-fee-enablement = {path = "../pallets/fee-enablement", default-features = false}
@@ -127,4 +128,5 @@ std = [
   'pallet-fee-measurement/std',
   'traits/std',
   'pallet-contract-asset-registry/std',
+  'pallet-system-contract-deployer/std',
 ]

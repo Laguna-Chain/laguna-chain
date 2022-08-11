@@ -55,9 +55,11 @@ substrate-frame-rpc-system = {git = 'https://github.com/paritytech/substrate.git
 pallet-transaction-payment-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 frame-system = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+frame-support = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contracts-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-system-contract-deployer = {path = "../pallets/system-contract-deployer", default-features = false}
 
 # requird for benchmark cli-parsing and conduct runtime-benchmark
 frame-benchmarking = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}

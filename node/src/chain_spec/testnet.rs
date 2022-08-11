@@ -11,8 +11,10 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 
 use super::util::{authority_keys_from_seed, get_account_id_from_seed};
+use frame_support::PalletId;
 use sc_service::ChainType;
-use sp_core::sr25519;
+use sp_core::{crypto::AccountId32, sr25519};
+use sp_runtime::traits::AccountIdConversion;
 
 // Spec derived from runtiem GenisisConfig
 pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig>;
@@ -29,6 +31,10 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		"local_testnet",
 		ChainType::Local,
 		move || {
+			let pallet_system_contract_deployer_id =
+				<laguna_runtime::Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
+					.into_account();
+
 			testnet_genesis(
 				wasm_binary,
 				// Initial PoA authorities
@@ -48,6 +54,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+					pallet_system_contract_deployer_id,
 				], // prefund accounts
 			)
 		},
@@ -106,5 +113,6 @@ fn testnet_genesis(
 		fee_enablement: FeeEnablementConfig {
 			enabled: vec![(CurrencyId::NativeToken(TokenId::Laguna), true)],
 		},
+		sudo_contracts: Default::default(),
 	}
 }

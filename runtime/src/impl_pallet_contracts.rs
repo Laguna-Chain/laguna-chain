@@ -8,7 +8,8 @@ use crate::{
 };
 use frame_support::parameter_types;
 use orml_tokens::CurrencyAdapter;
-use pallet_contracts::{DefaultAddressGenerator, DefaultContractAccessWeight};
+use pallet_contracts::DefaultContractAccessWeight;
+use pallet_system_contract_deployer::CustomAddressGenerator;
 
 mod chain_extensions;
 use chain_extensions::DemoExtension;
@@ -71,7 +72,7 @@ impl pallet_contracts::Config for Runtime {
 
 	type DepositPerItem = DepositPerItem;
 
-	type AddressGenerator = DefaultAddressGenerator;
+	type AddressGenerator = CustomAddressGenerator;
 
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 }
