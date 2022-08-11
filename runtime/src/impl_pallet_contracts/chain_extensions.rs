@@ -24,7 +24,8 @@ impl ChainExtension<Runtime> for DemoExtension {
 		let mut env = env.buf_in_buf_out();
 		match func_id {
 			0010 => {
-				// @todo: Whitelist contract after verification
+				// Whitelist contract after verification
+				// @dev: Currently only system-contracts are whitelisted
 				Ok(RetVal::Converging(0))
 			},
 			1000 => {
@@ -110,7 +111,11 @@ impl ChainExtension<Runtime> for DemoExtension {
 						// @dev: This is an UNSAFE method. Only whitelisted contracts can access it!
 
 						let contract: AccountId = env.ext().address().clone();
-						//@todo: Verify that the contract is authorised to do this operation
+
+						// Verify that the contract is authorised to do this operation
+						if !crate::SudoContracts::is_system_contract(contract) {
+							return Ok(RetVal::Converging(403))
+						}
 
 						let (_, from, to, value): (u32, AccountId, AccountId, Balance) =
 							env.read_as()?;

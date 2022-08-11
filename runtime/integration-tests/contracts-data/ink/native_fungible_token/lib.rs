@@ -10,7 +10,7 @@ use scale::{Decode, Encode};
 pub enum ExtensionError {
 	InvalidTokenId,
 	InsufficientBalance,
-	InsufficientAllowance,
+	AccessDenied,
 	UnknownStatusCode,
 	InvalidScaleEncoding,
 }
@@ -27,6 +27,7 @@ impl ink_env::chain_extension::FromStatusCode for ExtensionError {
 			0 => Ok(()),
 			1 => Err(Self::InvalidTokenId),
 			2 => Err(Self::InsufficientBalance),
+			403 => Err(Self::AccessDenied),
 			_ => Err(Self::UnknownStatusCode),
 		}
 	}
@@ -132,7 +133,7 @@ mod native_fungible_token {
 				panic!("Invalid tokenId")
 			}
 
-			// Allows instantaition from priviledged account only (ROOT for now)
+			// Allows instantaition from privileged account only (ROOT for now)
 			if Self::env().extension().whitelist_contract().is_err() {
 				panic!("Failed to whitelist the contract")
 			}
