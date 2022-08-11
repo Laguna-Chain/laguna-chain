@@ -3,6 +3,7 @@ edition = "2021"
 name = "native_fungible_token"
 version = "3.0.1"
 authors = ["Nimish Agrawal nimish@lagu.na"]
+description = "A system-contract used to expose native token as multilayer assets in ERC-20 standard"
 
 [dependencies]
 ink_primitives = { version = "~3.0", default-features = false }
