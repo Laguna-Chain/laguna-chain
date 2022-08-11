@@ -2755,6 +2755,7 @@ dependencies = [
  "pallet-fee-measurement",
  "pallet-fluent-fee",
  "pallet-grandpa",
+ "pallet-prepaid",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
  "pallet-sudo",
@@ -4378,6 +4379,23 @@ dependencies = [
  "sp-session",
  "sp-staking",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-prepaid"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "orml-traits",
+ "parity-scale-codec",
+ "primitives",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "traits",
 ]
 
 [[package]]

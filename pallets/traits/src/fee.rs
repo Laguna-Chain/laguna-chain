@@ -1,7 +1,4 @@
-use frame_support::{
-	sp_runtime::traits::PostDispatchInfoOf, traits::WithdrawReasons,
-	unsigned::TransactionValidityError,
-};
+use frame_support::{traits::WithdrawReasons, unsigned::TransactionValidityError};
 
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -39,39 +36,31 @@ pub trait FeeMeasure {
 	) -> Result<Self::Balance, TransactionValidityError>;
 }
 
-pub trait FeeDispatch<T>
-where
-	T: frame_system::Config,
-{
+pub trait FeeDispatch {
+	type AccountId;
 	type AssetId;
 	type Balance;
 
 	/// handle withdrawn
 	fn withdraw(
-		account: &<T as frame_system::Config>::AccountId,
+		account: &Self::AccountId,
 		id: &Self::AssetId,
-		call: &<T as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), InvalidFeeDispatch>;
 
 	/// handle overcharged amount
 	fn refund(
-		account: &<T as frame_system::Config>::AccountId,
-		id: &Self::AssetId,
-		balance: &Self::Balance,
-	) -> Result<Self::Balance, InvalidFeeDispatch>;
-
-	/// tip the block_author if exists
-	fn tip(
+		account: &Self::AccountId,
 		id: &Self::AssetId,
 		balance: &Self::Balance,
 	) -> Result<Self::Balance, InvalidFeeDispatch>;
 
 	fn post_info_correction(
 		id: &Self::AssetId,
-		corret_withdrawn: &Self::Balance,
-		benefitiary: &Option<<T as frame_system::Config>::AccountId>,
+		tip: &Self::Balance,
+		correted_withdrawn: &Self::Balance,
+		benefitiary: &Option<Self::AccountId>,
 	) -> Result<(), InvalidFeeDispatch>;
 }
 

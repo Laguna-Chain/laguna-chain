@@ -37,6 +37,7 @@ pallet-treasury = {default-features = false, git = 'https://github.com/paritytec
 pallet-fee-enablement = {path = "../pallets/fee-enablement", default-features = false}
 pallet-fee-measurement = {path = "../pallets/fee-measurement", default-features = false}
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
+pallet-prepaid = {path = "../pallets/prepaid", default-features = false}
 pallet-transaction-payment = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-transaction-payment-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
@@ -117,6 +118,7 @@ std = [
   "pallet-authorship/std",
   "pallet-grandpa/std",
   "pallet-sudo/std",
+  "pallet-prepaid/std",
   "pallet-balances/std",
   "pallet-timestamp/std",
   'pallet-scheduler/std',

@@ -51,6 +51,7 @@ pub mod impl_pallet_currencies;
 pub mod impl_pallet_fee_enablement;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
+pub mod impl_pallet_prepaid;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
 pub mod impl_pallet_system_contract_deployer;
@@ -134,6 +135,7 @@ construct_runtime!(
 			FluentFee: pallet_fluent_fee,
 			FeeEnablement: pallet_fee_enablement,
 			FeeMeasurement: pallet_fee_measurement,
+			PrepaidFee: pallet_prepaid,
 
 			// conseus mechanism
 			Aura: pallet_aura ,

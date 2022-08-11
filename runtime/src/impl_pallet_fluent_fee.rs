@@ -1,6 +1,6 @@
 use crate::{
 	impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Currencies, Event, FeeEnablement,
-	FeeMeasurement, FluentFee, Runtime, Treasury,
+	FeeMeasurement, FluentFee, PrepaidFee, Runtime, Treasury,
 };
 use frame_support::{pallet_prelude::InvalidTransaction, parameter_types};
 use orml_traits::MultiCurrency;
@@ -43,14 +43,14 @@ impl FeeMeasure for StaticImpl {
 	}
 }
 
-impl FeeDispatch<Runtime> for StaticImpl {
+impl FeeDispatch for StaticImpl {
+	type AccountId = AccountId;
 	type AssetId = CurrencyId;
 	type Balance = Balance;
 
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
-		call: &<Runtime as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &frame_support::traits::WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
@@ -81,34 +81,15 @@ impl FeeDispatch<Runtime> for StaticImpl {
 		}
 	}
 
-	fn tip(
-		id: &Self::AssetId,
-		balance: &Self::Balance,
-	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
-		match id {
-			// Currenlty can only
-			CurrencyId::NativeToken(_) =>
-				if let Some(author) = Authorship::author() {
-					<Currencies as MultiCurrency<AccountId>>::deposit(*id, &author, *balance)
-						.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
-					return Ok(*balance)
-				},
-
-			// TODO: need carrier for swap -> native
-			CurrencyId::Erc20(_) => todo!(),
-		}
-
-		Ok(0)
-	}
-
 	fn post_info_correction(
 		id: &Self::AssetId,
+		tip: &Self::Balance,
 		corret_withdrawn: &Self::Balance,
 		benefitiary: &Option<<Runtime as frame_system::Config>::AccountId>,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		// TODO: require carrier for erc20
 		if let CurrencyId::Erc20(_) = id {
-			unimplemented!("currently erc20 handlign is not impelmented");
+			unimplemented!("currently erc20 handling is not impelmented");
 		}
 
 		// 49% of total corrected goes to treasury by default
@@ -123,12 +104,25 @@ impl FeeDispatch<Runtime> for StaticImpl {
 		let treasury_account_id = Treasury::account_id();
 
 		let treasury_amount = to_treasury.saturating_mul_int(*corret_withdrawn);
-		<Currencies as MultiCurrency<AccountId>>::deposit(
-			*id,
-			&treasury_account_id,
-			treasury_amount,
-		)
-		.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
+
+		// TODO: provide token specific payout routes
+		let dispatch_with = match id {
+			CurrencyId::NativeToken(TokenId::Laguna) =>
+				|id: CurrencyId, who: &AccountId, amount: Balance| {
+					<Currencies as MultiCurrency<AccountId>>::deposit(id, who, amount)
+						.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)
+				},
+			CurrencyId::NativeToken(TokenId::FeeToken) =>
+				|_: CurrencyId, who: &AccountId, amount: Balance| {
+					PrepaidFee::unserve_to(who.clone(), amount)
+						.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)
+				},
+			_ => {
+				unimplemented!("non native token unspported");
+			},
+		};
+
+		dispatch_with(*id, &treasury_account_id, treasury_amount)?;
 
 		FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
 			amount: treasury_amount,
@@ -139,10 +133,10 @@ impl FeeDispatch<Runtime> for StaticImpl {
 		let author_amount = to_author.saturating_mul_int(*corret_withdrawn);
 
 		if let Some(author) = Authorship::author() {
-			<Currencies as MultiCurrency<AccountId>>::deposit(*id, &author, author_amount)
-				.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
+			dispatch_with(*id, &author, author_amount + tip)?;
+
 			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
-				amount: author_amount,
+				amount: author_amount + tip,
 				receiver: author,
 				currency: *id,
 			});
@@ -152,8 +146,8 @@ impl FeeDispatch<Runtime> for StaticImpl {
 
 		// TODO: investigate cases where block author cannot be found
 		if let Some(target) = benefitiary {
-			<Currencies as MultiCurrency<AccountId>>::deposit(*id, target, shared_amount)
-				.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
+			dispatch_with(*id, target, shared_amount)?;
+
 			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
 				receiver: target.clone(),
 				currency: *id,

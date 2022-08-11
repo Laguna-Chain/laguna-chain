@@ -16,6 +16,7 @@ members = [
   "pallets/traits",
   'pallets/contract-asset-registry',
   'pallets/currencies',
+  'pallets/prepaid',
   'pallets/currencies/rpc',
   'pallets/currencies/rpc/runtime-api',
 ] 

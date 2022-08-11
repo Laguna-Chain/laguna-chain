@@ -11,7 +11,7 @@ mod tests {
 	};
 	use laguna_runtime::{
 		constants::LAGUNAS, Currencies, FeeEnablement, FeeMeasurement, FluentFee, Origin,
-		TransactionPayment, Treasury,
+		PrepaidFee, TransactionPayment, Treasury,
 	};
 	use pallet_transaction_payment::ChargeTransactionPayment;
 
@@ -88,10 +88,7 @@ mod tests {
 	#[test]
 	fn test_alt_fee_path() {
 		ExtBuilder::default()
-			.balances(vec![
-				(ALICE, NATIVE_CURRENCY_ID, 10 * LAGUNAS),
-				(ALICE, FEE_TOKEN, 10 * LAGUNAS),
-			])
+			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * LAGUNAS)])
 			.enable_fee_source(vec![(NATIVE_CURRENCY_ID, true)])
 			.build()
 			.execute_with(|| {
@@ -101,6 +98,9 @@ mod tests {
 				// ALICE use FEE_TOKEN as default fee_source
 				assert_ok!(FluentFee::set_default(Origin::signed(ALICE), FEE_TOKEN));
 				assert_eq!(FluentFee::account_fee_source_priority(&ALICE), Some(FEE_TOKEN));
+
+				assert_ok!(PrepaidFee::prepaid_native(Origin::signed(ALICE), LAGUNAS));
+				assert_eq!(Currencies::free_balance(ALICE, FEE_TOKEN), LAGUNAS);
 
 				// prepare a call
 				let call = laguna_runtime::Call::Currencies(pallet_currencies::Call::transfer {

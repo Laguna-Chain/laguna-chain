@@ -20,7 +20,8 @@ use pallet_transaction_payment::OnChargeTransaction;
 use traits::fee::{FeeDispatch, FeeMeasure, FeeSource, IsFeeSharingCall};
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
-pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountIdOf<T>>>::Balance;
+pub type BalanceOf<T, C> = <C as MultiCurrency<AccountIdOf<T>>>::Balance;
+type CallOf<T> = <T as frame_system::Config>::Call;
 
 pub use pallet::*;
 
@@ -40,19 +41,36 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
+		// set a global default for fee preference
 		type DefaultFeeAsset: Get<CurrencyId>;
+
+		// monetary system to be used
 		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
 
+		// call wrapping
 		type Call: Parameter
 			+ Dispatchable<Origin = <Self as frame_system::Config>::Origin>
 			+ From<frame_system::Call<Self>>
 			+ GetDispatchInfo;
 
+		// call_filter for shared call
 		type IsFeeSharingCall: IsFeeSharingCall<Self, AccountId = AccountIdOf<Self>>;
 
+		// fee source evaluation
 		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
-		type FeeMeasure: FeeMeasure<AssetId = CurrencyId, Balance = BalanceOf<Self>>;
-		type FeeDispatch: FeeDispatch<Self, AssetId = CurrencyId, Balance = BalanceOf<Self>>;
+
+		// fee rate evaluation
+		type FeeMeasure: FeeMeasure<
+			AssetId = CurrencyId,
+			Balance = BalanceOf<Self, Self::MultiCurrency>,
+		>;
+
+		// withdraw and redeem path
+		type FeeDispatch: FeeDispatch<
+			AccountId = AccountIdOf<Self>,
+			AssetId = CurrencyId,
+			Balance = BalanceOf<Self, Self::MultiCurrency>,
+		>;
 	}
 
 	#[pallet::pallet]
@@ -61,12 +79,30 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub fn deposit_event)]
 	pub enum Event<T: Config> {
-		AccountPreferenceUpdated { account: AccountIdOf<T>, currency: Option<CurrencyId> },
-		FeeSharingBeneficiaryIncluded { beneficiary: Option<AccountIdOf<T>> },
-		FeeSharedWithTheBeneficiary { beneficiary: AccountIdOf<T>, amount: BalanceOf<T> },
-		FeeWithdrawn { currency: CurrencyId, amount: BalanceOf<T> },
-		FeeRefunded { currency: CurrencyId, amount: BalanceOf<T> },
-		FeePayout { receiver: AccountIdOf<T>, currency: CurrencyId, amount: BalanceOf<T> },
+		AccountPreferenceUpdated {
+			account: AccountIdOf<T>,
+			currency: Option<CurrencyId>,
+		},
+		FeeSharingBeneficiaryIncluded {
+			beneficiary: Option<AccountIdOf<T>>,
+		},
+		FeeSharedWithTheBeneficiary {
+			beneficiary: AccountIdOf<T>,
+			amount: BalanceOf<T, T::MultiCurrency>,
+		},
+		FeeWithdrawn {
+			currency: CurrencyId,
+			amount: BalanceOf<T, T::MultiCurrency>,
+		},
+		FeeRefunded {
+			currency: CurrencyId,
+			amount: BalanceOf<T, T::MultiCurrency>,
+		},
+		FeePayout {
+			receiver: AccountIdOf<T>,
+			currency: CurrencyId,
+			amount: BalanceOf<T, T::MultiCurrency>,
+		},
 		FeeCorrected,
 	}
 
@@ -109,7 +145,7 @@ pub mod pallet {
 		})]
 		pub fn fee_sharing_wrapper(
 			origin: OriginFor<T>,
-			call: Box<<T as pallet::Config>::Call>,
+			call: Box<<T as pallet::Config>::Call>, // used to get the weight
 			beneficiary: Option<AccountIdOf<T>>,
 		) -> DispatchResult {
 			ensure_signed(origin.clone())?;
@@ -132,7 +168,7 @@ impl<T: Config> Pallet<T> {
 	}
 }
 
-type CallOf<T> = <T as frame_system::Config>::Call;
+// type CallOf<T> = <T as frame_system::Config>::Call;
 
 // overview of stages during a multi-assets payout
 //
@@ -151,9 +187,9 @@ pub struct MultiCurrencyPayout<T: Config> {
 	// asset_id user requested to pay as fee
 	source_asset_id: CurrencyId,
 	// native amount needed
-	request_amount_native: BalanceOf<T>,
+	request_amount_native: BalanceOf<T, T::MultiCurrency>,
 	// equivalent withdrawn
-	withdrawn_source_amount: BalanceOf<T>,
+	withdrawn_source_amount: BalanceOf<T, T::MultiCurrency>,
 	beneficiary: Option<AccountIdOf<T>>,
 }
 
@@ -162,14 +198,14 @@ where
 	T: Config,
 	T: pallet_transaction_payment::Config,
 {
-	type Balance = BalanceOf<T>;
+	type Balance = BalanceOf<T, T::MultiCurrency>;
 
 	// TODO: deal with correct liquidity info logic
 	type LiquidityInfo = Option<MultiCurrencyPayout<T>>;
 
 	fn withdraw_fee(
 		who: &T::AccountId,
-		call: &<T as frame_system::Config>::Call,
+		call: &CallOf<T>,
 		dispatch_info: &DispatchInfoOf<CallOf<T>>,
 		fee: Self::Balance,
 		tip: Self::Balance,
@@ -198,7 +234,7 @@ where
 
 		let amount = T::FeeMeasure::measure(&preferred_fee_asset, fee)?;
 
-		match T::FeeDispatch::withdraw(who, &preferred_fee_asset, call, &amount, &withdraw_reason) {
+		match T::FeeDispatch::withdraw(who, &preferred_fee_asset, &amount, &withdraw_reason) {
 			Ok(_) => {
 				let payout_info = MultiCurrencyPayout {
 					source_asset_id: preferred_fee_asset,
@@ -206,7 +242,6 @@ where
 					withdrawn_source_amount: amount,
 					beneficiary: T::IsFeeSharingCall::is_call(call),
 				};
-				log::debug!(target: "fluent_fee::withdrawn", "succsefully withdrawn from {preferred_fee_asset:?}");
 
 				Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
 					currency: preferred_fee_asset,
@@ -242,14 +277,13 @@ where
 			let mut corrected_withdrawn = withdrawn_source_amount;
 
 			if !overcharged_amount_native.is_zero() {
-				log::debug!(target: "fluent_fee::correct", "succsefully withdrawn from {source_asset_id:?}");
 				let amounts_source =
 					T::FeeMeasure::measure(&source_asset_id, overcharged_amount_native)?;
 
 				// it's possible refund failed, due to below E.D or routing temporary not possible
 				if let Ok(refunded) = T::FeeDispatch::refund(who, &source_asset_id, &amounts_source)
 				{
-					corrected_withdrawn = withdrawn_source_amount.saturating_sub(refunded);
+					corrected_withdrawn.saturating_reduce(refunded);
 					Pallet::<T>::deposit_event(Event::<T>::FeeRefunded {
 						currency: source_asset_id,
 						amount: refunded,
@@ -257,15 +291,16 @@ where
 				}
 			}
 
-			// pay the tips for the block author
+			// calculate tip amount in target token
 			let tip_amount_source = T::FeeMeasure::measure(&source_asset_id, tip)?;
-			if T::FeeDispatch::tip(&source_asset_id, &tip_amount_source).is_ok() {
-				corrected_withdrawn = corrected_withdrawn.saturating_sub(tip_amount_source);
-			}
+
+			// reduce tip from total amount
+			corrected_withdrawn.saturating_reduce(tip_amount_source);
 
 			// splits the remaining balances between all needed parties.
 			T::FeeDispatch::post_info_correction(
 				&source_asset_id,
+				&tip_amount_source,
 				&corrected_withdrawn,
 				&beneficiary,
 			)
