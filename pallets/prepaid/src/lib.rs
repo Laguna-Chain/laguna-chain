@@ -160,7 +160,7 @@ where
 	) -> DispatchResult {
 		let pallet_account: AccountIdOf<T> = T::PalletId::get().into_account();
 
-		let unserved = <T::MultiCurrency as MultiReservableCurrency<AccountIdOf<T>>>::unreserve(
+		<T::MultiCurrency as MultiReservableCurrency<AccountIdOf<T>>>::unreserve(
 			T::NativeCurrencyId::get(),
 			&pallet_account,
 			amount,
@@ -172,7 +172,7 @@ where
 			T::NativeCurrencyId::get(),
 			&pallet_account,
 			&receiver,
-			unserved,
+			amount,
 			false,
 		)?;
 

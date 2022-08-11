@@ -147,6 +147,15 @@ mod tests {
 
 				let alice_post = Currencies::free_balance(ALICE, FEE_TOKEN);
 				assert_eq!(alice_init, alice_post + fee_in_alt);
+
+				let treasury_account = Treasury::account_id();
+				let to_treasury = FixedU128::saturating_from_rational(49_u128, 100_u128);
+				let expected_gain = to_treasury.saturating_mul_int(fee_in_alt);
+
+				assert_eq!(
+					Currencies::free_balance(treasury_account, NATIVE_CURRENCY_ID),
+					expected_gain
+				);
 			});
 	}
 
