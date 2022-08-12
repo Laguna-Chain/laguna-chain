@@ -25,7 +25,6 @@ pallet-randomness-collective-flip = {default-features = false, git = 'https://gi
 
 # monetary system
 orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
-pallet-balances = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contract-asset-registry = {path = "../pallets/contract-asset-registry", default-features = false}
 pallet-currencies = {path = "../pallets/currencies", default-features = false}
 pallet-system-contract-deployer = {path = "../pallets/system-contract-deployer", default-features = false}
@@ -89,7 +88,6 @@ runtime-benchmarks = [
   'frame-support/runtime-benchmarks',
   'frame-system-benchmarking',
   'frame-system/runtime-benchmarks',
-  'pallet-balances/runtime-benchmarks',
   'pallet-timestamp/runtime-benchmarks',
   'sp-runtime/runtime-benchmarks',
 ]
@@ -119,7 +117,6 @@ std = [
   "pallet-grandpa/std",
   "pallet-sudo/std",
   "pallet-prepaid/std",
-  "pallet-balances/std",
   "pallet-timestamp/std",
   'pallet-scheduler/std',
   'pallet-treasury/std',

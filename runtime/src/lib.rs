@@ -411,7 +411,6 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
 
 			// include pallet benchmarks
-			// list_benchmark!(list, extra, pallet_balances, Balances);
 
 			// TODO: add all benchmarks defined by pallets
 
@@ -454,7 +453,6 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 
 			// pallet-specific bench items
-			// add_benchmark!(params, batches, pallet_balances, Balances);
 
 			// TODO: add pallet-specific bench items below
 

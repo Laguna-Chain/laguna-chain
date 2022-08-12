@@ -134,7 +134,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// dynamically add one unit of weight if beneficiary is_some
+		// attach a beneficiary to arbitrary call
 		#[pallet::weight({
 			let dispatch_info = call.get_dispatch_info();
 			(
@@ -149,6 +149,7 @@ pub mod pallet {
 			beneficiary: Option<AccountIdOf<T>>,
 		) -> DispatchResult {
 			ensure_signed(origin.clone())?;
+
 			if beneficiary.is_some() {
 				Self::deposit_event(Event::FeeSharingBeneficiaryIncluded { beneficiary });
 			}

@@ -6,7 +6,7 @@
 //!
 //! the prepaying path is as follows:
 //! 1. check the resulted issuance didn't exceed the threshold.
-//! 2. move balances from user to the PalletId controlled account
+//! 2. move balances from user to the PalletId controlled account and reserved
 //! 3. issue new prepaid token for user
 //! 4. when paid using prepaid token, the tokens then are unreserved and sent to the targted account
 

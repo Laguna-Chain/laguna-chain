@@ -1,4 +1,4 @@
-use frame_support::{assert_err, assert_ok};
+use frame_support::assert_ok;
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
 use primitives::AccountId;
 use sp_runtime::traits::AccountIdConversion;
@@ -6,7 +6,7 @@ use sp_runtime::traits::AccountIdConversion;
 use super::mock::*;
 
 #[test]
-fn test_get_prepaid() {
+fn test_prepaid() {
 	ExtBuilder::default()
 		.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 1_000_000)])
 		.build()

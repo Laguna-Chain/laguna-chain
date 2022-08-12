@@ -10,24 +10,13 @@ mod tests {
 		weights::Pays,
 	};
 	use laguna_runtime::{
-		constants::LAGUNAS, Currencies, FeeEnablement, FeeMeasurement, FluentFee, Origin,
-		PrepaidFee, TransactionPayment, Treasury,
+		constants::LAGUNAS, Currencies, FeeEnablement, FluentFee, Origin, PrepaidFee,
+		TransactionPayment, Treasury,
 	};
 	use pallet_transaction_payment::ChargeTransactionPayment;
 
 	use sp_runtime::{FixedPointNumber, FixedU128};
 	use traits::fee::FeeMeasure;
-
-	fn step<'a>(
-		accs: impl Iterator<Item = &'a AccountId>,
-		asset_id: CurrencyId,
-		mut action: impl FnMut(),
-	) -> Vec<Balance> {
-		action();
-
-		accs.map(|acc| Currencies::free_balance(acc.clone(), asset_id))
-			.collect::<Vec<_>>()
-	}
 
 	fn balance_of(who: AccountId, asset_id: CurrencyId) -> Balance {
 		Currencies::free_balance(who, asset_id)
@@ -70,7 +59,6 @@ mod tests {
 
 				let post = call.dispatch(Origin::signed(ALICE)).expect("should be dispatched");
 
-				// // TODO: refund logic and payout to validator etc should work
 				assert_ok!(ChargeTransactionPayment::<Runtime>::post_dispatch(
 					Some(pre),
 					&info,
@@ -136,7 +124,6 @@ mod tests {
 
 				let post = call.dispatch(Origin::signed(ALICE)).expect("should be dispatched");
 
-				// TODO: refund logic and payout to validator etc should work
 				assert_ok!(ChargeTransactionPayment::<Runtime>::post_dispatch(
 					Some(pre),
 					&info,
@@ -222,7 +209,6 @@ mod tests {
 
 				let post = call.dispatch(Origin::signed(ALICE)).expect("should be dispatched");
 
-				// TODO: refund logic and payout to validator etc should work
 				assert_ok!(ChargeTransactionPayment::<Runtime>::post_dispatch(
 					Some(pre),
 					&info,
