@@ -1,9 +1,7 @@
 use super::*;
 
 use frame_support::{
-	construct_runtime,
-	dispatch::DispatchInfo,
-	parameter_types,
+	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
@@ -15,7 +13,7 @@ use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, In
 use sp_core::H256;
 
 use sp_runtime::{FixedPointNumber, FixedU128};
-use traits::fee::IsFeeSharingCall;
+use traits::fee::CallFilterWithOutput;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -168,14 +166,14 @@ impl FeeMeasure for DummyFeeMeasure {
 	}
 }
 
-pub struct DummyFeeSharingCall<T> {
-	_type: PhantomData<T>,
-}
+pub struct DummyFeeSharingCall;
 
-impl IsFeeSharingCall<Runtime> for DummyFeeSharingCall<Tokens> {
-	type AccountId = AccountId;
+impl CallFilterWithOutput for DummyFeeSharingCall {
+	type Call = Call;
 
-	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Option<Self::AccountId> {
+	type Output = Option<AccountId>;
+
+	fn is_call(call: &Self::Call) -> Self::Output {
 		if let Call::FluentFee(pallet::Call::<Runtime>::fee_sharing_wrapper {
 			beneficiary, ..
 		}) = call
@@ -259,7 +257,7 @@ impl Config for Runtime {
 	type MultiCurrency = Tokens;
 	type Call = Call;
 
-	type IsFeeSharingCall = DummyFeeSharingCall<Tokens>;
+	type IsFeeSharingCall = DummyFeeSharingCall;
 
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;

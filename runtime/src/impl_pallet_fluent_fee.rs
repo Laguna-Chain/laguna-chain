@@ -6,7 +6,7 @@ use frame_support::{pallet_prelude::InvalidTransaction, parameter_types};
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
 use sp_runtime::{self, FixedPointNumber, FixedU128};
-use traits::fee::{FeeDispatch, FeeMeasure, IsFeeSharingCall};
+use traits::fee::{CallFilterWithOutput, FeeDispatch, FeeMeasure};
 
 impl pallet_fluent_fee::Config for Runtime {
 	type DefaultFeeAsset = NativeCurrencyId;
@@ -163,10 +163,12 @@ impl FeeDispatch for StaticImpl {
 // is only included to satisfy the compiler errors
 pub struct DummyFeeSharingCall;
 
-impl IsFeeSharingCall<Runtime> for DummyFeeSharingCall {
-	type AccountId = AccountId;
+impl CallFilterWithOutput for DummyFeeSharingCall {
+	type Call = Call;
 
-	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Option<Self::AccountId> {
+	type Output = Option<AccountId>;
+
+	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Self::Output {
 		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::fee_sharing_wrapper {
 			beneficiary,
 			..

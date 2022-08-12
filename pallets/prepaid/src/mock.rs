@@ -1,22 +1,16 @@
 use super::*;
 
 use frame_support::{
-	construct_runtime,
-	dispatch::DispatchInfo,
-	parameter_types,
+	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
 	traits::{Contains, Everything},
-	unsigned::TransactionValidityError,
-	weights::IdentityFee,
 	PalletId,
 };
 
-use orml_traits::LockIdentifier;
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
 use sp_core::H256;
 
 use sp_runtime::{FixedPointNumber, FixedU128};
-use traits::fee::IsFeeSharingCall;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -169,14 +163,9 @@ pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
+#[derive(Default)]
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, CurrencyId, Balance)>,
-}
-
-impl Default for ExtBuilder {
-	fn default() -> Self {
-		Self { balances: vec![] }
-	}
 }
 
 impl ExtBuilder {

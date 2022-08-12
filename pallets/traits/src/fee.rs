@@ -88,20 +88,9 @@ pub trait Eligibility {
 	fn eligible(who: &Self::AccountId, asset_id: &Self::AssetId) -> Result<(), EligibilityError>;
 }
 
-pub trait IsFeeSharingCall<T>
-where
-	T: frame_system::Config,
-{
-	type AccountId;
-	// returns the Some(beneficiary_account) if the call is fee sharing type, otherwise returns None
-	fn is_call(call: &<T as frame_system::Config>::Call) -> Option<Self::AccountId>;
-}
-
-pub trait IsSchedulerCall<T>
-where
-	T: frame_system::Config,
-{
+pub trait CallFilterWithOutput {
+	type Call;
 	type Output;
 
-	fn is_call(call: &<T as frame_system::Config>::Call) -> Self::Output;
+	fn is_call(call: &Self::Call) -> Self::Output;
 }

@@ -7,10 +7,11 @@ mod tests {
 		assert_ok,
 		dispatch::{Dispatchable, GetDispatchInfo, PostDispatchInfo},
 		sp_runtime::traits::SignedExtension,
+		traits::fungibles::Balanced,
 		weights::Pays,
 	};
 	use laguna_runtime::{
-		constants::LAGUNAS, Currencies, FeeEnablement, FluentFee, Origin, PrepaidFee,
+		constants::LAGUNAS, Currencies, FeeEnablement, FluentFee, Origin, PrepaidFee, Tokens,
 		TransactionPayment, Treasury,
 	};
 	use pallet_transaction_payment::ChargeTransactionPayment;
@@ -228,6 +229,77 @@ mod tests {
 				assert_eq!(
 					beneficiary_init + beneficiary_reward,
 					Currencies::free_balance(beneficiary_acc, NATIVE_CURRENCY_ID)
+				);
+			});
+	}
+
+	#[test]
+	fn test_prepaid_insufficent() {
+		ExtBuilder::default()
+			.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * LAGUNAS)])
+			.enable_fee_source(vec![(NATIVE_CURRENCY_ID, true), (FEE_TOKEN, true)])
+			.build()
+			.execute_with(|| {
+				// ALICE use FEE_TOKEN as default fee_source
+				assert_ok!(FluentFee::set_default(Origin::signed(ALICE), FEE_TOKEN));
+				assert_eq!(FluentFee::account_fee_source_priority(&ALICE), Some(FEE_TOKEN));
+
+				assert_ok!(PrepaidFee::prepaid_native(Origin::signed(ALICE), LAGUNAS));
+				assert_eq!(Currencies::free_balance(ALICE, FEE_TOKEN), LAGUNAS);
+
+				let treasury_ratio = FixedU128::saturating_from_rational(49_u128, 100_u128);
+				let treasury_acc = Treasury::account_id();
+				let treasury_init =
+					Currencies::free_balance(treasury_acc.clone(), NATIVE_CURRENCY_ID);
+
+				let call = laguna_runtime::Call::Currencies(pallet_currencies::Call::transfer {
+					to: BOB,
+					currency_id: NATIVE_CURRENCY_ID,
+					balance: LAGUNAS,
+				});
+
+				let len = call.encoded_size();
+				let info = call.get_dispatch_info();
+
+				// clean all fee_tokens
+				assert_ok!(<Tokens as orml_traits::MultiCurrency<AccountId>>::withdraw(
+					FEE_TOKEN, &ALICE, LAGUNAS
+				));
+
+				let alice_pre_charged = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID);
+
+				// should fallback to native token if preferred token is not enough
+				let pre = ChargeTransactionPayment::<Runtime>::from(0)
+					.pre_dispatch(&ALICE, &call, &info, len)
+					.expect("unable to withdrawn");
+
+				let fee = TransactionPayment::compute_actual_fee(
+					len as u32,
+					&info,
+					&PostDispatchInfo { actual_weight: Some(info.weight), pays_fee: Pays::Yes },
+					0,
+				);
+
+				assert_eq!(
+					alice_pre_charged,
+					Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID) + fee
+				);
+
+				let post = call.dispatch(Origin::signed(ALICE)).expect("should be dispatched");
+
+				assert_ok!(ChargeTransactionPayment::<Runtime>::post_dispatch(
+					Some(pre),
+					&info,
+					&post,
+					len,
+					&Ok(()),
+				));
+
+				let treasury_reward = treasury_ratio.saturating_mul_int(fee);
+
+				assert_eq!(
+					treasury_init + treasury_reward,
+					Currencies::free_balance(treasury_acc, NATIVE_CURRENCY_ID)
 				);
 			});
 	}

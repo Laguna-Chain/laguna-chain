@@ -17,7 +17,7 @@ use primitives::CurrencyId;
 
 use frame_support::sp_runtime::traits::{DispatchInfoOf, PostDispatchInfoOf};
 use pallet_transaction_payment::OnChargeTransaction;
-use traits::fee::{FeeDispatch, FeeMeasure, FeeSource, IsFeeSharingCall};
+use traits::fee::{CallFilterWithOutput, FeeDispatch, FeeMeasure, FeeSource};
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<T, C> = <C as MultiCurrency<AccountIdOf<T>>>::Balance;
@@ -36,6 +36,7 @@ pub mod pallet {
 
 	use super::*;
 	use frame_support::weights::GetDispatchInfo;
+	use traits::fee::CallFilterWithOutput;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -54,7 +55,10 @@ pub mod pallet {
 			+ GetDispatchInfo;
 
 		// call_filter for shared call
-		type IsFeeSharingCall: IsFeeSharingCall<Self, AccountId = AccountIdOf<Self>>;
+		type IsFeeSharingCall: CallFilterWithOutput<
+			Call = CallOf<Self>,
+			Output = Option<AccountIdOf<Self>>,
+		>;
 
 		// fee source evaluation
 		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
@@ -98,6 +102,7 @@ pub mod pallet {
 			currency: CurrencyId,
 			amount: BalanceOf<T, T::MultiCurrency>,
 		},
+		FallbackToNative,
 		FeePayout {
 			receiver: AccountIdOf<T>,
 			currency: CurrencyId,
@@ -196,8 +201,7 @@ pub struct MultiCurrencyPayout<T: Config> {
 
 impl<T> OnChargeTransaction<T> for Pallet<T>
 where
-	T: Config,
-	T: pallet_transaction_payment::Config,
+	T: Config + pallet_transaction_payment::Config,
 {
 	type Balance = BalanceOf<T, T::MultiCurrency>;
 
@@ -216,8 +220,10 @@ where
 			return Ok(None)
 		}
 
+		let fallback_asset = T::DefaultFeeAsset::get();
+
 		let preferred_fee_asset =
-			Self::account_fee_source_priority(who).unwrap_or_else(T::DefaultFeeAsset::get);
+			Self::account_fee_source_priority(who).unwrap_or_else(|| fallback_asset);
 
 		// check if preferenced fee source is both listed and accepted
 		T::FeeSource::listed(&preferred_fee_asset)
@@ -233,26 +239,49 @@ where
 			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
 		};
 
-		let amount = T::FeeMeasure::measure(&preferred_fee_asset, fee)?;
+		let amount = T::FeeMeasure::measure(&preferred_fee_asset, fee + tip)?;
 
-		match T::FeeDispatch::withdraw(who, &preferred_fee_asset, &amount, &withdraw_reason) {
-			Ok(_) => {
-				let payout_info = MultiCurrencyPayout {
-					source_asset_id: preferred_fee_asset,
-					request_amount_native: fee,
-					withdrawn_source_amount: amount,
-					beneficiary: T::IsFeeSharingCall::is_call(call),
-				};
+		// try alt_token path first
+		if T::FeeDispatch::withdraw(who, &preferred_fee_asset, &amount, &withdraw_reason).is_ok() {
+			let payout_info = MultiCurrencyPayout {
+				source_asset_id: preferred_fee_asset,
+				request_amount_native: fee + tip,
+				withdrawn_source_amount: amount,
+				beneficiary: T::IsFeeSharingCall::is_call(call),
+			};
 
-				Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
-					currency: preferred_fee_asset,
-					amount,
-				});
+			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
+				currency: preferred_fee_asset,
+				amount,
+			});
 
-				Ok(Some(payout_info))
-			},
-			Err(_) => Err(InvalidTransaction::Payment.into()),
+			return Ok(Some(payout_info))
 		}
+
+		// retry using fallback if alt_token failed
+		if (preferred_fee_asset != fallback_asset) &&
+			T::FeeDispatch::withdraw(who, &fallback_asset, &(fee + tip), &withdraw_reason)
+				.is_ok()
+		{
+			Pallet::<T>::deposit_event(Event::<T>::FallbackToNative);
+			let fallback_amount = T::FeeMeasure::measure(&fallback_asset, fee + tip)?;
+
+			let payout_info = MultiCurrencyPayout {
+				source_asset_id: fallback_asset,
+				request_amount_native: fee + tip,
+				withdrawn_source_amount: fallback_amount,
+				beneficiary: T::IsFeeSharingCall::is_call(call),
+			};
+
+			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
+				currency: fallback_asset,
+				amount: fallback_amount,
+			});
+
+			return Ok(Some(payout_info))
+		}
+
+		Err(InvalidTransaction::Payment.into())
 	}
 
 	fn correct_and_deposit_fee(
