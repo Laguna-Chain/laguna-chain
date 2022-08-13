@@ -5,8 +5,7 @@ use frame_support::{
 	traits::{fungible, fungibles},
 };
 
-use core::cell::Cell;
-use orml_traits::{parameter_type_with_key, BasicCurrency, MultiCurrency};
+use orml_traits::MultiCurrency;
 use primitives::{AccountId, CurrencyId, TokenId};
 use sp_core::{Bytes, U256};
 use std::{str::FromStr, sync::Mutex};
@@ -124,7 +123,7 @@ fn test_total_supply_erc20() {
 			),);
 
 			assert_eq!(ContractTokenRegistry::balance_of(deployed.clone(), ALICE), Some(0));
-			assert_eq!(ContractTokenRegistry::balance_of(deployed.clone(), BOB), Some(UNIT));
+			assert_eq!(ContractTokenRegistry::balance_of(deployed, BOB), Some(UNIT));
 		});
 }
 
@@ -387,9 +386,9 @@ fn test_adapter_erc20() {
 				pub AssetId: CurrencyId = {
 				let  out = {
 					let handle = CID.lock().unwrap();
-					handle.clone()
+					handle
 				};
-				out
+				*out
 				};
 			}
 

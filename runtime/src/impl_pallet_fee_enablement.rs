@@ -1,9 +1,10 @@
-use crate::Runtime;
+use crate::{Currencies, Runtime};
 use frame_system::EnsureRoot;
 use primitives::{AccountId, CurrencyId};
 use traits::fee::{Eligibility, FeeAssetHealth};
 
 impl pallet_fee_enablement::Config for Runtime {
+	type MultiCurrency = Currencies;
 	type AllowedOrigin = EnsureRoot<AccountId>;
 
 	type HealthStatus = DefaultImpl;

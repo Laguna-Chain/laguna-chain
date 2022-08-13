@@ -11,6 +11,7 @@ primitives = {path = "../primitives", default-features = false}
 
 # runtime's basic pallet impl
 pallet-aura = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-authorship = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-grandpa = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-scheduler = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-sudo = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
@@ -22,22 +23,26 @@ pallet-contracts-primitives = {default-features = false, git = 'https://github.c
 pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
-# mometary system
+# monetary system
 orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
-pallet-balances = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contract-asset-registry = {path = "../pallets/contract-asset-registry", default-features = false}
 pallet-currencies = {path = "../pallets/currencies", default-features = false}
 pallet-system-contract-deployer = {path = "../pallets/system-contract-deployer", default-features = false}
+
+# government
+pallet-treasury = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # fee and validator
 pallet-fee-enablement = {path = "../pallets/fee-enablement", default-features = false}
 pallet-fee-measurement = {path = "../pallets/fee-measurement", default-features = false}
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
+pallet-prepaid = {path = "../pallets/prepaid", default-features = false}
 pallet-transaction-payment = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-transaction-payment-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
-# orml
+# share traits from both orml and our repo
 orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
+traits = {version = "0.1.0", path = "../pallets/traits", default-features = false}
 
 # interface for pallet build with frame
 frame-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", optional = true}
@@ -66,7 +71,6 @@ codec = {default-features = false, features = ['derive'], package = 'parity-scal
 hex-literal = {version = '0.3.1'}
 pallet-currencies-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
-traits = {version = "0.1.0", path = "../pallets/traits", default-features = false}
 
 # workaround for https://github.com/paritytech/substrate/issues/11706
 syn = {version = "=1.0.96"}
@@ -84,7 +88,6 @@ runtime-benchmarks = [
   'frame-support/runtime-benchmarks',
   'frame-system-benchmarking',
   'frame-system/runtime-benchmarks',
-  'pallet-balances/runtime-benchmarks',
   'pallet-timestamp/runtime-benchmarks',
   'sp-runtime/runtime-benchmarks',
 ]
@@ -110,11 +113,13 @@ std = [
   "sp-session/std",
   "primitives/std",
   "pallet-aura/std",
+  "pallet-authorship/std",
   "pallet-grandpa/std",
   "pallet-sudo/std",
-  "pallet-balances/std",
+  "pallet-prepaid/std",
   "pallet-timestamp/std",
   'pallet-scheduler/std',
+  'pallet-treasury/std',
   'pallet-currencies/std',
   'pallet-currencies-runtime-api/std',
   'pallet-transaction-payment/std',

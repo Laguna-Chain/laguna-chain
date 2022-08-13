@@ -1,21 +1,24 @@
 use super::*;
 
 use frame_support::{
-	construct_runtime,
-	dispatch::DispatchInfo,
-	parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
+	construct_runtime, parameter_types,
+	sp_runtime::{
+		self,
+		traits::{BlakeTwo256, IdentityLookup},
+	},
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
 	weights::IdentityFee,
 };
 
-use orml_currencies::BasicCurrencyAdapter;
 use orml_traits::LockIdentifier;
-use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
+use primitives::{
+	AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, Price, TokenId,
+};
 use sp_core::H256;
 
-use traits::fee::IsFeeSharingCall;
+use sp_runtime::{FixedPointNumber, FixedU128};
+use traits::fee::CallFilterWithOutput;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -59,7 +62,7 @@ impl frame_system::Config for Runtime {
 
 	type PalletInfo = PalletInfo;
 
-	type AccountData = pallet_balances::AccountData<Balance>;
+	type AccountData = orml_tokens::AccountData<Balance>;
 
 	type OnNewAccount = ();
 
@@ -168,14 +171,14 @@ impl FeeMeasure for DummyFeeMeasure {
 	}
 }
 
-pub struct DummyFeeSharingCall<T> {
-	_type: PhantomData<T>,
-}
+pub struct DummyFeeSharingCall;
 
-impl IsFeeSharingCall<Runtime> for DummyFeeSharingCall<Tokens> {
-	type AccountId = AccountId;
+impl CallFilterWithOutput for DummyFeeSharingCall {
+	type Call = Call;
 
-	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Option<Self::AccountId> {
+	type Output = Option<AccountId>;
+
+	fn is_call(call: &Self::Call) -> Self::Output {
 		if let Call::FluentFee(pallet::Call::<Runtime>::fee_sharing_wrapper {
 			beneficiary, ..
 		}) = call
@@ -194,69 +197,75 @@ pub struct DummyFeeDispatch<T> {
 	_type: PhantomData<T>,
 }
 
-impl FeeDispatch<Runtime> for DummyFeeDispatch<Tokens> {
+impl FeeDispatch for DummyFeeDispatch<Tokens> {
+	type AccountId = AccountId;
 	type AssetId = CurrencyId;
 	type Balance = Balance;
-
-	fn post_info_correction(
-		id: &Self::AssetId,
-		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
-	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Ok(())
-	}
 
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
-		call: &<Runtime as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		// If the transaction is of fee sharing type, transfer unit weight worth of fees to the
 		// given beneficiary
-		if let Some(beneficiary) =
-			<IsSharingCall<Runtime> as IsFeeSharingCall<Runtime>>::is_call(call)
-		{
-			// Get the fee equivalent to 1 unit of weight that can be shared with the
-			// beneficiary
-			let fee_details = Payment::compute_fee_details(
-				0,
-				&DispatchInfo { pays_fee: Pays::Yes, weight: 1u64, class: DispatchClass::Normal },
-				0,
-			);
-			// unpack the fee_details struct to get the adjusted_weight_fee
-			let unit_weight_fee = fee_details.inclusion_fee.unwrap().adjusted_weight_fee;
 
-			// Send the unit weight fee to the beneficiary account
-			// NOTE: we are not reverting the transaction if the transfer to the beneficiary
-			// fails as it does not constitute core logic expressed by the transaction but is merely
-			// a tip given to the beneficiary of the signer's choice.
-			// NOTE: We emit an event to indicate that unit weight fee transfer to the beneficiary
-			// succeeded.
-			if let Ok(_) = <Tokens as MultiCurrency<AccountId>>::transfer(
-				*id,
-				account,
-				&beneficiary,
-				unit_weight_fee.clone(),
-			) {
-				FluentFee::deposit_event(pallet::Event::FeeSharedWithTheBeneficiary((
-					Some(beneficiary),
-					unit_weight_fee,
-				)));
-			}
-
-			// normal transaction fee withdrawal
-			Tokens::withdraw(*id, account, *balance)
-				.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
-		} else {
-			Tokens::withdraw(*id, account, *balance)
-				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+		match id {
+			CurrencyId::NativeToken(_) => Tokens::withdraw(*id, account, *balance)
+				.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute),
+			CurrencyId::Erc20(_) => unimplemented!("erc20 need carrier not enabled right now"),
 		}
+	}
+
+	fn refund(
+		account: &<Runtime as frame_system::Config>::AccountId,
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		Tokens::withdraw(*id, account, *balance)
+			.map(|_| *balance)
+			.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+	}
+
+	fn post_info_correction(
+		id: &Self::AssetId,
+		tip: &Self::Balance,
+		corret_withdrawn: &Self::Balance,
+		benefitiary: &Option<<Runtime as frame_system::Config>::AccountId>,
+	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		let payouts = corret_withdrawn.saturating_sub(*tip);
+
+		let ratio = FixedU128::saturating_from_rational(2_u128, 100_u128);
+
+		// 2% of total control paid to beneficiary
+		let beneficiary_cut = ratio.saturating_mul_int(payouts);
+
+		if let Some(target) = benefitiary {
+			Tokens::deposit(*id, target, beneficiary_cut)
+				.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
+		}
+
+		Ok(())
 	}
 }
 
 parameter_types! {
 	pub const NativeAssetId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+
+
+}
+
+pub struct PayoutSplits;
+
+impl Get<(Price, Price, Price)> for PayoutSplits {
+	fn get() -> (Price, Price, Price) {
+		(
+			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
+			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
+			FixedPointNumber::saturating_from_rational(2_u128, 100_u128),
+		)
+	}
 }
 
 impl Config for Runtime {
@@ -267,11 +276,15 @@ impl Config for Runtime {
 	type MultiCurrency = Tokens;
 	type Call = Call;
 
-	type IsFeeSharingCall = DummyFeeSharingCall<Tokens>;
+	type IsFeeSharingCall = DummyFeeSharingCall;
 
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;
 	type FeeDispatch = DummyFeeDispatch<Tokens>;
+
+	type Ratio = Price;
+
+	type PayoutSplits = PayoutSplits;
 }
 
 impl pallet_transaction_payment::Config for Runtime {

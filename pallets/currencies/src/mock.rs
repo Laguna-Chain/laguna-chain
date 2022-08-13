@@ -1,24 +1,17 @@
-use std::path::Path;
-
 use super::*;
 
-// use crate::adapter::CurrencyAdapter;
-
-use codec::Decode;
 use frame_support::{
 	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::{Contains, Currency, Everything},
+	traits::{Contains, Everything},
 	weights::IdentityFee,
 	PalletId,
 };
 
-use frame_system::{EnsureRoot, EnsureSigned};
-use orml_currencies::BasicCurrencyAdapter;
+use frame_support::sp_runtime::Perbill;
+use frame_system::EnsureRoot;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use primitives::{AccountId, Amount, Balance, BlockNumber, Hash, Header, Index, TokenId};
-use sp_core::hexdisplay::AsBytesRef;
-use sp_runtime::Perbill;
 
 use orml_tokens::CurrencyAdapter as TokenCurrencyAdapter;
 
@@ -66,7 +59,7 @@ impl frame_system::Config for Runtime {
 
 	type PalletInfo = PalletInfo;
 
-	type AccountData = pallet_balances::AccountData<Balance>;
+	type AccountData = orml_tokens::AccountData<Balance>;
 
 	type OnNewAccount = ();
 
@@ -84,18 +77,6 @@ impl frame_system::Config for Runtime {
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 2;
 }
-
-// impl pallet_balances::Config for Runtime {
-// 	type Balance = Balance;
-// 	type DustRemoval = ();
-// 	type Event = Event;
-// 	type ExistentialDeposit = ExistentialDeposit;
-// 	type AccountStore = frame_system::Pallet<Runtime>;
-// 	type MaxLocks = ();
-// 	type MaxReserves = ();
-// 	type ReserveIdentifier = [u8; 8];
-// 	type WeightInfo = ();
-// }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
@@ -203,7 +184,7 @@ impl pallet_contract_asset_registry::Config for Runtime {
 }
 
 orml_traits::parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
 		Balance::MIN
 	};
 }
@@ -211,7 +192,7 @@ orml_traits::parameter_type_with_key! {
 pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
-	fn contains(t: &AccountId) -> bool {
+	fn contains(_t: &AccountId) -> bool {
 		false
 	}
 }
@@ -279,7 +260,6 @@ construct_runtime!(
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
-pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
 #[derive(Default)]
 pub struct ExtBuilder {
@@ -297,7 +277,7 @@ impl ExtBuilder {
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
 		orml_tokens::GenesisConfig::<Runtime> {
-			balances: self.balances.clone().into_iter().collect::<Vec<_>>(),
+			balances: self.balances.into_iter().collect::<Vec<_>>(),
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

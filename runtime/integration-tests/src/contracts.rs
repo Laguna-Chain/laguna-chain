@@ -77,7 +77,7 @@ mod tests {
 				let rs =
 					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						ALICE,
-						deployed_address.clone().into(),
+						deployed_address.clone(),
 						0,
 						MAX_GAS,
 						None,
@@ -91,10 +91,7 @@ mod tests {
 				// empty flags determines succesful execution
 				assert!(flags.is_empty());
 
-				assert!(bool::decode(&mut data.as_bytes_ref())
-					.ok()
-					.filter(|rs| *rs == false)
-					.is_some());
+				assert!(bool::decode(&mut data.as_bytes_ref()).ok().filter(|rs| !(*rs)).is_some());
 
 				let sel_flip = Bytes::from_str("0x633aa551")
 					.map(|v| v.to_vec())
@@ -114,7 +111,7 @@ mod tests {
 				let rs =
 					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						ALICE,
-						deployed_address.clone().into(),
+						deployed_address.clone(),
 						0,
 						MAX_GAS,
 						None,
@@ -128,10 +125,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				// assert state changes
-				assert!(bool::decode(&mut data.as_bytes_ref())
-					.ok()
-					.filter(|rs| *rs == true)
-					.is_some());
+				assert!(bool::decode(&mut data.as_bytes_ref()).ok().filter(|rs| *rs).is_some());
 
 				let mut sel_constructor_with_arg = Bytes::from_str("0x9bae9d5e")
 					.map(|v| v.to_vec())
@@ -172,7 +166,7 @@ mod tests {
 				let rs =
 					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						ALICE,
-						deployed_address.clone().into(),
+						deployed_address.clone(),
 						0,
 						MAX_GAS,
 						None,
@@ -186,10 +180,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				// assert state changes
-				assert!(bool::decode(&mut data.as_bytes_ref())
-					.ok()
-					.filter(|rs| *rs == true)
-					.is_some());
+				assert!(bool::decode(&mut data.as_bytes_ref()).ok().filter(|rs| *rs).is_some());
 
 				// submit call on the getter
 				assert_ok!(Contracts::call(
@@ -198,18 +189,18 @@ mod tests {
 					0,
 					MAX_GAS,
 					None,
-					sel_flip.clone(),
+					sel_flip,
 				));
 
 				// read the getter again before state mutating call
 				let rs =
 					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						ALICE,
-						deployed_address.clone().into(),
+						deployed_address.clone(),
 						0,
 						MAX_GAS,
 						None,
-						sel_getter.clone(),
+						sel_getter,
 					)
 					.result
 					.expect("execution without result");
@@ -219,10 +210,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				// assert state changes
-				assert!(bool::decode(&mut data.as_bytes_ref())
-					.ok()
-					.filter(|rs| *rs != true)
-					.is_some());
+				assert!(bool::decode(&mut data.as_bytes_ref()).ok().filter(|rs| !(*rs)).is_some());
 			});
 	}
 
@@ -251,7 +239,7 @@ mod tests {
 					0,
 					MAX_GAS,
 					None,
-					blob.clone(),
+					blob,
 					sel_constructor,
 					acc_counter.encode(),
 				));
@@ -284,7 +272,7 @@ mod tests {
 				let rs =
 					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						ALICE,
-						deployed_address.clone().into(),
+						deployed_address.clone(),
 						0,
 						MAX_GAS,
 						None,
@@ -298,10 +286,7 @@ mod tests {
 				// empty flags determines succesful execution
 				assert!(flags.is_empty());
 
-				assert!(bool::decode(&mut data.as_bytes_ref())
-					.ok()
-					.filter(|rs| *rs == true)
-					.is_some());
+				assert!(bool::decode(&mut data.as_bytes_ref()).ok().filter(|rs| *rs).is_some());
 
 				let sel_flip = Bytes::from_str("0xcde4efa9")
 					.map(|v| v.to_vec())
@@ -314,18 +299,18 @@ mod tests {
 					0,
 					MAX_GAS,
 					None,
-					sel_flip.clone(),
+					sel_flip,
 				));
 
 				// read the getter again after state mutating call
 				let rs =
 					<Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						ALICE,
-						deployed_address.clone().into(),
+						deployed_address.clone(),
 						0,
 						MAX_GAS,
 						None,
-						sel_getter.clone(),
+						sel_getter,
 					)
 					.result
 					.expect("execution without result");
@@ -335,10 +320,7 @@ mod tests {
 				assert!(flags.is_empty());
 
 				// assert state changes
-				assert!(bool::decode(&mut data.as_bytes_ref())
-					.ok()
-					.filter(|rs| *rs == false)
-					.is_some());
+				assert!(bool::decode(&mut data.as_bytes_ref()).ok().filter(|rs| !(*rs)).is_some());
 			});
 	}
 

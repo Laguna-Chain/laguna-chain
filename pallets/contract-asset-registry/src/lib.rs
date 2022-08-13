@@ -5,16 +5,20 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::HasCompact;
-use frame_support::{pallet_prelude::*, traits::Currency, PalletId};
+use frame_support::{
+	pallet_prelude::*,
+	sp_runtime::{
+		app_crypto::UncheckedFrom,
+		traits::{AccountIdConversion, StaticLookup},
+	},
+	sp_std::{fmt::Debug, prelude::*},
+	traits::Currency,
+	PalletId,
+};
 use frame_system::{pallet_prelude::*, RawOrigin};
 use hex_literal::hex;
 pub use pallet::*;
 use sp_core::{hexdisplay::AsBytesRef, U256};
-use sp_runtime::{
-	app_crypto::UncheckedFrom,
-	traits::{AccountIdConversion, StaticLookup},
-};
-use sp_std::fmt::Debug;
 use traits::currencies::TokenAccess;
 use weights::WeightInfo;
 
@@ -30,7 +34,6 @@ pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 type BalanceOf<T> =
 	<<T as pallet_contracts::Config>::Currency as Currency<AccountIdOf<T>>>::Balance;
-use sp_std::prelude::*;
 
 #[frame_support::pallet]
 mod pallet {
@@ -73,7 +76,7 @@ mod pallet {
 			asset_contract_address: AccountIdOf<T>,
 			enabled: bool,
 		) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+			T::AllowedOrigin::ensure_origin(origin)?;
 
 			RegisteredAsset::<T>::insert(asset_contract_address, enabled);
 
@@ -85,7 +88,7 @@ mod pallet {
 			origin: OriginFor<T>,
 			asset_contract_address: AccountIdOf<T>,
 		) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+			T::AllowedOrigin::ensure_origin(origin)?;
 
 			RegisteredAsset::<T>::mutate(asset_contract_address, |val| *val = Some(false));
 			Ok(())
@@ -96,7 +99,7 @@ mod pallet {
 			origin: OriginFor<T>,
 			asset_contract_address: AccountIdOf<T>,
 		) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+			T::AllowedOrigin::ensure_origin(origin)?;
 
 			RegisteredAsset::<T>::remove(asset_contract_address);
 			Ok(())
@@ -129,11 +132,11 @@ impl<T: Config> Selector<T> {
 	fn method_selector(&self) -> [u8; 4] {
 		match self {
 			Selector::TotalSupply => hex!("18160ddd"),
-			Selector::BalanceOf { owner } => hex!("70a08231"),
-			Selector::Transfer { to, amount } => hex!("a9059cbb"),
-			Selector::Allowance { owner, spender } => hex!("dd62ed3e"),
-			Selector::Approve { spender, amount: amout } => hex!("095ea7b3"),
-			Selector::TransferFrom { from, to, amount } => hex!("23b872dd"),
+			Selector::BalanceOf { owner: _ } => hex!("70a08231"),
+			Selector::Transfer { to: _, amount: _ } => hex!("a9059cbb"),
+			Selector::Allowance { owner: _, spender: _ } => hex!("dd62ed3e"),
+			Selector::Approve { spender: _, amount: _amout } => hex!("095ea7b3"),
+			Selector::TransferFrom { from: _, to: _, amount: _ } => hex!("23b872dd"),
 		}
 	}
 
@@ -172,17 +175,20 @@ impl<T> TokenAccess<T> for Pallet<T>
 where
 	T: Config,
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
-	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + Debug + TypeInfo + Encode,
+	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
 {
 	type Balance = BalanceOf<T>;
 
 	fn total_supply(asset_address: AccountIdOf<T>) -> Option<Self::Balance> {
-		if Self::get_registered(asset_address.clone())
-			.and_then(|rv| if rv == true { Some(()) } else { None })
-			.is_none()
-		{
-			return None
-		}
+		Self::get_registered(asset_address.clone()).and_then(
+			|rv| {
+				if rv {
+					Some(())
+				} else {
+					None
+				}
+			},
+		)?;
 
 		pallet_contracts::Pallet::<T>::bare_call(
 			T::PalletId::get().into_account(),
@@ -202,12 +208,15 @@ where
 	}
 
 	fn balance_of(asset_address: AccountIdOf<T>, who: AccountIdOf<T>) -> Option<Self::Balance> {
-		if Self::get_registered(asset_address.clone())
-			.and_then(|rv| if rv == true { Some(()) } else { None })
-			.is_none()
-		{
-			return None
-		}
+		Self::get_registered(asset_address.clone()).and_then(
+			|rv| {
+				if rv {
+					Some(())
+				} else {
+					None
+				}
+			},
+		)?;
 
 		pallet_contracts::Pallet::<T>::bare_call(
 			T::PalletId::get().into_account(),
@@ -233,7 +242,7 @@ where
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
 		if Self::get_registered(asset_address.clone())
-			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.and_then(|rv| if rv { Some(()) } else { None })
 			.is_none()
 		{
 			return Err(Error::<T>::InvalidAsset.into())
@@ -254,12 +263,15 @@ where
 		owner: AccountIdOf<T>,
 		spender: AccountIdOf<T>,
 	) -> Option<Self::Balance> {
-		if Self::get_registered(asset_address.clone())
-			.and_then(|rv| if rv == true { Some(()) } else { None })
-			.is_none()
-		{
-			return None
-		}
+		Self::get_registered(asset_address.clone()).and_then(
+			|rv| {
+				if rv {
+					Some(())
+				} else {
+					None
+				}
+			},
+		)?;
 		pallet_contracts::Pallet::<T>::bare_call(
 			T::PalletId::get().into_account(),
 			asset_address,
@@ -284,7 +296,7 @@ where
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
 		if Self::get_registered(asset_address.clone())
-			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.and_then(|rv| if rv { Some(()) } else { None })
 			.is_none()
 		{
 			return Err(Error::<T>::InvalidAsset.into())
@@ -307,7 +319,7 @@ where
 		amount: U256,
 	) -> DispatchResultWithPostInfo {
 		if Self::get_registered(asset_address.clone())
-			.and_then(|rv| if rv == true { Some(()) } else { None })
+			.and_then(|rv| if rv { Some(()) } else { None })
 			.is_none()
 		{
 			return Err(Error::<T>::InvalidAsset.into())

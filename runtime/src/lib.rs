@@ -44,11 +44,14 @@ pub mod impl_pallet_aura;
 pub mod impl_pallet_contract_asset_registry;
 pub mod impl_pallet_contracts;
 pub mod impl_pallet_fee_measurement;
+pub mod impl_pallet_treasury;
 
+pub mod impl_pallet_authorship;
 pub mod impl_pallet_currencies;
 pub mod impl_pallet_fee_enablement;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
+pub mod impl_pallet_prepaid;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
 pub mod impl_pallet_system_contract_deployer;
@@ -132,10 +135,15 @@ construct_runtime!(
 			FluentFee: pallet_fluent_fee,
 			FeeEnablement: pallet_fee_enablement,
 			FeeMeasurement: pallet_fee_measurement,
+			PrepaidFee: pallet_prepaid,
 
 			// conseus mechanism
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
+			Authorship: pallet_authorship,
+
+			// government
+			Treasury: pallet_treasury,
 
 			Contracts: pallet_contracts,
 			SudoContracts: pallet_system_contract_deployer,
@@ -403,7 +411,6 @@ impl_runtime_apis! {
 			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
 
 			// include pallet benchmarks
-			// list_benchmark!(list, extra, pallet_balances, Balances);
 
 			// TODO: add all benchmarks defined by pallets
 
@@ -446,7 +453,6 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 
 			// pallet-specific bench items
-			// add_benchmark!(params, batches, pallet_balances, Balances);
 
 			// TODO: add pallet-specific bench items below
 

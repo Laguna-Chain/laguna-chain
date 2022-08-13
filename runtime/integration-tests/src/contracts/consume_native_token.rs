@@ -108,11 +108,11 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
-					sel_name.clone(),
+					sel_name,
 				)
 				.result
 				.expect("Execution without result");
@@ -129,11 +129,11 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
-					sel_symbol.clone(),
+					sel_symbol,
 				)
 				.result
 				.expect("Execution without result");
@@ -150,11 +150,11 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
-					sel_decimals.clone(),
+					sel_decimals,
 				)
 				.result
 				.expect("Execution without result");
@@ -171,7 +171,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
@@ -194,7 +194,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
@@ -239,7 +239,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
@@ -273,7 +273,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
@@ -310,7 +310,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.into(),
 					0,
 					MAX_GAS,
 					None,
@@ -390,7 +390,7 @@ mod tests {
 
 				assert_ok!(Contracts::call(
 					Origin::signed(ALICE),
-					native_erc20_addr.clone().into(),
+					native_erc20_addr.into(),
 					0,
 					MAX_GAS,
 					None,
@@ -415,7 +415,7 @@ mod tests {
 
 					let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						account,
-						std_erc20_addr.clone().into(),
+						std_erc20_addr.clone(),
 						0,
 						MAX_GAS,
 						None,
@@ -527,7 +527,7 @@ mod tests {
 
 				assert_ok!(Contracts::call(
 					Origin::signed(ALICE),
-					amm_addr.clone().into(),
+					amm_addr.into(),
 					0,
 					MAX_GAS,
 					None,
