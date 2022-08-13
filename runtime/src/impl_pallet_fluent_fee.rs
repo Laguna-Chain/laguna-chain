@@ -136,12 +136,13 @@ impl FeeDispatch for StaticImpl {
 
 		FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
 			amount: treasury_amount,
-			receiver: treasury_account_id.clone(),
+			receiver: treasury_account_id,
 			currency: *id,
 		});
 
 		let author_amount = to_author.saturating_mul_int(*corret_withdrawn);
 
+		// TODO: investigate cases where block author cannot be found
 		if let Some(author) = Authorship::author() {
 			dispatch_with(*id, &author, author_amount + tip)?;
 
@@ -154,20 +155,11 @@ impl FeeDispatch for StaticImpl {
 
 		let shared_amount = to_shared.saturating_mul_int(*corret_withdrawn);
 
-		// TODO: investigate cases where block author cannot be found
 		if let Some(target) = benefitiary {
 			dispatch_with(*id, target, shared_amount)?;
 
 			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
 				receiver: target.clone(),
-				currency: *id,
-				amount: shared_amount,
-			});
-		} else {
-			dispatch_with(*id, &treasury_account_id, shared_amount)?;
-
-			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
-				receiver: treasury_account_id,
 				currency: *id,
 				amount: shared_amount,
 			});
