@@ -111,6 +111,8 @@ mod pallet {
 		pub enabled: Vec<(CurrencyOf<T, T::MultiCurrency>, bool)>,
 	}
 
+	#[cfg(feature = "std")]
+
 	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self { enabled: vec![] }
