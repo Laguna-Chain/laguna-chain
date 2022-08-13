@@ -12,7 +12,9 @@ use frame_support::{
 };
 
 use orml_traits::LockIdentifier;
-use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
+use primitives::{
+	AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, Price, TokenId,
+};
 use sp_core::H256;
 
 use sp_runtime::{FixedPointNumber, FixedU128};
@@ -250,6 +252,20 @@ impl FeeDispatch for DummyFeeDispatch<Tokens> {
 
 parameter_types! {
 	pub const NativeAssetId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+
+
+}
+
+pub struct PayoutSplits;
+
+impl Get<(Price, Price, Price)> for PayoutSplits {
+	fn get() -> (Price, Price, Price) {
+		(
+			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
+			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
+			FixedPointNumber::saturating_from_rational(2_u128, 100_u128),
+		)
+	}
 }
 
 impl Config for Runtime {
@@ -265,6 +281,10 @@ impl Config for Runtime {
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;
 	type FeeDispatch = DummyFeeDispatch<Tokens>;
+
+	type Ratio = Price;
+
+	type PayoutSplits = PayoutSplits;
 }
 
 impl pallet_transaction_payment::Config for Runtime {

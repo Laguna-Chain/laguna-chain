@@ -35,7 +35,7 @@ mod tests;
 pub mod pallet {
 
 	use super::*;
-	use frame_support::weights::GetDispatchInfo;
+	use frame_support::{sp_runtime::FixedPointNumber, weights::GetDispatchInfo};
 	use traits::fee::CallFilterWithOutput;
 
 	#[pallet::config]
@@ -78,6 +78,11 @@ pub mod pallet {
 			AssetId = CurrencyOf<Self, Self::MultiCurrency>,
 			Balance = BalanceOf<Self, Self::MultiCurrency>,
 		>;
+
+		type Ratio: FixedPointNumber;
+
+		/// treasury | block_author | beneficiary
+		type PayoutSplits: Get<(Self::Ratio, Self::Ratio, Self::Ratio)>;
 	}
 
 	#[pallet::pallet]

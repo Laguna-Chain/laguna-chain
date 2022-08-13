@@ -2,28 +2,44 @@ use crate::{
 	impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Currencies, Event, FeeEnablement,
 	FeeMeasurement, FluentFee, PrepaidFee, Runtime, Treasury,
 };
-use frame_support::pallet_prelude::InvalidTransaction;
+use frame_support::{pallet_prelude::InvalidTransaction, traits::Get};
 use orml_traits::MultiCurrency;
-use primitives::{AccountId, Balance, CurrencyId, TokenId};
+use primitives::{AccountId, Balance, CurrencyId, Price, TokenId};
 use sp_runtime::{self, FixedPointNumber, FixedU128};
 use traits::fee::{CallFilterWithOutput, FeeDispatch, FeeMeasure};
 
-impl pallet_fluent_fee::Config for Runtime {
-	type DefaultFeeAsset = NativeCurrencyId;
+pub struct PayoutSplits;
 
+impl Get<(Price, Price, Price)> for PayoutSplits {
+	fn get() -> (Price, Price, Price) {
+		(
+			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
+			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
+			FixedPointNumber::saturating_from_rational(2_u128, 100_u128),
+		)
+	}
+}
+
+impl pallet_fluent_fee::Config for Runtime {
 	type Event = Event;
+
+	type DefaultFeeAsset = NativeCurrencyId;
 
 	type MultiCurrency = Currencies;
 
 	type Call = Call;
 
-	type IsFeeSharingCall = DummyFeeSharingCall;
+	type IsFeeSharingCall = IsFeeSharingCall;
 
 	type FeeSource = FeeEnablement;
 
 	type FeeMeasure = FeeMeasurement;
 
 	type FeeDispatch = StaticImpl;
+
+	type Ratio = Price;
+
+	type PayoutSplits = PayoutSplits;
 }
 
 pub struct StaticImpl;
@@ -92,14 +108,8 @@ impl FeeDispatch for StaticImpl {
 			unimplemented!("currently erc20 handling is not impelmented");
 		}
 
-		// 49% of total corrected goes to treasury by default
-		let to_treasury = FixedU128::saturating_from_rational(49_u128, 100_u128);
-
-		// 49% of total corrected goes to validator by default
-		let to_author = FixedU128::saturating_from_rational(49_u128, 100_u128);
-
-		// 2% of total corrected goes to shared by default
-		let to_shared = FixedU128::saturating_from_rational(2_u128, 100_u128);
+		let (to_treasury, to_author, to_shared) =
+			<Runtime as pallet_fluent_fee::Config>::PayoutSplits::get();
 
 		let treasury_account_id = Treasury::account_id();
 
@@ -126,7 +136,7 @@ impl FeeDispatch for StaticImpl {
 
 		FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
 			amount: treasury_amount,
-			receiver: treasury_account_id,
+			receiver: treasury_account_id.clone(),
 			currency: *id,
 		});
 
@@ -153,6 +163,14 @@ impl FeeDispatch for StaticImpl {
 				currency: *id,
 				amount: shared_amount,
 			});
+		} else {
+			dispatch_with(*id, &treasury_account_id, shared_amount)?;
+
+			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
+				receiver: treasury_account_id,
+				currency: *id,
+				amount: shared_amount,
+			});
 		}
 
 		Ok(())
@@ -161,9 +179,9 @@ impl FeeDispatch for StaticImpl {
 
 // TODO: the below part is currently not included in the withdraw_fee() implementation. For now it
 // is only included to satisfy the compiler errors
-pub struct DummyFeeSharingCall;
+pub struct IsFeeSharingCall;
 
-impl CallFilterWithOutput for DummyFeeSharingCall {
+impl CallFilterWithOutput for IsFeeSharingCall {
 	type Call = Call;
 
 	type Output = Option<AccountId>;
