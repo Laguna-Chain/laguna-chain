@@ -1,5 +1,5 @@
+use frame_support::sp_runtime::FixedPointNumber;
 use primitives::{CurrencyId, TokenId};
-use sp_runtime::FixedPointNumber;
 use traits::fee::FeeMeasure;
 
 use crate::mock::*;

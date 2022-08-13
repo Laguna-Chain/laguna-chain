@@ -19,7 +19,7 @@ pub use fixed_address::CustomAddressGenerator;
 #[frame_support::pallet]
 pub mod pallet {
 	use codec::HasCompact;
-	use frame_support::{pallet_prelude::*, traits::Currency, PalletId};
+	use frame_support::{pallet_prelude::*, sp_runtime, sp_std, traits::Currency, PalletId};
 	use frame_system::{pallet_prelude::*, RawOrigin};
 	use pallet_contracts::weights::WeightInfo;
 	use sp_core::crypto::UncheckedFrom;

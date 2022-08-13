@@ -13,7 +13,6 @@ use frame_system::pallet_prelude::*;
 use scale_info::prelude::boxed::Box;
 
 use orml_traits::{arithmetic::Zero, MultiCurrency};
-use primitives::CurrencyId;
 
 use frame_support::sp_runtime::traits::{DispatchInfoOf, PostDispatchInfoOf};
 use pallet_transaction_payment::OnChargeTransaction;
@@ -22,6 +21,7 @@ use traits::fee::{CallFilterWithOutput, FeeDispatch, FeeMeasure, FeeSource};
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<T, C> = <C as MultiCurrency<AccountIdOf<T>>>::Balance;
 type CallOf<T> = <T as frame_system::Config>::Call;
+type CurrencyOf<T, C> = <C as MultiCurrency<AccountIdOf<T>>>::CurrencyId;
 
 pub use pallet::*;
 
@@ -43,10 +43,10 @@ pub mod pallet {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 
 		// set a global default for fee preference
-		type DefaultFeeAsset: Get<CurrencyId>;
+		type DefaultFeeAsset: Get<CurrencyOf<Self, Self::MultiCurrency>>;
 
 		// monetary system to be used
-		type MultiCurrency: MultiCurrency<Self::AccountId, CurrencyId = CurrencyId>;
+		type MultiCurrency: MultiCurrency<Self::AccountId>;
 
 		// call wrapping
 		type Call: Parameter
@@ -61,18 +61,21 @@ pub mod pallet {
 		>;
 
 		// fee source evaluation
-		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
+		type FeeSource: FeeSource<
+			AccountId = AccountIdOf<Self>,
+			AssetId = CurrencyOf<Self, Self::MultiCurrency>,
+		>;
 
 		// fee rate evaluation
 		type FeeMeasure: FeeMeasure<
-			AssetId = CurrencyId,
+			AssetId = CurrencyOf<Self, Self::MultiCurrency>,
 			Balance = BalanceOf<Self, Self::MultiCurrency>,
 		>;
 
 		// withdraw and redeem path
 		type FeeDispatch: FeeDispatch<
 			AccountId = AccountIdOf<Self>,
-			AssetId = CurrencyId,
+			AssetId = CurrencyOf<Self, Self::MultiCurrency>,
 			Balance = BalanceOf<Self, Self::MultiCurrency>,
 		>;
 	}
@@ -85,7 +88,7 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		AccountPreferenceUpdated {
 			account: AccountIdOf<T>,
-			currency: Option<CurrencyId>,
+			currency: Option<CurrencyOf<T, T::MultiCurrency>>,
 		},
 		FeeSharingBeneficiaryIncluded {
 			beneficiary: Option<AccountIdOf<T>>,
@@ -95,17 +98,17 @@ pub mod pallet {
 			amount: BalanceOf<T, T::MultiCurrency>,
 		},
 		FeeWithdrawn {
-			currency: CurrencyId,
+			currency: CurrencyOf<T, T::MultiCurrency>,
 			amount: BalanceOf<T, T::MultiCurrency>,
 		},
 		FeeRefunded {
-			currency: CurrencyId,
+			currency: CurrencyOf<T, T::MultiCurrency>,
 			amount: BalanceOf<T, T::MultiCurrency>,
 		},
 		FallbackToNative,
 		FeePayout {
 			receiver: AccountIdOf<T>,
-			currency: CurrencyId,
+			currency: CurrencyOf<T, T::MultiCurrency>,
 			amount: BalanceOf<T, T::MultiCurrency>,
 		},
 		FeeCorrected,
@@ -113,13 +116,16 @@ pub mod pallet {
 
 	#[pallet::storage]
 	pub(super) type DefdaultFeeSource<T: Config> =
-		StorageMap<_, Blake2_128Concat, AccountIdOf<T>, CurrencyId>;
+		StorageMap<_, Blake2_128Concat, AccountIdOf<T>, CurrencyOf<T, T::MultiCurrency>>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// set the default asset for this account
 		#[pallet::weight(1000)]
-		pub fn set_default(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
+		pub fn set_default(
+			origin: OriginFor<T>,
+			asset_id: CurrencyOf<T, T::MultiCurrency>,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			DefdaultFeeSource::<T>::insert(who.clone(), asset_id);
 			Self::deposit_event(Event::AccountPreferenceUpdated {
@@ -191,7 +197,7 @@ impl<T: Config> Pallet<T> {
 /// record multicurrency payout info
 pub struct MultiCurrencyPayout<T: Config> {
 	// asset_id user requested to pay as fee
-	source_asset_id: CurrencyId,
+	source_asset_id: CurrencyOf<T, T::MultiCurrency>,
 	// native amount needed
 	request_amount_native: BalanceOf<T, T::MultiCurrency>,
 	// equivalent withdrawn
@@ -222,8 +228,7 @@ where
 
 		let fallback_asset = T::DefaultFeeAsset::get();
 
-		let preferred_fee_asset =
-			Self::account_fee_source_priority(who).unwrap_or_else(|| fallback_asset);
+		let preferred_fee_asset = Self::account_fee_source_priority(who).unwrap_or(fallback_asset);
 
 		// check if preferenced fee source is both listed and accepted
 		T::FeeSource::listed(&preferred_fee_asset)

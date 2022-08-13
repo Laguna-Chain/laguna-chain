@@ -20,13 +20,16 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-use frame_support::{pallet_prelude::*, traits::fungibles};
+use frame_support::{
+	pallet_prelude::*,
+	sp_runtime::{
+		traits::{AccountIdConversion, Saturating},
+		FixedPointNumber, FixedPointOperand, FixedU128,
+	},
+	traits::fungibles,
+};
 use frame_system::pallet_prelude::*;
 use orml_traits::{MultiCurrency, MultiReservableCurrency};
-use sp_runtime::{
-	traits::{AccountIdConversion, Saturating},
-	FixedPointNumber, FixedPointOperand,
-};
 
 type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 type BalanceOf<T, C> = <C as MultiCurrency<AccountIdOf<T>>>::Balance;
@@ -36,7 +39,6 @@ type CurrencyOf<T, C> = <C as MultiCurrency<AccountIdOf<T>>>::CurrencyId;
 pub mod pallet {
 	use frame_support::PalletId;
 	use orml_traits::MultiReservableCurrency;
-	use sp_runtime::FixedU128;
 
 	use super::*;
 

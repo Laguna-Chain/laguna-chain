@@ -53,7 +53,7 @@ impl frame_system::Config for Runtime {
 
 	type PalletInfo = PalletInfo;
 
-	type AccountData = pallet_balances::AccountData<Balance>;
+	type AccountData = orml_tokens::AccountData<Balance>;
 
 	type OnNewAccount = ();
 
@@ -151,6 +151,7 @@ impl Eligibility for DummyImpl {
 }
 
 impl Config for Runtime {
+	type MultiCurrency = Tokens;
 	type AllowedOrigin = EnsureRoot<AccountId>;
 
 	type HealthStatus = DummyImpl;

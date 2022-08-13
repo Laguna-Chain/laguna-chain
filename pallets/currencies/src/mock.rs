@@ -1,22 +1,17 @@
-use std::path::Path;
-
 use super::*;
 
-// use crate::adapter::CurrencyAdapter;
-
-use codec::Decode;
 use frame_support::{
 	construct_runtime, parameter_types,
 	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::{Contains, Currency, Everything},
+	traits::{Contains, Everything},
 	weights::IdentityFee,
 	PalletId,
 };
 
+use frame_support::sp_runtime::Perbill;
 use frame_system::EnsureRoot;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use primitives::{AccountId, Amount, Balance, BlockNumber, Hash, Header, Index, TokenId};
-use sp_runtime::Perbill;
 
 use orml_tokens::CurrencyAdapter as TokenCurrencyAdapter;
 
@@ -64,7 +59,7 @@ impl frame_system::Config for Runtime {
 
 	type PalletInfo = PalletInfo;
 
-	type AccountData = pallet_balances::AccountData<Balance>;
+	type AccountData = orml_tokens::AccountData<Balance>;
 
 	type OnNewAccount = ();
 
@@ -82,18 +77,6 @@ impl frame_system::Config for Runtime {
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 2;
 }
-
-// impl pallet_balances::Config for Runtime {
-// 	type Balance = Balance;
-// 	type DustRemoval = ();
-// 	type Event = Event;
-// 	type ExistentialDeposit = ExistentialDeposit;
-// 	type AccountStore = frame_system::Pallet<Runtime>;
-// 	type MaxLocks = ();
-// 	type MaxReserves = ();
-// 	type ReserveIdentifier = [u8; 8];
-// 	type WeightInfo = ();
-// }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 

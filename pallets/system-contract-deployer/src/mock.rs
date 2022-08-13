@@ -2,7 +2,10 @@ use crate as pallet_system_contract_deployer;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
+	sp_runtime::{
+		self,
+		traits::{BlakeTwo256, IdentityLookup},
+	},
 	traits::{Everything, GenesisBuild},
 	weights::IdentityFee,
 };

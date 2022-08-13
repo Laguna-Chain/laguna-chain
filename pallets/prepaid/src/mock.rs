@@ -2,7 +2,10 @@ use super::*;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
+	sp_runtime::{
+		self,
+		traits::{BlakeTwo256, IdentityLookup},
+	},
 	traits::{Contains, Everything},
 	PalletId,
 };

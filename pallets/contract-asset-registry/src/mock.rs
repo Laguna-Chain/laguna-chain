@@ -7,11 +7,11 @@ use frame_support::{
 	weights::IdentityFee,
 };
 
+use frame_support::sp_runtime::Perbill;
 use frame_system::EnsureRoot;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
-use sp_runtime::Perbill;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;

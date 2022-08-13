@@ -2,7 +2,7 @@ use crate::{
 	impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Currencies, Event, FeeEnablement,
 	FeeMeasurement, FluentFee, PrepaidFee, Runtime, Treasury,
 };
-use frame_support::{pallet_prelude::InvalidTransaction, parameter_types};
+use frame_support::pallet_prelude::InvalidTransaction;
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
 use sp_runtime::{self, FixedPointNumber, FixedU128};

@@ -6,8 +6,10 @@ use frame_support::{
 	traits::{Contains, Everything},
 };
 
-use orml_traits::{DataProvider, DefaultPriceProvider, LockIdentifier};
-use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, Price};
+use orml_traits::{DataProvider, DefaultPriceProvider};
+use primitives::{
+	AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, Price, TokenId,
+};
 use sp_core::H256;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
@@ -52,7 +54,7 @@ impl frame_system::Config for Runtime {
 
 	type PalletInfo = PalletInfo;
 
-	type AccountData = pallet_balances::AccountData<Balance>;
+	type AccountData = orml_tokens::AccountData<Balance>;
 
 	type OnNewAccount = ();
 
@@ -122,11 +124,24 @@ impl DataProvider<CurrencyId, Price> for DummyProvider {
 
 parameter_types! {
 	pub static ConvertRate: Price = Price::checked_from_rational(11, 10).unwrap();
+
+	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+	pub const PrepaidCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::FeeToken);
 }
 
 impl Config for Runtime {
 	type PrepaidConversionRate = ConvertRate;
 	type AltConversionRate = DefaultPriceProvider<CurrencyId, DummyProvider>;
+
+	type Rate = Price;
+
+	type Balance = Balance;
+
+	type CurrencyId = CurrencyId;
+
+	type NativeToken = NativeCurrencyId;
+
+	type PrepaidToken = PrepaidCurrencyId;
 }
 
 construct_runtime!(

@@ -16,9 +16,6 @@ scale-info = {default-features = false, features = ['derive'], version = '2.0.1'
 frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-sp-io = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-sp-runtime = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 frame-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", optional = true}
 hex = {version = "0.4.3", default-features = false}
@@ -30,11 +27,11 @@ pallet-contract-asset-registry = {version = "0.1.0", path = "../contract-asset-r
 [dev-dependencies]
 once_cell = "1.12.0"
 orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", branch = "polkadot-v0.9.22"}
-pallet-balances = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contracts = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-randomness-collective-flip = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-timestamp = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-io = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 [features]
 default = ["std"]
@@ -45,9 +42,6 @@ std = [
   "frame-support/std",
   "frame-system/std",
   "sp-core/std",
-  "sp-std/std",
-  "sp-io/std",
-  "sp-runtime/std",
   "hex/std",
   "primitives/std",
   'orml-traits/std',

@@ -639,9 +639,9 @@ checksum = "c1db59621ec70f09c5e9b597b220c7a2b43611f4710dc03ceb8748637775692c"
 
 [[package]]
 name = "camino"
-version = "1.1.0"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "35176a56fa5f5efe08df85cd5e68158471c2fa7057e85a5356ee4bd9787a6df9"
+checksum = "88ad0e1e3e88dd237a156ab9f571021b8a158caa0ae44b1968a241efb5144c1e"
 dependencies = [
  "serde",
 ]
@@ -767,9 +767,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "3.2.16"
+version = "3.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3dbbb6653e7c55cc8595ad3e1f7be8f32aba4eb7ff7f0fd1163d4f3d137c0a9"
+checksum = "29e724a68d9319343bb3328c9cc2dfde263f4b3142ee1059a9980580171c954b"
 dependencies = [
  "atty",
  "bitflags",
@@ -784,9 +784,9 @@ dependencies = [
 
 [[package]]
 name = "clap_derive"
-version = "3.2.15"
+version = "3.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ba52acd3b0a5c33aeada5cdaa3267cdc7c594a98731d4268cdc1532f4264cb4"
+checksum = "13547f7012c01ab4a0e8f8967730ada8f9fdf419e8b6c792788f39cf4e46eefa"
 dependencies = [
  "heck 0.4.0",
  "proc-macro-error",
@@ -4127,8 +4127,6 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
  "traits",
 ]
 
@@ -4226,7 +4224,6 @@ dependencies = [
  "once_cell",
  "orml-tokens",
  "orml-traits",
- "pallet-balances",
  "pallet-contract-asset-registry",
  "pallet-contracts",
  "pallet-randomness-collective-flip",
@@ -4237,8 +4234,6 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
  "traits",
 ]
 
@@ -4279,15 +4274,12 @@ dependencies = [
  "log",
  "orml-tokens",
  "orml-traits",
- "pallet-balances",
  "pallet-transaction-payment",
  "parity-scale-codec",
  "primitives",
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
  "traits",
 ]
 
@@ -4301,15 +4293,12 @@ dependencies = [
  "log",
  "orml-tokens",
  "orml-traits",
- "pallet-balances",
  "pallet-transaction-payment",
  "parity-scale-codec",
  "primitives",
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
  "traits",
 ]
 
@@ -4325,15 +4314,12 @@ dependencies = [
  "log",
  "orml-tokens",
  "orml-traits",
- "pallet-balances",
  "pallet-transaction-payment",
  "parity-scale-codec",
  "primitives",
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
  "traits",
 ]
 
@@ -4373,8 +4359,6 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
  "traits",
 ]
 
@@ -4462,8 +4446,6 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
 ]
 
 [[package]]

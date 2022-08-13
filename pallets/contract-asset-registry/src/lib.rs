@@ -5,16 +5,20 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::HasCompact;
-use frame_support::{pallet_prelude::*, traits::Currency, PalletId};
+use frame_support::{
+	pallet_prelude::*,
+	sp_runtime::{
+		app_crypto::UncheckedFrom,
+		traits::{AccountIdConversion, StaticLookup},
+	},
+	sp_std::{fmt::Debug, prelude::*},
+	traits::Currency,
+	PalletId,
+};
 use frame_system::{pallet_prelude::*, RawOrigin};
 use hex_literal::hex;
 pub use pallet::*;
 use sp_core::{hexdisplay::AsBytesRef, U256};
-use sp_runtime::{
-	app_crypto::UncheckedFrom,
-	traits::{AccountIdConversion, StaticLookup},
-};
-use sp_std::fmt::Debug;
 use traits::currencies::TokenAccess;
 use weights::WeightInfo;
 
@@ -30,7 +34,6 @@ pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 type BalanceOf<T> =
 	<<T as pallet_contracts::Config>::Currency as Currency<AccountIdOf<T>>>::Balance;
-use sp_std::prelude::*;
 
 #[frame_support::pallet]
 mod pallet {
@@ -172,7 +175,7 @@ impl<T> TokenAccess<T> for Pallet<T>
 where
 	T: Config,
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
-	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + Debug + TypeInfo + Encode,
+	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
 {
 	type Balance = BalanceOf<T>;
 

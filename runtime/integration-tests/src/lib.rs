@@ -55,7 +55,7 @@ impl ExtBuilder {
 		}
 
 		if !self.fee_sources.is_empty() {
-			<pallet_fee_enablement::GenesisConfig as GenesisBuild<Runtime>>::assimilate_storage(
+			<pallet_fee_enablement::GenesisConfig<Runtime> as GenesisBuild<Runtime>>::assimilate_storage(
 				&pallet_fee_enablement::GenesisConfig { enabled: self.fee_sources },
 				&mut t,
 			)

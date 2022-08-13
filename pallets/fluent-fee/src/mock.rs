@@ -2,7 +2,10 @@ use super::*;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
+	sp_runtime::{
+		self,
+		traits::{BlakeTwo256, IdentityLookup},
+	},
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
 	weights::IdentityFee,
@@ -57,7 +60,7 @@ impl frame_system::Config for Runtime {
 
 	type PalletInfo = PalletInfo;
 
-	type AccountData = pallet_balances::AccountData<Balance>;
+	type AccountData = orml_tokens::AccountData<Balance>;
 
 	type OnNewAccount = ();
 

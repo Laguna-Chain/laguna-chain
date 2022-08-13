@@ -8,7 +8,6 @@ version = "0.1.0"
 [dependencies]
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}
 log = "0.4.14"
-primitives = {path = "../../primitives", default-features = false}
 traits = {path = "../traits", default-features = false}
 
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
@@ -17,16 +16,10 @@ frame-support = {default-features = false, git = 'https://github.com/paritytech/
 frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-sp-io = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-sp-runtime = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
-sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # contracts related deps
 pallet-contracts = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", default-features = false}
 pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", default-features = false}
-
-pallet-balances = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", default-features = false}
-pallet-sudo = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", default-features = false}
 
 frame-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", optional = true}
 hex = {version = "0.4.3", default-features = false}
@@ -35,9 +28,13 @@ hex-literal = "0.3.4"
 orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.22"}
 
 [dev-dependencies]
+pallet-balances = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-randomness-collective-flip = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-sudo = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-timestamp = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+primitives = {path = "../../primitives"}
+sp-io = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 [features]
 default = ["std"]
@@ -48,14 +45,8 @@ std = [
   "frame-support/std",
   "frame-system/std",
   "sp-core/std",
-  "sp-std/std",
-  "sp-io/std",
-  "sp-runtime/std",
   "hex/std",
-  "primitives/std",
   'pallet-contracts/std',
   'pallet-contracts-primitives/std',
-  'pallet-balances/std',
-  'pallet-sudo/std',
   'orml-traits/std',
 ]

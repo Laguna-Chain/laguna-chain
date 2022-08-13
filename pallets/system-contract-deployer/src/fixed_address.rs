@@ -2,7 +2,7 @@
 //! the salt is expected to contain a 32-byte encoded value of the destined address
 //! otherwise the DefaultAddressGenerator provided in the pallet-contract is used
 
-use frame_support::{pallet_prelude::Decode, traits::Get};
+use frame_support::{pallet_prelude::Decode, sp_runtime, traits::Get};
 use pallet_contracts::{AddressGenerator, DefaultAddressGenerator};
 use sp_core::crypto::UncheckedFrom;
 use sp_runtime::{traits::AccountIdConversion, AccountId32};
