@@ -10,7 +10,7 @@
 // imports
 // +++++++
 
-use frame_support::pallet_prelude::*;
+use frame_support::{pallet_prelude::*, sp_std::prelude::*};
 use frame_system::pallet_prelude::*;
 
 use orml_traits::MultiCurrency;
