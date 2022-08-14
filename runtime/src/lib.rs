@@ -405,6 +405,10 @@ impl_runtime_apis! {
 
 			// include pallet benchmarks
 			// list_benchmark!(list, extra, pallet_balances, Balances);
+			list_benchmark!(list, extra, pallet_fluent_fee, FluentFee);
+			list_benchmark!(list, extra, pallet_contract_asset_registry, ContractAssetsRegistry);
+			// list_benchmark!(list, extra, pallet_currencies, Currencies);
+			list_benchmark!(list, extra, pallet_fee_enablement, FeeEnablement);
 
 			// TODO: add all benchmarks defined by pallets
 
@@ -448,6 +452,10 @@ impl_runtime_apis! {
 
 			// pallet-specific bench items
 			// add_benchmark!(params, batches, pallet_balances, Balances);
+			add_benchmark!(params, batches, pallet_fluent_fee, FluentFee);
+			add_benchmark!(params, batches, pallet_contract_asset_registry, ContractAssetsRegistry);
+			// add_benchmark!(params, batches, pallet_currencies, Currencies);
+			add_benchmark!(params, batches, pallet_fee_enablement, FeeEnablement);
 
 			// TODO: add pallet-specific bench items below
 

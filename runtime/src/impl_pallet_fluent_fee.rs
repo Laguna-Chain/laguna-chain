@@ -23,6 +23,8 @@ impl pallet_fluent_fee::Config for Runtime {
 	type FeeMeasure = FeeMeasurement;
 
 	type FeeDispatch = StaticImpl;
+
+	type WeightInfo = pallet_fluent_fee::weights::SubstrateWeight<Runtime>;
 }
 
 pub struct StaticImpl;

@@ -22,8 +22,14 @@ pub type BalanceOf<T> = <<T as Config>::MultiCurrency as MultiCurrency<AccountId
 #[cfg(test)]
 mod mock;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 #[cfg(test)]
 mod tests;
+
+pub mod weights;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -48,6 +54,8 @@ pub mod pallet {
 		type FeeSource: FeeSource<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
 		type FeeMeasure: FeeMeasure<AssetId = CurrencyId, Balance = BalanceOf<Self>>;
 		type FeeDispatch: FeeDispatch<Self, AssetId = CurrencyId, Balance = BalanceOf<Self>>;
+
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::pallet]
@@ -67,7 +75,7 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		#[pallet::weight(1000)]
+		#[pallet::weight(T::WeightInfo::set_default())]
 		pub fn set_default(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			DefdaultFeeSource::<T>::insert(who.clone(), asset_id);
@@ -75,7 +83,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		#[pallet::weight(1000)]
+		#[pallet::weight(T::WeightInfo::unset_default())]
 		pub fn unset_default(origin: OriginFor<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			DefdaultFeeSource::<T>::remove(who.clone());

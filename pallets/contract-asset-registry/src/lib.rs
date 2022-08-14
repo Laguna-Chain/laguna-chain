@@ -16,7 +16,7 @@ use sp_runtime::{
 };
 use sp_std::fmt::Debug;
 use traits::currencies::TokenAccess;
-use weights::WeightInfo;
+pub use weights::WeightInfo;
 
 pub mod weights;
 
@@ -25,6 +25,9 @@ mod tests;
 
 #[cfg(test)]
 mod mock;
+
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 

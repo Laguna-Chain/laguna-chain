@@ -52,6 +52,9 @@ type CurrencyIdOf<T> = <Pallet<T> as MultiCurrency<AccountIdOf<T>>>::CurrencyId;
 #[cfg(test)]
 mod mock;
 
+// #[cfg(feature = "runtime-benchmarks")]
+// mod benchmarking;
+
 #[cfg(test)]
 mod tests;
 

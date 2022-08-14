@@ -10,6 +10,8 @@ use frame_support::{
 	weights::IdentityFee,
 };
 
+use crate::weights::SubstrateWeight;
+
 use orml_currencies::BasicCurrencyAdapter;
 use orml_traits::LockIdentifier;
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
@@ -272,6 +274,8 @@ impl Config for Runtime {
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;
 	type FeeDispatch = DummyFeeDispatch<Tokens>;
+
+	type WeightInfo = SubstrateWeight<Runtime>;
 }
 
 impl pallet_transaction_payment::Config for Runtime {

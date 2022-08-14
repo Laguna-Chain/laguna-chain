@@ -53,4 +53,5 @@ std = [
   "primitives/std",
   'orml-traits/std',
   'pallet-contract-asset-registry/std',
+  'frame-benchmarking/std',
 ]
