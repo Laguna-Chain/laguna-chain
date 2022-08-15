@@ -44,11 +44,10 @@
 // ./pallets/fee-enablement/src/weights.rs
 // --template=./.maintain/frame-weight-template.hbs
 
-#![cfg_attr(rustfmt, rustfmt_skip)]
-#![allow(unused_parens)]
-#![allow(unused_imports)]
-
-use frame_support::{traits::Get, weights::{Weight, constants::RocksDbWeight}};
+use frame_support::{
+	traits::Get,
+	weights::{constants::RocksDbWeight, Weight},
+};
 use sp_std::marker::PhantomData;
 
 /// Weight functions needed for pallet_fee_enablement.
@@ -63,8 +62,7 @@ pub struct SubstrateWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: FeeEnablement FeeAssets (r:0 w:1)
 	fn onboard_asset() -> Weight {
-		(3_000_000 as Weight)
-			.saturating_add(T::DbWeight::get().writes(1 as Weight))
+		(3_000_000 as Weight).saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 	// Storage: FeeEnablement FeeAssets (r:1 w:1)
 	fn enable_asset() -> Weight {
@@ -84,8 +82,7 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 impl WeightInfo for () {
 	// Storage: FeeEnablement FeeAssets (r:0 w:1)
 	fn onboard_asset() -> Weight {
-		(3_000_000 as Weight)
-			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
+		(3_000_000 as Weight).saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 	// Storage: FeeEnablement FeeAssets (r:1 w:1)
 	fn enable_asset() -> Weight {

@@ -13,16 +13,11 @@ pub const EVA: AccountId = AccountId::new([5u8; 32]);
 pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 pub const FEE_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::FeeToken);
 
+#[derive(Default)]
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, CurrencyId, Balance)>,
 	sudo: Option<AccountId>,
 	fee_sources: Vec<(CurrencyId, bool)>,
-}
-
-impl Default for ExtBuilder {
-	fn default() -> Self {
-		Self { balances: vec![], sudo: None, fee_sources: vec![] }
-	}
 }
 
 impl ExtBuilder {
@@ -60,8 +55,8 @@ impl ExtBuilder {
 		}
 
 		if !self.fee_sources.is_empty() {
-			<pallet_fee_enablement::GenesisConfig as GenesisBuild<Runtime>>::assimilate_storage(
-				&pallet_fee_enablement::GenesisConfig { enabled: self.fee_sources.clone() },
+			<pallet_fee_enablement::GenesisConfig<Runtime> as GenesisBuild<Runtime>>::assimilate_storage(
+				&pallet_fee_enablement::GenesisConfig { enabled: self.fee_sources },
 				&mut t,
 			)
 			.unwrap();

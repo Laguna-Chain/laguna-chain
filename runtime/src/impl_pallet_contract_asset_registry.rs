@@ -1,7 +1,6 @@
-use crate::{impl_pallet_currencies::NativeCurrencyId, Contracts, Runtime};
+use crate::Runtime;
 use frame_support::{parameter_types, PalletId};
 use frame_system::EnsureRoot;
-use orml_tokens::CurrencyAdapter;
 use primitives::AccountId;
 
 parameter_types! {

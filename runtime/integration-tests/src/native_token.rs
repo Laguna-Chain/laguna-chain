@@ -8,10 +8,8 @@ mod tests {
 
 	use crate::*;
 	use frame_support::assert_ok;
-	use laguna_runtime::{constants::LAGUNAS, Currencies, Origin};
-	use orml_traits::{
-		MultiCurrency, MultiCurrencyExtended, MultiLockableCurrency, MultiReservableCurrency,
-	};
+	use laguna_runtime::{constants::LAGUNAS, Currencies};
+	use orml_traits::{MultiCurrency, MultiCurrencyExtended, MultiReservableCurrency};
 
 	#[test]
 	fn transfer_native() {
@@ -34,7 +32,7 @@ mod tests {
 					NATIVE_CURRENCY_ID,
 					&ALICE,
 					&BOB,
-					1 * LAGUNAS,
+					LAGUNAS,
 				));
 
 				let alice_after =
@@ -65,7 +63,7 @@ mod tests {
 					FEE_TOKEN_ID,
 					&ALICE,
 					&BOB,
-					1 * LAGUNAS,
+					LAGUNAS,
 				));
 
 				let alice_after =
@@ -87,11 +85,9 @@ mod tests {
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
 				assert_eq!(alice_init, 10 * LAGUNAS);
 
-				assert_ok!(Currencies::update_balance(
-					NATIVE_CURRENCY_ID,
-					&ALICE,
-					(1 * LAGUNAS) as i128,
-				));
+				assert_ok!(
+					Currencies::update_balance(NATIVE_CURRENCY_ID, &ALICE, LAGUNAS as i128,)
+				);
 
 				let alice_after =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
@@ -109,7 +105,7 @@ mod tests {
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
 				assert_eq!(alice_init, 10 * LAGUNAS);
 
-				assert_ok!(Currencies::reserve(NATIVE_CURRENCY_ID, &ALICE, 1 * LAGUNAS,));
+				assert_ok!(Currencies::reserve(NATIVE_CURRENCY_ID, &ALICE, LAGUNAS,));
 
 				let alice_free =
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE);
@@ -119,7 +115,7 @@ mod tests {
 					NATIVE_CURRENCY_ID,
 					&ALICE,
 				);
-				assert_eq!(alice_reserved, 1 * LAGUNAS);
+				assert_eq!(alice_reserved, LAGUNAS);
 			});
 	}
 
@@ -142,7 +138,7 @@ mod tests {
 				assert_ok!(<Currencies as MultiReservableCurrency<_>>::reserve(
 					NATIVE_CURRENCY_ID,
 					&ALICE,
-					1 * LAGUNAS,
+					LAGUNAS,
 				));
 				assert_eq!(
 					<Currencies as MultiCurrency<_>>::free_balance(NATIVE_CURRENCY_ID, &ALICE),

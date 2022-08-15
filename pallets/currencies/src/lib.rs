@@ -18,6 +18,7 @@
 
 use frame_support::{
 	pallet_prelude::*,
+	sp_runtime,
 	traits::tokens::{fungible, fungibles, DepositConsequence, WithdrawConsequence},
 };
 
@@ -595,8 +596,9 @@ where
 		by_amount: Self::Amount,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			CurrencyId::NativeToken(_) =>
-				<T::MultiCurrency>::update_balance(currency_id, who, by_amount),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiCurrencyExtended<
+				AccountIdOf<T>,
+			>>::update_balance(currency_id, who, by_amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
 	}
@@ -615,8 +617,9 @@ where
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			CurrencyId::NativeToken(_) =>
-				<T::MultiCurrency>::set_lock(lock_id, currency_id, who, amount),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiLockableCurrency<
+				AccountIdOf<T>,
+			>>::set_lock(lock_id, currency_id, who, amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
 	}
@@ -628,8 +631,9 @@ where
 		amount: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			CurrencyId::NativeToken(_) =>
-				<T::MultiCurrency>::extend_lock(lock_id, currency_id, who, amount),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiLockableCurrency<
+				AccountIdOf<T>,
+			>>::extend_lock(lock_id, currency_id, who, amount),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
 	}
@@ -640,8 +644,9 @@ where
 		who: &AccountIdOf<T>,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			CurrencyId::NativeToken(_) =>
-				<T::MultiCurrency>::remove_lock(lock_id, currency_id, who),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiLockableCurrency<
+				AccountIdOf<T>,
+			>>::remove_lock(lock_id, currency_id, who),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
 	}
@@ -657,7 +662,9 @@ where
 		value: Self::Balance,
 	) -> bool {
 		match currency_id {
-			CurrencyId::NativeToken(_) => <T::MultiCurrency>::can_reserve(currency_id, who, value),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiReservableCurrency<
+				AccountIdOf<T>,
+			>>::can_reserve(currency_id, who, value),
 			CurrencyId::Erc20(_) => false,
 		}
 	}
@@ -668,15 +675,18 @@ where
 		value: Self::Balance,
 	) -> Self::Balance {
 		match currency_id {
-			CurrencyId::NativeToken(_) =>
-				<T::MultiCurrency>::slash_reserved(currency_id, who, value),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiReservableCurrency<
+				AccountIdOf<T>,
+			>>::slash_reserved(currency_id, who, value),
 			CurrencyId::Erc20(_) => Default::default(),
 		}
 	}
 
 	fn reserved_balance(currency_id: Self::CurrencyId, who: &AccountIdOf<T>) -> Self::Balance {
 		match currency_id {
-			CurrencyId::NativeToken(_) => <T::MultiCurrency>::reserved_balance(currency_id, who),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiReservableCurrency<
+				AccountIdOf<T>,
+			>>::reserved_balance(currency_id, who),
 			CurrencyId::Erc20(_) => Default::default(),
 		}
 	}
@@ -687,7 +697,9 @@ where
 		value: Self::Balance,
 	) -> sp_runtime::DispatchResult {
 		match currency_id {
-			CurrencyId::NativeToken(_) => <T::MultiCurrency>::reserve(currency_id, who, value),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiReservableCurrency<
+				AccountIdOf<T>,
+			>>::reserve(currency_id, who, value),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}
 	}
@@ -698,7 +710,9 @@ where
 		value: Self::Balance,
 	) -> Self::Balance {
 		match currency_id {
-			CurrencyId::NativeToken(_) => <T::MultiCurrency>::unreserve(currency_id, who, value),
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiReservableCurrency<
+				AccountIdOf<T>,
+			>>::unreserve(currency_id, who, value),
 			CurrencyId::Erc20(_) => {
 				log::debug!("not amount will be unreserved for contract based assets");
 				Default::default()
@@ -714,12 +728,10 @@ where
 		status: orml_traits::BalanceStatus,
 	) -> core::result::Result<Self::Balance, DispatchError> {
 		match currency_id {
-			CurrencyId::NativeToken(_) => <T::MultiCurrency>::repatriate_reserved(
-				currency_id,
-				slashed,
-				beneficiary,
-				value,
-				status,
+			CurrencyId::NativeToken(_) => <T::MultiCurrency as MultiReservableCurrency<
+				AccountIdOf<T>,
+			>>::repatriate_reserved(
+				currency_id, slashed, beneficiary, value, status
 			),
 			CurrencyId::Erc20(_) => Err(Error::<T>::InvalidContractOperation.into()),
 		}

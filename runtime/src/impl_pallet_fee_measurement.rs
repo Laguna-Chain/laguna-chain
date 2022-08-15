@@ -1,11 +1,12 @@
 use frame_support::parameter_types;
-use orml_traits::parameter_type_with_key;
 
 use orml_traits::PriceProvider;
-use primitives::{CurrencyId, Price};
+use primitives::{Balance, CurrencyId, Price};
 use sp_runtime::FixedPointNumber;
 
-use crate::Runtime;
+use crate::{
+	impl_pallet_currencies::NativeCurrencyId, impl_pallet_prepaid::PREPAIDTOKENID, Runtime,
+};
 
 parameter_types! {
 	pub PrepaidConvertionRate: Price = Price::saturating_from_rational(11, 10);
@@ -23,4 +24,14 @@ impl pallet_fee_measurement::Config for Runtime {
 	type PrepaidConversionRate = PrepaidConvertionRate;
 
 	type AltConversionRate = DummyPriceProvider;
+
+	type Rate = Price;
+
+	type Balance = Balance;
+
+	type CurrencyId = CurrencyId;
+
+	type NativeToken = NativeCurrencyId;
+
+	type PrepaidToken = PREPAIDTOKENID;
 }

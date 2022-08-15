@@ -1,92 +1,81 @@
-use super::*;
+use crate as pallet_system_contract_deployer;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::Everything,
+	sp_runtime::{
+		self,
+		traits::{BlakeTwo256, IdentityLookup},
+	},
+	traits::{Everything, GenesisBuild},
 	weights::IdentityFee,
 };
 
-use frame_support::sp_runtime::Perbill;
-use frame_system::EnsureRoot;
-use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
+use frame_support::{
+	pallet_prelude::{ConstU32, Weight},
+	PalletId,
+};
+use pallet_contracts::{weights::WeightInfo, DefaultContractAccessWeight};
+use pallet_system_contract_deployer::CustomAddressGenerator;
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
+use sp_runtime::Perbill;
 
-type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
-type Block = frame_system::mocking::MockBlock<Runtime>;
+type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
+type Block = frame_system::mocking::MockBlock<Test>;
 
 parameter_types! {
 	pub const BlockHashCount: BlockNumber = 250;
 }
 
-impl frame_system::Config for Runtime {
+impl frame_system::Config for Test {
 	type BaseCallFilter = Everything;
-
 	type BlockWeights = ();
-
 	type BlockLength = ();
-
 	type Origin = Origin;
-
 	type Call = Call;
-
 	type Index = Index;
-
 	type BlockNumber = BlockNumber;
-
 	type Hash = Hash;
-
 	type Hashing = BlakeTwo256;
-
 	type AccountId = AccountId;
-
 	type Lookup = IdentityLookup<Self::AccountId>;
-
 	type Header = Header;
-
 	type Event = Event;
-
 	type BlockHashCount = BlockHashCount;
-
 	type DbWeight = ();
-
 	type Version = ();
-
 	type PalletInfo = PalletInfo;
-
 	type AccountData = pallet_balances::AccountData<Balance>;
-
 	type OnNewAccount = ();
-
 	type OnKilledAccount = ();
-
 	type SystemWeightInfo = ();
-
 	type SS58Prefix = ();
-
 	type OnSetCode = ();
-
 	type MaxConsumers = ConstU32<1>;
+}
+
+impl pallet_sudo::Config for Test {
+	type Event = Event;
+	type Call = Call;
 }
 
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 2;
 }
 
-impl pallet_balances::Config for Runtime {
+impl pallet_balances::Config for Test {
 	type Balance = Balance;
 	type DustRemoval = ();
 	type Event = Event;
 	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = frame_system::Pallet<Runtime>;
+	type AccountStore = frame_system::Pallet<Test>;
 	type MaxLocks = ();
 	type MaxReserves = ();
 	type ReserveIdentifier = [u8; 8];
 	type WeightInfo = ();
 }
 
-impl pallet_randomness_collective_flip::Config for Runtime {}
+impl pallet_randomness_collective_flip::Config for Test {}
 
 pub const MILLISECS_PER_BLOCK: u64 = 6000;
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
@@ -95,7 +84,7 @@ parameter_types! {
 	pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
 }
 
-impl pallet_timestamp::Config for Runtime {
+impl pallet_timestamp::Config for Test {
 	type Moment = u64;
 	type OnTimestampSet = ();
 	type MinimumPeriod = MinimumPeriod;
@@ -107,13 +96,11 @@ parameter_types! {
 	pub OperationalFeeMultiplier: u8 = 5;
 }
 
-impl pallet_transaction_payment::Config for Runtime {
-	// TODO: add benchmark around cross pallet interaction between fee
+impl pallet_transaction_payment::Config for Test {
 	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
 	type FeeMultiplierUpdate = ();
-
 	type LengthToFee = IdentityFee<Balance>;
 }
 
@@ -125,7 +112,6 @@ const fn deposit(items: u32, bytes: u32) -> Balance {
 }
 
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
-
 const WEIGHT_PER_SECOND: Weight = 1_000_000_000_000;
 
 parameter_types! {
@@ -137,23 +123,22 @@ parameter_types! {
 	pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
 		BlockWeights::get().max_block;
 	pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get() / (
-			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
-			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
+			<Test as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
+			<Test as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
 		)) / 5) as u32;
-	pub Schedule: pallet_contracts::Schedule<Runtime> = {
-		let mut schedule = pallet_contracts::Schedule::<Runtime>::default();
+	pub Schedule: pallet_contracts::Schedule<Test> = {
+		let mut schedule = pallet_contracts::Schedule::<Test>::default();
 		schedule.limits.code_len = 256 * 1024;
 		schedule
 	};
 }
 
-impl pallet_contracts::Config for Runtime {
+impl pallet_contracts::Config for Test {
 	type Time = Timestamp;
 	type Randomness = RandomnessCollectiveFlip;
 	type Currency = Balances;
 	type Event = Event;
 	type Call = Call;
-
 	type CallFilter = frame_support::traits::Nothing;
 	type WeightPrice = Payment;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
@@ -162,67 +147,50 @@ impl pallet_contracts::Config for Runtime {
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
 	type DeletionQueueDepth = DeletionQueueDepth;
 	type DeletionWeightLimit = DeletionWeightLimit;
-
 	type DepositPerByte = DepositPerByte;
-
 	type DepositPerItem = DepositPerItem;
-
-	type AddressGenerator = DefaultAddressGenerator;
-
-	// TODO: use arbitrary value now, need to adjust usage later
+	type AddressGenerator = CustomAddressGenerator;
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 }
 
 parameter_types! {
-	pub const PId: PalletId = PalletId(*b"tkn/reg_");
-	pub const MaxGas: u64 = 200_000_000_000;
-	pub const DebugFlag: bool = true;
+	pub const PId: PalletId = PalletId(*b"sys_depl");
 }
 
-impl Config for Runtime {
-	type AllowedOrigin = EnsureRoot<AccountId>;
-	type PalletId = PId;
-
-	type MaxGas = MaxGas;
-
-	type ContractDebugFlag = DebugFlag;
-
-	type WeightInfo = ();
-}
-
-impl pallet_sudo::Config for Runtime {
+impl pallet_system_contract_deployer::Config for Test {
 	type Event = Event;
-
-	type Call = Call;
+	type PalletId = PId;
 }
 
 construct_runtime!(
 
-	pub enum Runtime where
+	pub enum Test where
 		Block = Block,
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
 		Sudo: pallet_sudo,
-
 		Balances: pallet_balances,
-		Contracts: pallet_contracts,
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 		Timestamp: pallet_timestamp,
 		Payment: pallet_transaction_payment,
-
-		ContractTokenRegistry: crate
+		Contracts: pallet_contracts,
+		SudoContracts: pallet_system_contract_deployer
 	}
 );
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
-pub const BOB: AccountId = AccountId::new([2u8; 32]);
 
-#[derive(Default)]
 pub struct ExtBuilder {
 	balances: Vec<(AccountId, Balance)>,
 	sudo: Option<AccountId>,
+}
+
+impl Default for ExtBuilder {
+	fn default() -> Self {
+		Self { balances: vec![], sudo: None }
+	}
 }
 
 impl ExtBuilder {
@@ -238,9 +206,9 @@ impl ExtBuilder {
 
 	pub fn build(self) -> sp_io::TestExternalities {
 		// construct test storage for the mock runtime
-		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+		let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 
-		pallet_balances::GenesisConfig::<Runtime> {
+		pallet_balances::GenesisConfig::<Test> {
 			balances: self.balances.clone().into_iter().collect::<Vec<_>>(),
 		}
 		.assimilate_storage(&mut t)
@@ -249,7 +217,7 @@ impl ExtBuilder {
 		// setup sudo account
 		if let Some(key) = self.sudo {
 			// FIXME #1578 make this available through chainspec
-			pallet_sudo::GenesisConfig::<Runtime> { key: Some(key) }
+			pallet_sudo::GenesisConfig::<Test> { key: Some(key) }
 				.assimilate_storage(&mut t)
 				.unwrap();
 		}

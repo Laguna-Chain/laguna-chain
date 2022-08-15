@@ -44,13 +44,17 @@ pub mod impl_pallet_aura;
 pub mod impl_pallet_contract_asset_registry;
 pub mod impl_pallet_contracts;
 pub mod impl_pallet_fee_measurement;
+pub mod impl_pallet_treasury;
 
+pub mod impl_pallet_authorship;
 pub mod impl_pallet_currencies;
 pub mod impl_pallet_fee_enablement;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
+pub mod impl_pallet_prepaid;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
+pub mod impl_pallet_system_contract_deployer;
 pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
 
@@ -131,12 +135,18 @@ construct_runtime!(
 			FluentFee: pallet_fluent_fee,
 			FeeEnablement: pallet_fee_enablement,
 			FeeMeasurement: pallet_fee_measurement,
+			PrepaidFee: pallet_prepaid,
 
 			// conseus mechanism
 			Aura: pallet_aura ,
 			Grandpa: pallet_grandpa ,
+			Authorship: pallet_authorship,
+
+			// government
+			Treasury: pallet_treasury,
 
 			Contracts: pallet_contracts,
+			SudoContracts: pallet_system_contract_deployer,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 
 		}
@@ -363,8 +373,6 @@ impl_runtime_apis! {
 		) -> pallet_contracts_primitives::GetStorageResult {
 			Contracts::get_storage(address, key)
 		}
-
-
 	}
 
 	impl pallet_currencies_runtime_api::CurrenciesApi<Block, AccountId, Balance> for Runtime {
@@ -379,7 +387,6 @@ impl_runtime_apis! {
 		fn total_balance(account: AccountId, asset: CurrencyId) -> Option<Balance> {
 			Some(Currencies::total_balance(account, asset))
 		}
-
 	}
 
 	// TODO: add other needed runtime-api

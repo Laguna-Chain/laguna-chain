@@ -10,11 +10,10 @@
 // imports
 // +++++++
 
-use frame_support::pallet_prelude::*;
+use frame_support::{pallet_prelude::*, sp_std::prelude::*};
 use frame_system::pallet_prelude::*;
 
 use orml_traits::MultiCurrency;
-use primitives::CurrencyId;
 
 use traits::fee::{Eligibility, FeeAssetHealth, FeeSource, InvalidFeeSource};
 
@@ -36,6 +35,7 @@ pub mod tests;
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<B, T> = <B as MultiCurrency<AccountIdOf<T>>>::Balance;
+pub type CurrencyOf<T, C> = <C as MultiCurrency<AccountIdOf<T>>>::CurrencyId;
 
 pub mod weights;
 
@@ -49,13 +49,17 @@ mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type AllowedOrigin: EnsureOrigin<Self::Origin>;
+		type MultiCurrency: MultiCurrency<AccountIdOf<Self>>;
 
 		/// determing whether an asset is allowed to be active by checking with chain
 		/// conditions such as total staked or liquidity
-		type HealthStatus: FeeAssetHealth<AssetId = CurrencyId>;
+		type HealthStatus: FeeAssetHealth<AssetId = CurrencyOf<Self, Self::MultiCurrency>>;
 
 		/// whether an account met the condition to use an asset as fee source
-		type Eligibility: Eligibility<AccountId = AccountIdOf<Self>, AssetId = CurrencyId>;
+		type Eligibility: Eligibility<
+			AccountId = AccountIdOf<Self>,
+			AssetId = CurrencyOf<Self, Self::MultiCurrency>,
+		>;
 
 		type WeightInfo: WeightInfo;
 	}
@@ -64,25 +68,29 @@ mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::storage]
-	pub(super) type FeeAssets<T: Config> = StorageMap<_, Blake2_128Concat, CurrencyId, bool>;
+	pub(super) type FeeAssets<T: Config> =
+		StorageMap<_, Blake2_128Concat, CurrencyOf<T, T::MultiCurrency>, bool>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(T::WeightInfo::onboard_asset())]
 		pub fn onboard_asset(
 			origin: OriginFor<T>,
-			asset_id: CurrencyId,
+			asset_id: CurrencyOf<T, T::MultiCurrency>,
 			enabled: bool,
 		) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+			T::AllowedOrigin::ensure_origin(origin)?;
 
 			FeeAssets::<T>::insert(asset_id, enabled);
 			Ok(())
 		}
 
 		#[pallet::weight(T::WeightInfo::enable_asset())]
-		pub fn enable_asset(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+		pub fn enable_asset(
+			origin: OriginFor<T>,
+			asset_id: CurrencyOf<T, T::MultiCurrency>,
+		) -> DispatchResult {
+			T::AllowedOrigin::ensure_origin(origin)?;
 
 			FeeAssets::<T>::mutate(asset_id, |val| *val = Some(true));
 
@@ -90,8 +98,11 @@ mod pallet {
 		}
 
 		#[pallet::weight(T::WeightInfo::disable_asset())]
-		pub fn disable_asset(origin: OriginFor<T>, asset_id: CurrencyId) -> DispatchResult {
-			T::AllowedOrigin::ensure_origin(origin.clone())?;
+		pub fn disable_asset(
+			origin: OriginFor<T>,
+			asset_id: CurrencyOf<T, T::MultiCurrency>,
+		) -> DispatchResult {
+			T::AllowedOrigin::ensure_origin(origin)?;
 			FeeAssets::<T>::mutate(asset_id, |val| *val = Some(false));
 
 			Ok(())
@@ -99,19 +110,20 @@ mod pallet {
 	}
 
 	#[pallet::genesis_config]
-	pub struct GenesisConfig {
-		pub enabled: Vec<(CurrencyId, bool)>,
+	pub struct GenesisConfig<T: Config> {
+		pub enabled: Vec<(CurrencyOf<T, T::MultiCurrency>, bool)>,
 	}
 
 	#[cfg(feature = "std")]
-	impl Default for GenesisConfig {
+
+	impl<T: Config> Default for GenesisConfig<T> {
 		fn default() -> Self {
 			Self { enabled: vec![] }
 		}
 	}
 
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig {
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
 			for (asset_id, enabled) in &self.enabled {
 				FeeAssets::<T>::insert(asset_id, enabled);
@@ -125,7 +137,7 @@ where
 	T: Config,
 {
 	type AccountId = AccountIdOf<T>;
-	type AssetId = CurrencyId;
+	type AssetId = CurrencyOf<T, T::MultiCurrency>;
 
 	fn accepted(
 		who: &Self::AccountId,

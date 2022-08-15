@@ -25,7 +25,6 @@ pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git
 pallet-transaction-payment-rpc-runtime-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # orml
-orml-currencies = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", branch = "polkadot-v0.9.22"}
 orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", branch = "polkadot-v0.9.22"}
 orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", branch = "polkadot-v0.9.22"}
 
@@ -33,6 +32,7 @@ orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-lib
 pallet-contracts = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 pallet-contracts-rpc-runtime-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+pallet-system-contract-deployer = {path = "../../pallets/system-contract-deployer", default-features = false}
 
 num_enum = {version = '0.5.3', default-features = false}
 

@@ -50,7 +50,7 @@ where
 	// operational rpcs
 	// ++++++++++++++++
 
-	module.merge(SystemRpc::new(client.clone(), pool.clone(), deny_unsafe).into_rpc())?;
+	module.merge(SystemRpc::new(client.clone(), pool, deny_unsafe).into_rpc())?;
 	module.merge(TransactionPaymentRpc::new(client.clone()).into_rpc())?;
 
 	// ++++++++++
@@ -58,7 +58,7 @@ where
 	// ++++++++++
 
 	module.merge(ContractsRpc::new(client.clone()).into_rpc())?;
-	module.merge(CurrenciesRpc::new(client.clone()).into_rpc())?;
+	module.merge(CurrenciesRpc::new(client).into_rpc())?;
 
 	Ok(module)
 }

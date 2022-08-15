@@ -1,7 +1,4 @@
-use frame_support::{
-	sp_runtime::traits::PostDispatchInfoOf, traits::WithdrawReasons,
-	unsigned::TransactionValidityError,
-};
+use frame_support::{traits::WithdrawReasons, unsigned::TransactionValidityError};
 
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -39,24 +36,31 @@ pub trait FeeMeasure {
 	) -> Result<Self::Balance, TransactionValidityError>;
 }
 
-pub trait FeeDispatch<T>
-where
-	T: frame_system::Config,
-{
+pub trait FeeDispatch {
+	type AccountId;
 	type AssetId;
 	type Balance;
 
+	/// handle withdrawn
 	fn withdraw(
-		account: &<T as frame_system::Config>::AccountId,
+		account: &Self::AccountId,
 		id: &Self::AssetId,
-		call: &<T as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &WithdrawReasons,
 	) -> Result<(), InvalidFeeDispatch>;
 
+	/// handle overcharged amount
+	fn refund(
+		account: &Self::AccountId,
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, InvalidFeeDispatch>;
+
 	fn post_info_correction(
 		id: &Self::AssetId,
-		post_info: &PostDispatchInfoOf<T::Call>,
+		tip: &Self::Balance,
+		correted_withdrawn: &Self::Balance,
+		benefitiary: &Option<Self::AccountId>,
 	) -> Result<(), InvalidFeeDispatch>;
 }
 
@@ -84,20 +88,9 @@ pub trait Eligibility {
 	fn eligible(who: &Self::AccountId, asset_id: &Self::AssetId) -> Result<(), EligibilityError>;
 }
 
-pub trait IsFeeSharingCall<T>
-where
-	T: frame_system::Config,
-{
-	type AccountId;
-	// returns the Some(beneficiary_account) if the call is fee sharing type, otherwise returns None
-	fn is_call(call: &<T as frame_system::Config>::Call) -> Option<Self::AccountId>;
-}
-
-pub trait IsSchedulerCall<T>
-where
-	T: frame_system::Config,
-{
+pub trait CallFilterWithOutput {
+	type Call;
 	type Output;
 
-	fn is_call(call: &<T as frame_system::Config>::Call) -> Self::Output;
+	fn is_call(call: &Self::Call) -> Self::Output;
 }

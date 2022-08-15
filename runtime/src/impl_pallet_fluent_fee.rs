@@ -1,22 +1,35 @@
 use crate::{
-	impl_pallet_currencies::NativeCurrencyId, Call, ContractAssetsRegistry, Currencies, Event,
-	FeeEnablement, FeeMeasurement, Runtime,
+	impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Currencies, Event, FeeEnablement,
+	FeeMeasurement, FluentFee, PrepaidFee, Runtime, Treasury,
 };
-use frame_support::pallet_prelude::InvalidTransaction;
+use frame_support::{pallet_prelude::InvalidTransaction, traits::Get};
 use orml_traits::MultiCurrency;
-use primitives::{AccountId, Balance, CurrencyId, TokenId};
-use traits::fee::{FeeDispatch, FeeMeasure, FeeSource, IsFeeSharingCall};
+use primitives::{AccountId, Balance, CurrencyId, Price, TokenId};
+use sp_runtime::{self, FixedPointNumber, FixedU128};
+use traits::fee::{CallFilterWithOutput, FeeDispatch, FeeMeasure};
+
+pub struct PayoutSplits;
+
+impl Get<(Price, Price, Price)> for PayoutSplits {
+	fn get() -> (Price, Price, Price) {
+		(
+			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
+			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
+			FixedPointNumber::saturating_from_rational(2_u128, 100_u128),
+		)
+	}
+}
 
 impl pallet_fluent_fee::Config for Runtime {
-	type DefaultFeeAsset = NativeCurrencyId;
-
 	type Event = Event;
+
+	type DefaultFeeAsset = NativeCurrencyId;
 
 	type MultiCurrency = Currencies;
 
 	type Call = Call;
 
-	type IsFeeSharingCall = DummyFeeSharingCall;
+	type IsFeeSharingCall = IsFeeSharingCall;
 
 	type FeeSource = FeeEnablement;
 
@@ -25,6 +38,9 @@ impl pallet_fluent_fee::Config for Runtime {
 	type FeeDispatch = StaticImpl;
 
 	type WeightInfo = pallet_fluent_fee::weights::SubstrateWeight<Runtime>;
+	type Ratio = Price;
+
+	type PayoutSplits = PayoutSplits;
 }
 
 pub struct StaticImpl;
@@ -44,38 +60,127 @@ impl FeeMeasure for StaticImpl {
 	}
 }
 
-impl FeeDispatch<Runtime> for StaticImpl {
+impl FeeDispatch for StaticImpl {
+	type AccountId = AccountId;
 	type AssetId = CurrencyId;
 	type Balance = Balance;
 
 	fn withdraw(
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
-		call: &<Runtime as frame_system::Config>::Call,
 		balance: &Self::Balance,
 		reason: &frame_support::traits::WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
-		Currencies::withdraw(*id, account, *balance)
-			.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+		match id {
+			CurrencyId::NativeToken(_) =>
+				<Currencies as MultiCurrency<AccountId>>::withdraw(*id, account, *balance)
+					.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute),
+
+			// TODO: need carrier for swap -> native
+			CurrencyId::Erc20(_) => todo!(),
+		}
+	}
+
+	fn refund(
+		account: &<Runtime as frame_system::Config>::AccountId,
+		id: &Self::AssetId,
+		balance: &Self::Balance,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		match id {
+			CurrencyId::NativeToken(_) => {
+				<Currencies as MultiCurrency<AccountId>>::deposit(*id, account, *balance)
+					.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)?;
+				Ok(*balance)
+			},
+
+			// TODO: need carrier for swap -> native
+			CurrencyId::Erc20(_) => todo!(),
+		}
 	}
 
 	fn post_info_correction(
 		id: &Self::AssetId,
-		post_info: &sp_runtime::traits::PostDispatchInfoOf<<Runtime as frame_system::Config>::Call>,
+		tip: &Self::Balance,
+		corret_withdrawn: &Self::Balance,
+		benefitiary: &Option<<Runtime as frame_system::Config>::AccountId>,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
+		// TODO: require carrier for erc20
+		if let CurrencyId::Erc20(_) = id {
+			unimplemented!("currently erc20 handling is not impelmented");
+		}
+
+		let (to_treasury, to_author, to_shared) =
+			<Runtime as pallet_fluent_fee::Config>::PayoutSplits::get();
+
+		let treasury_account_id = Treasury::account_id();
+
+		let treasury_amount = to_treasury.saturating_mul_int(*corret_withdrawn);
+
+		// TODO: provide token specific payout routes
+		let dispatch_with = match id {
+			CurrencyId::NativeToken(TokenId::Laguna) =>
+				|id: CurrencyId, who: &AccountId, amount: Balance| {
+					<Currencies as MultiCurrency<AccountId>>::deposit(id, who, amount)
+						.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)
+				},
+			CurrencyId::NativeToken(TokenId::FeeToken) =>
+				|_: CurrencyId, who: &AccountId, amount: Balance| {
+					PrepaidFee::unserve_to(who.clone(), amount)
+						.map_err(|_| traits::fee::InvalidFeeDispatch::CorrectionError)
+				},
+			_ => {
+				unimplemented!("non native token unspported");
+			},
+		};
+
+		dispatch_with(*id, &treasury_account_id, treasury_amount)?;
+
+		FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
+			amount: treasury_amount,
+			receiver: treasury_account_id,
+			currency: *id,
+		});
+
+		let author_amount = to_author.saturating_mul_int(*corret_withdrawn);
+
+		// TODO: investigate cases where block author cannot be found
+		if let Some(author) = Authorship::author() {
+			dispatch_with(*id, &author, author_amount + tip)?;
+
+			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
+				amount: author_amount + tip,
+				receiver: author,
+				currency: *id,
+			});
+		}
+
+		let shared_amount = to_shared.saturating_mul_int(*corret_withdrawn);
+
+		if let Some(target) = benefitiary {
+			dispatch_with(*id, target, shared_amount)?;
+
+			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
+				receiver: target.clone(),
+				currency: *id,
+				amount: shared_amount,
+			});
+		}
+
 		Ok(())
 	}
 }
 
 // TODO: the below part is currently not included in the withdraw_fee() implementation. For now it
 // is only included to satisfy the compiler errors
-pub struct DummyFeeSharingCall;
+pub struct IsFeeSharingCall;
 
-impl IsFeeSharingCall<Runtime> for DummyFeeSharingCall {
-	type AccountId = AccountId;
+impl CallFilterWithOutput for IsFeeSharingCall {
+	type Call = Call;
 
-	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Option<Self::AccountId> {
-		if let Call::FluentFee(pallet_fluent_fee::Call::<Runtime>::fee_sharing_wrapper {
+	type Output = Option<AccountId>;
+
+	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Self::Output {
+		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::fee_sharing_wrapper {
 			beneficiary,
 			..
 		}) = call

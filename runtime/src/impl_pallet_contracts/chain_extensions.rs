@@ -24,7 +24,8 @@ impl ChainExtension<Runtime> for DemoExtension {
 		let mut env = env.buf_in_buf_out();
 		match func_id {
 			0010 => {
-				// @todo: Whitelist contract after verification
+				// Whitelist contract after verification
+				// @dev: Currently only system-contracts are whitelisted
 				Ok(RetVal::Converging(0))
 			},
 			1000 => {
@@ -33,7 +34,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call demo"))?;
 				Ok(RetVal::Converging(0))
 			},
-			_ if 2000 <= func_id && func_id < 3000 => {
+			_ if (2000..3000).contains(&func_id) => {
 				// Native token access as ERC20 token
 				let token_id: u32 = env.read_as()?;
 				let currency = CurrencyId::NativeToken(match token_id {
@@ -110,7 +111,11 @@ impl ChainExtension<Runtime> for DemoExtension {
 						// @dev: This is an UNSAFE method. Only whitelisted contracts can access it!
 
 						let contract: AccountId = env.ext().address().clone();
-						//@todo: Verify that the contract is authorised to do this operation
+
+						// Verify that the contract is authorised to do this operation
+						if !crate::SudoContracts::is_system_contract(contract) {
+							return Ok(RetVal::Converging(403))
+						}
 
 						let (_, from, to, value): (u32, AccountId, AccountId, Balance) =
 							env.read_as()?;

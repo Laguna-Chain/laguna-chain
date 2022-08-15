@@ -43,58 +43,60 @@
 // --output
 // ./pallets/contract-asset-registry/src/weights.rs
 // --template=./.maintain/frame-weight-template.hbs
-
 #![cfg_attr(rustfmt, rustfmt_skip)]
 #![allow(unused_parens)]
 #![allow(unused_imports)]
 
-use frame_support::{traits::Get, weights::{Weight, constants::RocksDbWeight}};
+use frame_support::{
+	traits::Get,
+	weights::{constants::RocksDbWeight, Weight},
+};
 use sp_std::marker::PhantomData;
 
-/// Weight functions needed for pallet_contract_asset_registry.
+/// Weight functions needed for pallet_fee_enablement.
 pub trait WeightInfo {
-	fn register_asset() -> Weight;
-	fn suspend_asset() -> Weight;
-	fn unregister_asset() -> Weight;
+	fn onboard_asset() -> Weight;
+	fn enable_asset() -> Weight;
+	fn disable_asset() -> Weight;
 }
 
-/// Weights for pallet_contract_asset_registry using the Substrate node and recommended hardware.
+/// Weights for pallet_fee_enablement using the Substrate node and recommended hardware.
 pub struct SubstrateWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
-	// Storage: ContractAssetsRegistry RegisteredAsset (r:0 w:1)
-	fn register_asset() -> Weight {
-		(4_000_000 as Weight)
-			.saturating_add(T::DbWeight::get().writes(1 as Weight))
+	// Storage: FeeEnablement FeeAssets (r:0 w:1)
+	fn onboard_asset() -> Weight {
+		(3_000_000 as Weight).saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
-	// Storage: ContractAssetsRegistry RegisteredAsset (r:1 w:1)
-	fn suspend_asset() -> Weight {
-		(8_000_000 as Weight)
+	// Storage: FeeEnablement FeeAssets (r:1 w:1)
+	fn enable_asset() -> Weight {
+		(7_000_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
-	// Storage: ContractAssetsRegistry RegisteredAsset (r:0 w:1)
-	fn unregister_asset() -> Weight {
-		(4_000_000 as Weight)
+	// Storage: FeeEnablement FeeAssets (r:1 w:1)
+	fn disable_asset() -> Weight {
+		(8_000_000 as Weight)
+			.saturating_add(T::DbWeight::get().reads(1 as Weight))
 			.saturating_add(T::DbWeight::get().writes(1 as Weight))
 	}
 }
 
 // For backwards compatibility and tests
 impl WeightInfo for () {
-	// Storage: ContractAssetsRegistry RegisteredAsset (r:0 w:1)
-	fn register_asset() -> Weight {
-		(4_000_000 as Weight)
-			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
+	// Storage: FeeEnablement FeeAssets (r:0 w:1)
+	fn onboard_asset() -> Weight {
+		(3_000_000 as Weight).saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
-	// Storage: ContractAssetsRegistry RegisteredAsset (r:1 w:1)
-	fn suspend_asset() -> Weight {
-		(8_000_000 as Weight)
+	// Storage: FeeEnablement FeeAssets (r:1 w:1)
+	fn enable_asset() -> Weight {
+		(7_000_000 as Weight)
 			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
-	// Storage: ContractAssetsRegistry RegisteredAsset (r:0 w:1)
-	fn unregister_asset() -> Weight {
-		(4_000_000 as Weight)
+	// Storage: FeeEnablement FeeAssets (r:1 w:1)
+	fn disable_asset() -> Weight {
+		(8_000_000 as Weight)
+			.saturating_add(RocksDbWeight::get().reads(1 as Weight))
 			.saturating_add(RocksDbWeight::get().writes(1 as Weight))
 	}
 }

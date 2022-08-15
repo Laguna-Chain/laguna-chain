@@ -11,10 +11,42 @@ mod tests {
 	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
 	use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId, TokenMetadata};
 	use sp_core::{hexdisplay::AsBytesRef, Bytes, U256};
+	use sp_runtime::traits::AccountIdConversion;
 	use std::str::FromStr;
 
 	const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 	const MAX_GAS: u64 = 200_000_000_000;
+
+	fn deploy_system_contract(blob: Vec<u8>, sel_constructor: Vec<u8>) -> AccountId {
+		assert_ok!(laguna_runtime::SudoContracts::instantiate_with_code(
+			Origin::root(),
+			0,
+			MAX_GAS,
+			None,
+			blob,
+			sel_constructor,
+			None,
+		));
+
+		let evts = System::events();
+
+		let deployed_address = evts
+			.iter()
+			.rev()
+			.find_map(|r| {
+				if let Event::SudoContracts(pallet_system_contract_deployer::Event::Created(
+					contract,
+				)) = &r.event
+				{
+					Some(contract)
+				} else {
+					None
+				}
+			})
+			.expect("unable to find contract");
+
+		deployed_address.clone()
+	}
 
 	fn deploy_contract(blob: Vec<u8>, sel_constructor: Vec<u8>) -> AccountId {
 		assert_ok!(Contracts::instantiate_with_code(
@@ -50,8 +82,10 @@ mod tests {
 
 	#[test]
 	fn test_ink_multilayer_erc20() {
+		let deploying_key =
+			<Runtime as pallet_system_contract_deployer::Config>::PalletId::get().into_account();
 		ExtBuilder::default()
-			.balances(vec![(ALICE, LAGUNA_TOKEN, 10*LAGUNAS),(BOB, LAGUNA_TOKEN, 10*LAGUNAS),(EVA, LAGUNA_TOKEN, 10*LAGUNAS)])
+			.balances(vec![(ALICE, LAGUNA_TOKEN, 10*LAGUNAS),(BOB, LAGUNA_TOKEN, 10*LAGUNAS),(EVA, LAGUNA_TOKEN, 10*LAGUNAS), (deploying_key, LAGUNA_TOKEN, 10*LAGUNAS)])
 			.build()
 			.execute_with(|| {
 
@@ -65,7 +99,7 @@ mod tests {
 
                 sel_constructor.append(&mut 0_u32.encode());
 
-                let erc20_contract_addr = deploy_contract(blob, sel_constructor);
+                let erc20_contract_addr = deploy_system_contract(blob, sel_constructor);
 
 				// 2. Test name()
 				let sel_name = Bytes::from_str("0x06fdde03")
@@ -74,11 +108,11 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
-					sel_name.clone(),
+					sel_name,
 				)
 				.result
 				.expect("Execution without result");
@@ -95,11 +129,11 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
-					sel_symbol.clone(),
+					sel_symbol,
 				)
 				.result
 				.expect("Execution without result");
@@ -116,11 +150,11 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
-					sel_decimals.clone(),
+					sel_decimals,
 				)
 				.result
 				.expect("Execution without result");
@@ -137,7 +171,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
@@ -160,7 +194,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
@@ -205,7 +239,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
@@ -239,7 +273,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.clone(),
 					0,
 					MAX_GAS,
 					None,
@@ -276,7 +310,7 @@ mod tests {
 
 				let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 					ALICE,
-					erc20_contract_addr.clone().into(),
+					erc20_contract_addr.into(),
 					0,
 					MAX_GAS,
 					None,
@@ -298,8 +332,10 @@ mod tests {
 
 	#[test]
 	fn test_solang_multilayer_amm() {
+		let deploying_key =
+			<Runtime as pallet_system_contract_deployer::Config>::PalletId::get().into_account();
 		ExtBuilder::default()
-			.balances(vec![(ALICE, LAGUNA_TOKEN, 1000*LAGUNAS)])
+			.balances(vec![(ALICE, LAGUNA_TOKEN, 1000*LAGUNAS), (deploying_key, LAGUNA_TOKEN, 10*LAGUNAS)])
 			.build()
 			.execute_with(|| {
 				// @NOTE: Just a simple test method to verify multilayer interaction and ERC20 works!
@@ -315,7 +351,7 @@ mod tests {
 
                 sel_constructor_native_erc20.append(&mut 0_u32.encode());
 
-                let native_erc20_addr = deploy_contract(blob_native_erc20, sel_constructor_native_erc20);
+                let native_erc20_addr = deploy_system_contract(blob_native_erc20, sel_constructor_native_erc20);
 
 				// 1B. Deploy a standard ERC20 contract (ERC20)
 				let blob_std_erc20 = std::fs::read("../integration-tests/contracts-data/solidity/erc20/dist/ERC20.wasm")
@@ -354,7 +390,7 @@ mod tests {
 
 				assert_ok!(Contracts::call(
 					Origin::signed(ALICE),
-					native_erc20_addr.clone().into(),
+					native_erc20_addr.into(),
 					0,
 					MAX_GAS,
 					None,
@@ -379,7 +415,7 @@ mod tests {
 
 					let ExecReturnValue{flags, data} = <Runtime as ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::call(
 						account,
-						std_erc20_addr.clone().into(),
+						std_erc20_addr.clone(),
 						0,
 						MAX_GAS,
 						None,
@@ -491,7 +527,7 @@ mod tests {
 
 				assert_ok!(Contracts::call(
 					Origin::signed(ALICE),
-					amm_addr.clone().into(),
+					amm_addr.into(),
 					0,
 					MAX_GAS,
 					None,

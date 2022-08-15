@@ -2,14 +2,18 @@ use super::*;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
+	sp_runtime::{
+		self,
+		traits::{BlakeTwo256, IdentityLookup},
+	},
 	traits::{Contains, Everything},
+	PalletId,
 };
 
-use frame_system::EnsureRoot;
-use orml_traits::LockIdentifier;
 use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, TokenId};
 use sp_core::H256;
+
+use sp_runtime::{FixedPointNumber, FixedU128};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -75,14 +79,14 @@ parameter_types! {
 pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
-	fn contains(_t: &AccountId) -> bool {
+	fn contains(t: &AccountId) -> bool {
 		// TODO: all account are possible to be dust-removed now
 		false
 	}
 }
 
 orml_traits::parameter_type_with_key! {
-	pub ExistentialDeposits: |_currency: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |currency: CurrencyId| -> Balance {
 		Balance::min_value()
 	};
 }
@@ -113,52 +117,36 @@ impl orml_tokens::Config for Runtime {
 	type ReserveIdentifier = ReserveIdentifier;
 }
 
-pub struct DummyImpl;
+pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+pub const FEE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::FeeToken);
 
-impl FeeAssetHealth for DummyImpl {
-	type AssetId = CurrencyId;
+parameter_types! {
+	pub const NativeCurrencyId: CurrencyId = NATIVE_CURRENCY_ID;
+	pub const PrepaidCurrencyId: CurrencyId = FEE_CURRENCY_ID;
 
-	fn health_status(asset_id: &Self::AssetId) -> Result<(), traits::fee::HealthStatusError> {
-		match asset_id {
-			// a made-up case where not enough liquidity exist for the target asset
-			CurrencyId::NativeToken(TokenId::FeeToken) => {
-				if Tokens::total_issuance(asset_id) > 1000 {
-					Ok(())
-				} else {
-					Err(traits::fee::HealthStatusError::Unstable)
-				}
-			},
-			_ => Ok(()),
-		}
-	}
+	pub const PALLETID: PalletId = PalletId(*b"pretoken");
+
 }
 
-impl Eligibility for DummyImpl {
-	type AccountId = AccountId;
-
-	type AssetId = CurrencyId;
-
-	fn eligible(
-		who: &Self::AccountId,
-		asset_id: &Self::AssetId,
-	) -> Result<(), traits::fee::EligibilityError> {
-		match (who, asset_id) {
-			(&BOB, CurrencyId::NativeToken(TokenId::FeeToken)) =>
-				Err(traits::fee::EligibilityError::NotAllowed),
-			_ => Ok(()),
-		}
+pub struct MaxRatio;
+impl Get<FixedU128> for MaxRatio {
+	fn get() -> FixedU128 {
+		FixedU128::saturating_from_rational(20_u128, 100_u128)
 	}
 }
 
 impl Config for Runtime {
+	type Event = Event;
+
+	type MaxPrepaidRaio = MaxRatio;
+
 	type MultiCurrency = Tokens;
-	type AllowedOrigin = EnsureRoot<AccountId>;
 
-	type HealthStatus = DummyImpl;
+	type NativeCurrencyId = NativeCurrencyId;
 
-	type Eligibility = DummyImpl;
+	type PrepaidCurrencyId = PrepaidCurrencyId;
 
-	type WeightInfo = ();
+	type PalletId = PALLETID;
 }
 
 construct_runtime!(
@@ -169,26 +157,23 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
-		FeeEnablement: crate,
-		Tokens: orml_tokens
-
+		Tokens: orml_tokens,
+		PrepaidFee: pallet,
 	}
 );
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
-pub const ID_1: LockIdentifier = *b"1       ";
 
 #[derive(Default)]
 pub struct ExtBuilder {
-	enabled: Vec<(CurrencyId, bool)>,
+	balances: Vec<(AccountId, CurrencyId, Balance)>,
 }
 
 impl ExtBuilder {
-	pub fn enabled(mut self, enabled: Vec<(CurrencyId, bool)>) -> Self {
-		self.enabled = enabled;
-
+	pub fn balances(mut self, balances: Vec<(AccountId, CurrencyId, Balance)>) -> Self {
+		self.balances = balances;
 		self
 	}
 
@@ -196,17 +181,12 @@ impl ExtBuilder {
 		// construct test storage for the mock runtime
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
 
-		if !self.enabled.is_empty() {
-			GenesisBuild::<Runtime>::assimilate_storage(
-				&crate::GenesisConfig { enabled: self.enabled },
-				&mut t,
-			)
-			.expect("unable to build genesis");
+		orml_tokens::GenesisConfig::<Runtime> {
+			balances: self.balances.into_iter().collect::<Vec<_>>(),
 		}
+		.assimilate_storage(&mut t)
+		.unwrap();
 
-		let mut ext = sp_io::TestExternalities::new(t);
-		ext.execute_with(|| System::set_block_number(1));
-
-		ext
+		t.into()
 	}
 }
