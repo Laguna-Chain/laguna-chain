@@ -119,7 +119,12 @@ mod pallet {
 		) -> DispatchResult {
 			let from = ensure_signed(origin)?;
 
-			<Self as MultiCurrency<AccountIdOf<T>>>::transfer(currency_id, &from, &to, balance)?;
+			<Self as MultiCurrency<AccountIdOf<T>>>::transfer(
+				currency_id,
+				&from,
+				&to,
+				balance.clone(),
+			)?;
 
 			Self::deposit_event(Event::Transfer { from, to, amount: balance });
 			Ok(())

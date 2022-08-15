@@ -1,4 +1,8 @@
-use crate::{adapters::CurrencyAdapter, mock::{Event as MockEvents,*}, AccountIdOf};
+use crate::{
+	adapters::CurrencyAdapter,
+	mock::{Event as MockEvents, *},
+	AccountIdOf,
+};
 use codec::Encode;
 use frame_support::{
 	assert_err, assert_ok, parameter_types,
