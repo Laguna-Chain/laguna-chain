@@ -1,0 +1,8 @@
+doc
+target/
+.idea/
+build/docker/
+.dockerignore
+.local
+.env*
+.github/
