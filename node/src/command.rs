@@ -43,7 +43,8 @@ impl SubstrateCli for LagunaCli {
 
 	fn load_spec(&self, id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 		Ok(match id {
-			"dev" => Box::new(chain_spec::testnet::local_testnet_config()?),
+			"dev" => Box::new(chain_spec::testnet::devnet_config()?),
+			"local" => Box::new(chain_spec::testnet::local_testnet_config()?),
 			path => Box::new(chain_spec::testnet::ChainSpec::from_json_file(
 				std::path::PathBuf::from(path),
 			)?),
