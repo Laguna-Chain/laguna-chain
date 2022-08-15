@@ -6,3 +6,4 @@ build/docker/
 .local
 .env*
 .github/
+.cargo/
