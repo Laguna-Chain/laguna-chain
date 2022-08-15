@@ -1,4 +1,4 @@
-use crate::{adapters::CurrencyAdapter, mock::*, AccountIdOf};
+use crate::{adapters::CurrencyAdapter, mock::{Event as MockEvents,*}, AccountIdOf};
 use codec::Encode;
 use frame_support::{
 	assert_err, assert_ok, parameter_types,
@@ -45,7 +45,7 @@ where
 		.iter()
 		.rev()
 		.find_map(|rec| {
-			if let Event::Contracts(pallet_contracts::Event::Instantiated {
+			if let MockEvents::Contracts(pallet_contracts::Event::Instantiated {
 				deployer: _,
 				contract,
 			}) = &rec.event
