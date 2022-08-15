@@ -4127,6 +4127,7 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
+ "sp-std",
  "traits",
 ]
 
@@ -4320,6 +4321,7 @@ dependencies = [
  "scale-info",
  "sp-core",
  "sp-io",
+ "sp-std",
  "traits",
 ]
 

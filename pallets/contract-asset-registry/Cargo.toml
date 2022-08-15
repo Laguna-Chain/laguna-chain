@@ -16,6 +16,7 @@ frame-support = {default-features = false, git = 'https://github.com/paritytech/
 frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
+sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22"}
 
 # contracts related deps
 pallet-contracts = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.22", default-features = false}
@@ -46,6 +47,7 @@ std = [
   "frame-system/std",
   "frame-benchmarking/std",
   "sp-core/std",
+  "sp-std/std",
   "hex/std",
   'pallet-contracts/std',
   'pallet-contracts-primitives/std',
