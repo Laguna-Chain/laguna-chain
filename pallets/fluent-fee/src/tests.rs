@@ -1,7 +1,7 @@
 //! Unit test for the fluent-fee pallet
 
 use super::pallet;
-use crate::mock::{Call, *};
+use crate::mock::{Call, Event, *};
 use codec::Encode;
 use frame_support::{
 	assert_ok,
@@ -142,7 +142,29 @@ fn test_fee_sharing_beneficiary_works() {
 			let ratio = FixedU128::saturating_from_rational(2_u128, 100_u128);
 			let beneficiary_cut = ratio.saturating_mul_int(fee);
 
-			assert!(eva_balance_after == eva_balance_before + beneficiary_cut);
+			/////////// TEST
+			let evts = System::events();
+			let (beneficiary, fee_shared) = evts
+				.iter()
+				.rev()
+				.find_map(|rec| {
+					if let Event::FluentFee(pallet::Event::FeeSharedWithTheBeneficiary {
+						beneficiary,
+						amount,
+					}) = &rec.event
+					{
+						Some((beneficiary, amount))
+					} else {
+						None
+					}
+				})
+				.expect("unable to find deployed contract");
+
+			assert_eq!(beneficiary.clone(), EVA);
+			assert_eq!(beneficiary_cut, fee_shared.clone().into());
+			//////////////
+
+			assert_eq!(eva_balance_after, fee_shared.clone().into());
 		})
 }
 

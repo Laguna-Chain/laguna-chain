@@ -46,6 +46,7 @@ pub trait FeeDispatch {
 		account: &Self::AccountId,
 		id: &Self::AssetId,
 		balance: &Self::Balance,
+		beneficiary: &Option<Self::AccountId>,
 		reason: &WithdrawReasons,
 	) -> Result<(), InvalidFeeDispatch>;
 

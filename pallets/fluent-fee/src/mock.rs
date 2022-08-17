@@ -13,7 +13,6 @@ use frame_support::{
 
 use crate::weights::SubstrateWeight;
 
-use orml_currencies::BasicCurrencyAdapter;
 use orml_traits::LockIdentifier;
 use primitives::{
 	AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index, Price, TokenId,
@@ -193,9 +192,6 @@ impl CallFilterWithOutput for DummyFeeSharingCall {
 	}
 }
 
-// alias
-type IsSharingCall<T> = <T as pallet::Config>::IsFeeSharingCall;
-
 pub struct DummyFeeDispatch<T> {
 	_type: PhantomData<T>,
 }
@@ -206,52 +202,49 @@ impl FeeDispatch for DummyFeeDispatch<Tokens> {
 	type Balance = Balance;
 
 	fn withdraw(
-		account: &<Runtime as frame_system::Config>::AccountId,
+		account: &Self::AccountId,
 		id: &Self::AssetId,
 		balance: &Self::Balance,
+		beneficiary: &Option<Self::AccountId>,
 		reason: &WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		// SHARE or BURN 2% of the transaction fee based on whether the beneficiary is set to an
 		// eligible address or None
-		let fee_shared_or_burned = balance.saturating_mul(2).saturating_div(100);
-		let fee_payout = balance - fee_shared_or_burned;
-		// If the transaction is of fee sharing type, transfer unit weight worth of fees to the
-		// given beneficiary
-		if let Some(beneficiary) =
-			<IsSharingCall<Runtime> as IsFeeSharingCall<Runtime>>::is_call(call)
-		{
-			// Send the shared fee to the beneficiary account
-			// NOTE: we are not reverting the transaction if the transfer to the beneficiary
-			// fails as it does not constitute core logic expressed by the transaction but is merely
-			// a tip given to the beneficiary of the signer's choice.
-			// NOTE: We emit an event to indicate that unit weight fee transfer to the beneficiary
-			// succeeded.
+		let (validator_split, treasury_split, fee_sharing_split) =
+			<<Runtime as pallet::Config>::PayoutSplits as Get<(Price, Price, Price)>>::get();
+		// let validator_share = /*validator_split.saturating_mul_int(balance.clone());*/
+		// balance.saturating_mul(49).saturating_div(100); let treasury_share =
+		// /*treasury_split.saturating_mul_int(balance.clone());*/balance.saturating_mul(49).
+		// saturating_div(100);
+		let fee_sharing_share = /*fee_sharing_split.saturating_mul_int(balance.clone());*/balance.saturating_mul(2).saturating_div(100);
+		let treasury_share =
+			(balance.clone() - fee_sharing_share).saturating_mul(50).saturating_div(100);
+		let validator_share = balance - fee_sharing_share - treasury_share;
+
+		if let Some(beneficiary_account) = beneficiary {
 			if let Ok(_) = <Tokens as MultiCurrency<AccountId>>::transfer(
 				*id,
 				account,
-				&beneficiary,
-				fee_shared_or_burned.clone(),
+				beneficiary_account,
+				fee_sharing_share.clone(),
 			) {
-				FluentFee::deposit_event(pallet::Event::FeeSharedWithTheBeneficiary((
-					Some(beneficiary),
-					fee_shared_or_burned,
-				)));
+				FluentFee::deposit_event(pallet::Event::FeeSharedWithTheBeneficiary {
+					beneficiary: beneficiary_account.clone(),
+					amount: fee_sharing_share,
+				});
+				dbg!("INSIDE FEE SHARED");
 			}
-
-			// normal transaction fee withdrawal
-			Tokens::withdraw(*id, account, fee_payout)
-				.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 		} else {
-			// BURN a portion of the fee if no beneficiary is chosen
-			Tokens::withdraw(*id, account, fee_shared_or_burned)
-				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute);
-			// Validator payout amount
-			// NOTE: currently it is also being burned for the sake of simplicity, but with future
-			// staking upgrades it will change
-			Tokens::withdraw(*id, account, fee_payout)
-				.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
+			Tokens::withdraw(*id, account, fee_sharing_share)
+				.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute);
+			()
+		}
+		// normal transaction fee withdrawal
+		Tokens::withdraw(*id, account, validator_share)
+			.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
+		Tokens::withdraw(*id, account, treasury_share)
+			.map_err(|err| traits::fee::InvalidFeeDispatch::UnresolvedRoute)
 	}
-}
 
 	fn refund(
 		account: &<Runtime as frame_system::Config>::AccountId,
@@ -380,6 +373,9 @@ impl ExtBuilder {
 		.assimilate_storage(&mut t)
 		.unwrap();
 
-		t.into()
+		let mut ext = sp_io::TestExternalities::new(t);
+		ext.execute_with(|| System::set_block_number(1));
+
+		ext
 	}
 }

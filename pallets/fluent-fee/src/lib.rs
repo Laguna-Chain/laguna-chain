@@ -28,8 +28,8 @@ pub use pallet::*;
 #[cfg(test)]
 mod mock;
 
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
+// #[cfg(feature = "runtime-benchmarks")]
+// mod benchmarking;
 
 #[cfg(test)]
 mod tests;
@@ -133,7 +133,10 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		#[pallet::weight(T::WeightInfo::set_default())]
-		pub fn set_default(origin: OriginFor<T>, asset_id: CurrencyOf<T, T::MultiCurrency>) -> DispatchResult {
+		pub fn set_default(
+			origin: OriginFor<T>,
+			asset_id: CurrencyOf<T, T::MultiCurrency>,
+		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			DefdaultFeeSource::<T>::insert(who.clone(), asset_id);
 			Self::deposit_event(Event::AccountPreferenceUpdated {
@@ -247,14 +250,22 @@ where
 		};
 
 		let amount = T::FeeMeasure::measure(&preferred_fee_asset, fee + tip)?;
-
+		let beneficiary = T::IsFeeSharingCall::is_call(call);
 		// try alt_token path first
-		if T::FeeDispatch::withdraw(who, &preferred_fee_asset, &amount, &withdraw_reason).is_ok() {
+		if T::FeeDispatch::withdraw(
+			who,
+			&preferred_fee_asset,
+			&amount,
+			&beneficiary,
+			&withdraw_reason,
+		)
+		.is_ok()
+		{
 			let payout_info = MultiCurrencyPayout {
 				source_asset_id: preferred_fee_asset,
 				request_amount_native: fee + tip,
 				withdrawn_source_amount: amount,
-				beneficiary: T::IsFeeSharingCall::is_call(call),
+				beneficiary,
 			};
 
 			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
@@ -267,8 +278,14 @@ where
 
 		// retry using fallback if alt_token failed
 		if (preferred_fee_asset != fallback_asset) &&
-			T::FeeDispatch::withdraw(who, &fallback_asset, &(fee + tip), &withdraw_reason)
-				.is_ok()
+			T::FeeDispatch::withdraw(
+				who,
+				&fallback_asset,
+				&(fee + tip),
+				&beneficiary,
+				&withdraw_reason,
+			)
+			.is_ok()
 		{
 			Pallet::<T>::deposit_event(Event::<T>::FallbackToNative);
 			let fallback_amount = T::FeeMeasure::measure(&fallback_asset, fee + tip)?;
@@ -277,7 +294,7 @@ where
 				source_asset_id: fallback_asset,
 				request_amount_native: fee + tip,
 				withdrawn_source_amount: fallback_amount,
-				beneficiary: T::IsFeeSharingCall::is_call(call),
+				beneficiary,
 			};
 
 			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
