@@ -64,5 +64,5 @@ Building with the `--release` flag results in optimized artifacts.
 4. To start the chain, run the following command:
 
 ```bash
-./target/release/laguna-chain --dev
+./target/release/laguna-node --dev
 ```
