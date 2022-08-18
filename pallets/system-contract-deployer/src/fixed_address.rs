@@ -20,7 +20,7 @@ where
 		salt: &[u8],
 	) -> T::AccountId {
 		// Retrieving the pallet_system_contract_deployer AccountId
-		let key = <T as crate::Config>::PalletId::get().into_account();
+		let key = <T as crate::Config>::PalletId::get().into_account_truncating();
 
 		if deploying_address == &key {
 			// Decoding the salt to the destined deployment contract address

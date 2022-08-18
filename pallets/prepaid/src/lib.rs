@@ -122,7 +122,7 @@ where
 			return Err(From::from(Error::<T>::MaxPrepaidExceeded))
 		}
 
-		let pallet_account: AccountIdOf<T> = T::PalletId::get().into_account();
+		let pallet_account: AccountIdOf<T> = T::PalletId::get().into_account_truncating();
 
 		<T::MultiCurrency as MultiCurrency<AccountIdOf<T>>>::transfer(
 			T::NativeCurrencyId::get(),
@@ -160,7 +160,7 @@ where
 		receiver: AccountIdOf<T>,
 		amount: BalanceOf<T, T::MultiCurrency>,
 	) -> DispatchResult {
-		let pallet_account: AccountIdOf<T> = T::PalletId::get().into_account();
+		let pallet_account: AccountIdOf<T> = T::PalletId::get().into_account_truncating();
 
 		<T::MultiCurrency as MultiReservableCurrency<AccountIdOf<T>>>::unreserve(
 			T::NativeCurrencyId::get(),
@@ -168,7 +168,7 @@ where
 			amount,
 		);
 
-		let pallet_account: AccountIdOf<T> = T::PalletId::get().into_account();
+		let pallet_account: AccountIdOf<T> = T::PalletId::get().into_account_truncating();
 
 		<T::MultiCurrency as fungibles::Transfer<AccountIdOf<T>>>::transfer(
 			T::NativeCurrencyId::get(),

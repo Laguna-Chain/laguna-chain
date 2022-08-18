@@ -9,7 +9,7 @@ const MAX_GAS: u64 = 200_000_000_000;
 
 #[test]
 fn test_fixed_address() {
-	let deploying_key = <Test as crate::Config>::PalletId::get().into_account();
+	let deploying_key = <Test as crate::Config>::PalletId::get().into_account_truncating();
 	ExtBuilder::default()
 		.balances(vec![(ALICE, UNIT), (deploying_key, UNIT)])
 		.sudo(ALICE)
@@ -56,7 +56,7 @@ fn test_fixed_address() {
 
 #[test]
 fn test_sequential_address_generation() {
-	let deploying_key = <Test as crate::Config>::PalletId::get().into_account();
+	let deploying_key = <Test as crate::Config>::PalletId::get().into_account_truncating();
 	ExtBuilder::default()
 		.balances(vec![(ALICE, UNIT), (deploying_key, UNIT)])
 		.sudo(ALICE)

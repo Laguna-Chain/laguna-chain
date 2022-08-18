@@ -191,7 +191,7 @@ where
 		)?;
 
 		pallet_contracts::Pallet::<T>::bare_call(
-			T::PalletId::get().into_account(),
+			T::PalletId::get().into_account_truncating(),
 			asset_address,
 			Self::Balance::default(),
 			T::MaxGas::get(),
@@ -219,7 +219,7 @@ where
 		)?;
 
 		pallet_contracts::Pallet::<T>::bare_call(
-			T::PalletId::get().into_account(),
+			T::PalletId::get().into_account_truncating(),
 			asset_address,
 			Self::Balance::default(),
 			T::MaxGas::get(),
@@ -273,7 +273,7 @@ where
 			},
 		)?;
 		pallet_contracts::Pallet::<T>::bare_call(
-			T::PalletId::get().into_account(),
+			T::PalletId::get().into_account_truncating(),
 			asset_address,
 			Self::Balance::default(),
 			T::MaxGas::get(),

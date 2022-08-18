@@ -14,7 +14,7 @@ fn test_prepaid() {
 			assert_ok!(PrepaidFee::prepaid_native(Origin::signed(ALICE), 10000));
 
 			let pallet_account: AccountId =
-				<Runtime as crate::Config>::PalletId::get().into_account();
+				<Runtime as crate::Config>::PalletId::get().into_account_truncating();
 
 			assert_eq!(
 				Tokens::reserved_balance(NATIVE_CURRENCY_ID, &pallet_account),
