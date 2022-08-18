@@ -10,11 +10,12 @@ use pallet_contracts::chain_extension::{
 use primitives::{AccountId, Balance, CurrencyId, TokenId, TokenMetadata};
 use sp_runtime::DispatchError;
 
+#[derive(Default)]
 pub struct DemoExtension;
 
 impl ChainExtension<Runtime> for DemoExtension {
 	fn call<E>(
-		func_id: u32,
+		&mut self,
 		env: Environment<E, InitState>,
 	) -> pallet_contracts::chain_extension::Result<RetVal>
 	where
@@ -22,6 +23,8 @@ impl ChainExtension<Runtime> for DemoExtension {
 		<E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,
 	{
 		let mut env = env.buf_in_buf_out();
+		let func_id = env.func_id();
+
 		match func_id {
 			0010 => {
 				// Whitelist contract after verification
