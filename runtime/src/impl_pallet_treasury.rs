@@ -34,4 +34,5 @@ impl pallet_treasury::Config for Runtime {
 	type SpendFunds = ();
 	type WeightInfo = ();
 	type MaxApprovals = ConstU32<30>;
+	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<u128>;
 }
