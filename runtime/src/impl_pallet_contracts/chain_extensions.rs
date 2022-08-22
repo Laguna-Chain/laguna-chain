@@ -26,18 +26,18 @@ impl ChainExtension<Runtime> for DemoExtension {
 		let func_id = env.func_id();
 
 		match func_id {
-			0010 => {
+			10 => {
 				// Whitelist contract after verification
 				// @dev: Currently only system-contracts are whitelisted
 				Ok(RetVal::Converging(0))
 			},
-			1000 => {
+			100 => {
 				let arg: [u8; 32] = env.read_as()?;
 				env.write(&arg, false, None)
 					.map_err(|_| DispatchError::Other("ChainExtension failed to call demo"))?;
 				Ok(RetVal::Converging(0))
 			},
-			_ if (2000..3000).contains(&func_id) => {
+			_ if (200..210).contains(&func_id) => {
 				// Native token access as ERC20 token
 				let token_id: u32 = env.read_as()?;
 				let currency = CurrencyId::NativeToken(match token_id {
@@ -47,8 +47,8 @@ impl ChainExtension<Runtime> for DemoExtension {
 				});
 
 				match func_id {
-					2000 => Ok(RetVal::Converging(0)),
-					2001 => {
+					200 => Ok(RetVal::Converging(0)),
+					201 => {
 						// Get token name
 						let name = currency.name();
 						env.write(&name.encode(), false, None).map_err(|_| {
@@ -56,7 +56,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						})?;
 						Ok(RetVal::Converging(0))
 					},
-					2002 => {
+					202 => {
 						// Get token symbol
 						let symbol = currency.symbol();
 						env.write(&symbol.encode(), false, None).map_err(|_| {
@@ -64,7 +64,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						})?;
 						Ok(RetVal::Converging(0))
 					},
-					2003 => {
+					203 => {
 						// Get token decimals
 						let decimals = currency.decimals();
 						env.write(&decimals.encode(), false, None).map_err(|_| {
@@ -72,7 +72,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						})?;
 						Ok(RetVal::Converging(0))
 					},
-					2004 => {
+					204 => {
 						// Get total supply
 						let supply = Currencies::total_issuance(currency);
 						env.write(&supply.encode(), false, None).map_err(|_| {
@@ -80,7 +80,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						})?;
 						Ok(RetVal::Converging(0))
 					},
-					2005 => {
+					205 => {
 						// Get balance
 						let (_, account): (u32, AccountId) = env.read_as()?;
 
@@ -90,7 +90,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						})?;
 						Ok(RetVal::Converging(0))
 					},
-					2006 => {
+					206 => {
 						// Transfer tokens
 						let from: AccountId = env.ext().caller().clone();
 						let (_, to, value): (u32, AccountId, Balance) = env.read_as()?;
@@ -109,7 +109,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						};
 						Ok(RetVal::Converging(err_code))
 					},
-					2007 => {
+					207 => {
 						// transfer_from
 						// @dev: This is an UNSAFE method. Only whitelisted contracts can access it!
 

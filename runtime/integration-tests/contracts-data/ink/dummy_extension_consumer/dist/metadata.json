@@ -1,0 +1,144 @@
+{
+  "source": {
+    "hash": "0xda70ef8aede9a79a5749c6959d62b94b653a821990a8b6112eb96d4eb2b9406d",
+    "language": "ink! 3.3.1",
+    "compiler": "rustc 1.60.0-nightly"
+  },
+  "contract": {
+    "name": "dummy_extension_consumer",
+    "version": "0.1.0",
+    "authors": [
+      "[your_name] <[your_email]>"
+    ]
+  },
+  "V3": {
+    "spec": {
+      "constructors": [
+        {
+          "args": [],
+          "docs": [],
+          "label": "default",
+          "payable": false,
+          "selector": "0xed4b9d1b"
+        }
+      ],
+      "docs": [],
+      "events": [],
+      "messages": [
+        {
+          "args": [
+            {
+              "label": "input",
+              "type": {
+                "displayName": [],
+                "type": 0
+              }
+            }
+          ],
+          "docs": [],
+          "label": "call_extension",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "Result"
+            ],
+            "type": 2
+          },
+          "selector": "0x35a21ae9"
+        }
+      ]
+    },
+    "storage": {
+      "struct": {
+        "fields": []
+      }
+    },
+    "types": [
+      {
+        "id": 0,
+        "type": {
+          "def": {
+            "array": {
+              "len": 32,
+              "type": 1
+            }
+          }
+        }
+      },
+      {
+        "id": 1,
+        "type": {
+          "def": {
+            "primitive": "u8"
+          }
+        }
+      },
+      {
+        "id": 2,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "fields": [
+                    {
+                      "type": 0
+                    }
+                  ],
+                  "index": 0,
+                  "name": "Ok"
+                },
+                {
+                  "fields": [
+                    {
+                      "type": 3
+                    }
+                  ],
+                  "index": 1,
+                  "name": "Err"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "T",
+              "type": 0
+            },
+            {
+              "name": "E",
+              "type": 3
+            }
+          ],
+          "path": [
+            "Result"
+          ]
+        }
+      },
+      {
+        "id": 3,
+        "type": {
+          "def": {
+            "variant": {
+              "variants": [
+                {
+                  "index": 0,
+                  "name": "ExtError"
+                },
+                {
+                  "index": 1,
+                  "name": "InvalidScaleEncoding"
+                }
+              ]
+            }
+          },
+          "path": [
+            "dummy_extension_consumer",
+            "ExtensionError"
+          ]
+        }
+      }
+    ]
+  }
+}
