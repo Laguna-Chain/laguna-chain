@@ -67,7 +67,7 @@ frame-benchmarking-cli = {git = 'https://github.com/paritytech/substrate.git', b
 
 clap = {version = "3.1.6", features = ["derive"]}
 hex-literal = "0.3.4"
-jsonrpsee = {version = "0.13.0", features = ["server"]}
+jsonrpsee = {version = "0.14.0", features = ["server"]}
 pallet-currencies-rpc = {version = "0.1.0", path = "../pallets/currencies/rpc"}
 
 [features]
