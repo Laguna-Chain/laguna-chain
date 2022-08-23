@@ -39,31 +39,31 @@ type Balance = <ink_env::DefaultEnvironment as Environment>::Balance;
 pub trait NativeTokenRuntimeExt {
 	type ErrorCode = ExtensionError;
 
-	#[ink(extension = 0010, returns_result = false)]
+	#[ink(extension = 10, returns_result = false)]
 	fn whitelist_contract();
 
-	#[ink(extension = 2000, returns_result = false)]
+	#[ink(extension = 200, returns_result = false)]
 	fn is_valid_token(token_id: u32);
 
-	#[ink(extension = 2001)]
+	#[ink(extension = 201)]
 	fn name(token_id: u32) -> Result<StorageVec<u8>, ExtensionError>;
 
-	#[ink(extension = 2002)]
+	#[ink(extension = 202)]
 	fn symbol(token_id: u32) -> Result<StorageVec<u8>, ExtensionError>;
 
-	#[ink(extension = 2003)]
+	#[ink(extension = 203)]
 	fn decimals(token_id: u32) -> Result<u8, ExtensionError>;
 
-	#[ink(extension = 2004)]
+	#[ink(extension = 204)]
 	fn total_supply(token_id: u32) -> Result<Balance, ExtensionError>;
 
-	#[ink(extension = 2005)]
+	#[ink(extension = 205)]
 	fn balance_of(token_id: u32, owner: AccountId) -> Result<Balance, ExtensionError>;
 
-	#[ink(extension = 2006, returns_result = false)]
+	#[ink(extension = 206, returns_result = false)]
 	fn transfer(token_id: u32, to: AccountId, value: Balance);
 
-	#[ink(extension = 2007, returns_result = false)]
+	#[ink(extension = 207, returns_result = false)]
 	fn transfer_from(token_id: u32, from: AccountId, to: AccountId, value: Balance);
 }
 

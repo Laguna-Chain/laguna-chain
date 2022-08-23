@@ -4,18 +4,18 @@ use laguna_runtime::opaque::Block;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Index};
 use std::sync::Arc;
 
-use pallet_contracts_rpc::{ContractsApiServer, ContractsRpc, ContractsRuntimeApi};
+use pallet_contracts_rpc::{Contracts, ContractsApiServer, ContractsRuntimeApi};
 use pallet_currencies_rpc::{CurrenciesApiServer, CurrenciesRpc, CurrenciesRuntimeApi};
 
 use pallet_transaction_payment_rpc::{
-	TransactionPaymentApiServer, TransactionPaymentRpc, TransactionPaymentRuntimeApi,
+	TransactionPayment, TransactionPaymentApiServer, TransactionPaymentRuntimeApi,
 };
 use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
 use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
-use substrate_frame_rpc_system::{AccountNonceApi, SystemApiServer, SystemRpc};
+use substrate_frame_rpc_system::{AccountNonceApi, System, SystemApiServer};
 
 pub struct FullDeps<Client, Pool> {
 	pub client: Arc<Client>,
@@ -50,14 +50,14 @@ where
 	// operational rpcs
 	// ++++++++++++++++
 
-	module.merge(SystemRpc::new(client.clone(), pool, deny_unsafe).into_rpc())?;
-	module.merge(TransactionPaymentRpc::new(client.clone()).into_rpc())?;
+	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
+	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 
 	// ++++++++++
 	// extra rpcs
 	// ++++++++++
 
-	module.merge(ContractsRpc::new(client.clone()).into_rpc())?;
+	module.merge(Contracts::new(client.clone()).into_rpc())?;
 	module.merge(CurrenciesRpc::new(client).into_rpc())?;
 
 	Ok(module)

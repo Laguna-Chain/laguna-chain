@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0x4258c9de4446c1c457f2780788d146c4aea0ed3cffea6d7ccd244a8b3028f967",
+    "hash": "0xbfdb7140f5b3ef8ae919fb3d7275d3239679b09e6e5faf2d9a41563e2c53ce81",
     "language": "ink! 3.0.1",
     "compiler": "rustc 1.60.0-nightly"
   },
@@ -9,7 +9,8 @@
     "version": "3.0.1",
     "authors": [
       "Nimish Agrawal nimish@lagu.na"
-    ]
+    ],
+    "description": "A system-contract used to expose native token as multilayer assets in ERC-20 standard"
   },
   "V3": {
     "spec": {

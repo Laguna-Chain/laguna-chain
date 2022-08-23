@@ -54,4 +54,6 @@ impl orml_tokens::Config for Runtime {
 	type MaxReserves = ConstU32<2>;
 
 	type ReserveIdentifier = ReserveIdentifier;
+	type OnNewTokenAccount = ();
+	type OnKilledTokenAccount = ();
 }

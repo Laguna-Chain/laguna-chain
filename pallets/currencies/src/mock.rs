@@ -101,6 +101,7 @@ parameter_types! {
 
 impl pallet_transaction_payment::Config for Runtime {
 	// TODO: add benchmark around cross pallet interaction between fee
+	type Event = Event;
 	type OnChargeTransaction =
 		PaymentCurrencyAdapter<TokenCurrencyAdapter<Runtime, NativeCurrencyId>, ()>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
@@ -133,11 +134,7 @@ parameter_types! {
 			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
 			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
 		)) / 5) as u32;
-	pub Schedule: pallet_contracts::Schedule<Runtime> = {
-		let mut schedule = pallet_contracts::Schedule::<Runtime>::default();
-		schedule.limits.code_len = 256 * 1024;
-		schedule
-	};
+	pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
 }
 
 impl pallet_contracts::Config for Runtime {
@@ -163,6 +160,10 @@ impl pallet_contracts::Config for Runtime {
 	type AddressGenerator = DefaultAddressGenerator;
 
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
+
+	type MaxCodeLen = ConstU32<{ 256 * 1024 }>;
+	type RelaxedMaxCodeLen = ConstU32<{ 512 * 1024 }>;
+	type MaxStorageKeyLen = ConstU32<128>;
 }
 
 parameter_types! {
@@ -216,6 +217,10 @@ impl orml_tokens::Config for Runtime {
 	type MaxReserves = ConstU32<2>;
 
 	type ReserveIdentifier = ReserveIdentifier;
+
+	type OnNewTokenAccount = ();
+
+	type OnKilledTokenAccount = ();
 }
 
 parameter_types! {

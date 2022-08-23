@@ -97,6 +97,7 @@ parameter_types! {
 }
 
 impl pallet_transaction_payment::Config for Test {
+	type Event = Event;
 	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
 	type WeightToFee = IdentityFee<Balance>;
@@ -126,11 +127,7 @@ parameter_types! {
 			<Test as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
 			<Test as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
 		)) / 5) as u32;
-	pub Schedule: pallet_contracts::Schedule<Test> = {
-		let mut schedule = pallet_contracts::Schedule::<Test>::default();
-		schedule.limits.code_len = 256 * 1024;
-		schedule
-	};
+	pub Schedule: pallet_contracts::Schedule<Test> = Default::default();
 }
 
 impl pallet_contracts::Config for Test {
@@ -151,6 +148,10 @@ impl pallet_contracts::Config for Test {
 	type DepositPerItem = DepositPerItem;
 	type AddressGenerator = CustomAddressGenerator;
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
+
+	type MaxCodeLen = ConstU32<{ 256 * 1024 }>;
+	type RelaxedMaxCodeLen = ConstU32<{ 512 * 1024 }>;
+	type MaxStorageKeyLen = ConstU32<128>;
 }
 
 parameter_types! {

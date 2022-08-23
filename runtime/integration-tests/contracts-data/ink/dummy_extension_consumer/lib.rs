@@ -10,7 +10,7 @@ pub trait DummyRuntimeExt {
 	type ErrorCode = ExtensionError;
 
 	// match extension ID on your runtime
-	#[ink(extension = 1000)]
+	#[ink(extension = 100)]
 	fn exposed_method(input: [u8; 32]) -> Result<[u8; 32], ExtensionError>;
 }
 
@@ -18,6 +18,7 @@ pub trait DummyRuntimeExt {
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 pub enum ExtensionError {
 	ExtError,
+	InvalidScaleEncoding
 }
 
 // contract need the environment that understand your extension
@@ -44,6 +45,12 @@ impl ink_env::chain_extension::FromStatusCode for ExtensionError {
 			1 => Err(Self::ExtError),
 			_ => panic!("encountered unknown status code"),
 		}
+	}
+}
+
+impl From<scale::Error> for ExtensionError {
+	fn from(_: scale::Error) -> Self {
+		ExtensionError::InvalidScaleEncoding
 	}
 }
 
