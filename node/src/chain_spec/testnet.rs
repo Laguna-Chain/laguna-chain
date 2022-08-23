@@ -33,7 +33,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		move || {
 			let pallet_system_contract_deployer_id =
 				<laguna_runtime::Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-					.into_account_truncating();
+					.try_into_account().expect("Invalid PalletId");
 
 			testnet_genesis(
 				wasm_binary,
@@ -86,7 +86,7 @@ pub fn devnet_config() -> Result<ChainSpec, String> {
 		move || {
 			let pallet_system_contract_deployer_id =
 			<laguna_runtime::Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-				.into_account_truncating();
+				.try_into_account().expect("Invalid PalletId");
 
 			testnet_genesis(
 				wasm_binary,

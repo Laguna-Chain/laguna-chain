@@ -88,7 +88,8 @@ pub mod pallet {
 				destined_address.unwrap_or_else(|| Self::get_next_available_bytes());
 
 			let output = pallet_contracts::Pallet::<T>::instantiate_with_code(
-				RawOrigin::Signed(T::PalletId::get().into_account_truncating()).into(),
+				RawOrigin::Signed(T::PalletId::get().try_into_account().expect("Invalid PalletId"))
+					.into(),
 				value,
 				gas_limit,
 				storage_deposit_limit,
@@ -131,7 +132,8 @@ pub mod pallet {
 				destined_address.unwrap_or_else(|| Self::get_next_available_bytes());
 
 			let output = pallet_contracts::Pallet::<T>::instantiate(
-				RawOrigin::Signed(T::PalletId::get().into_account_truncating()).into(),
+				RawOrigin::Signed(T::PalletId::get().try_into_account().expect("Invalid PalletId"))
+					.into(),
 				value,
 				gas_limit,
 				storage_deposit_limit,
@@ -163,7 +165,8 @@ pub mod pallet {
 			ensure_root(origin)?;
 
 			pallet_contracts::Pallet::<T>::upload_code(
-				RawOrigin::Signed(T::PalletId::get().into_account_truncating()).into(),
+				RawOrigin::Signed(T::PalletId::get().try_into_account().expect("Invalid PalletId"))
+					.into(),
 				code,
 				storage_deposit_limit,
 			)
@@ -181,7 +184,8 @@ pub mod pallet {
 			ensure_root(origin)?;
 
 			pallet_contracts::Pallet::<T>::remove_code(
-				RawOrigin::Signed(T::PalletId::get().into_account_truncating()).into(),
+				RawOrigin::Signed(T::PalletId::get().try_into_account().expect("Invalid PalletId"))
+					.into(),
 				code_hash,
 			)
 		}
@@ -251,7 +255,7 @@ pub mod pallet {
 
 			for i in 0..sz {
 				pallet_contracts::Pallet::<T>::bare_upload_code(
-					T::PalletId::get().into_account_truncating(),
+					T::PalletId::get().try_into_account().expect("Invalid PalletId"),
 					self.code[i].clone(),
 					None,
 				)

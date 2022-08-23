@@ -83,7 +83,8 @@ mod tests {
 	#[test]
 	fn test_ink_multilayer_erc20() {
 		let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-			.into_account_truncating();
+			.try_into_account()
+			.expect("Invalid PalletId");
 		ExtBuilder::default()
 			.balances(vec![(ALICE, LAGUNA_TOKEN, 10*LAGUNAS),(BOB, LAGUNA_TOKEN, 10*LAGUNAS),(EVA, LAGUNA_TOKEN, 10*LAGUNAS), (deploying_key, LAGUNA_TOKEN, 10*LAGUNAS)])
 			.build()
@@ -333,7 +334,8 @@ mod tests {
 	#[test]
 	fn test_solang_multilayer_amm() {
 		let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-			.into_account_truncating();
+			.try_into_account()
+			.expect("Invalid PalletId");
 		ExtBuilder::default()
 			.balances(vec![(ALICE, LAGUNA_TOKEN, 1000*LAGUNAS), (deploying_key, LAGUNA_TOKEN, 10*LAGUNAS)])
 			.build()
