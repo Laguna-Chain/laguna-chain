@@ -82,7 +82,7 @@ mod set_code {
 		/// Contracts can call this method to change their code in-place.
 		/// @dev: It doesn't change any storage items. For more details refer to
 		/// https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable#modifying-your-contracts
-		#[ink(message)]
+		#[ink(message, selector = 0xe4d2b1ca)]
 		pub fn replace_code(&mut self, code_hash: Hash) -> bool {
 			let caller = self.env().caller();
 			let version = self.code_version(caller);
@@ -119,7 +119,7 @@ mod set_code {
 		}
 
 		/// Returns the number of times the contract has been updated
-		#[ink(message)]
+		#[ink(message, selector = 0xe82d14a6)]
 		pub fn code_version(&self, addr: AccountId) -> u32 {
 			self.version.get(&addr).unwrap_or(0)
 		}

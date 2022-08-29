@@ -1,6 +1,6 @@
 {
   "source": {
-    "hash": "0xd97c32db983817c8cd79b4a0decdc4ed74b0149260bc58b5c8ac350bde4652e4",
+    "hash": "0xc899b71267810e30e0ca4f8f48e043a936060f5d6e4b36fa2eb03dd7f8e1b97a",
     "language": "ink! 3.3.1",
     "compiler": "rustc 1.60.0-nightly"
   },
@@ -95,7 +95,7 @@
             ],
             "type": 7
           },
-          "selector": "0xd7f3b3eb"
+          "selector": "0xe4d2b1ca"
         },
         {
           "args": [
@@ -110,7 +110,7 @@
             }
           ],
           "docs": [
-            " Returns the number of times the contract is updated"
+            " Returns the number of times the contract has been updated"
           ],
           "label": "code_version",
           "mutates": false,
@@ -121,7 +121,7 @@
             ],
             "type": 4
           },
-          "selector": "0x9ce2df33"
+          "selector": "0xe82d14a6"
         }
       ]
     },
