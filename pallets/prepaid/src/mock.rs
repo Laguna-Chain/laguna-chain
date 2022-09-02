@@ -115,6 +115,10 @@ impl orml_tokens::Config for Runtime {
 	type MaxReserves = ConstU32<2>;
 
 	type ReserveIdentifier = ReserveIdentifier;
+
+	type OnNewTokenAccount = ();
+
+	type OnKilledTokenAccount = ();
 }
 
 pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);

@@ -326,8 +326,9 @@ mod tests {
 
 	#[test]
 	fn test_fixed_address() {
-		let deploying_key =
-			<Runtime as pallet_system_contract_deployer::Config>::PalletId::get().into_account();
+		let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
+			.try_into_account()
+			.expect("Invalid PalletId");
 		ExtBuilder::default()
 			.balances(vec![(ALICE, LAGUNA_TOKEN, LAGUNAS), (deploying_key, LAGUNA_TOKEN, LAGUNAS)])
 			.sudo(ALICE)

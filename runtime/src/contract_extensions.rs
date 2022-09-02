@@ -10,13 +10,14 @@ pub struct DemoExtension;
 
 impl ChainExtension<Runtime> for DemoExtension {
 	fn call<E>(
-		func_id: u32,
+		&mut self,
 		env: Environment<E, InitState>,
 	) -> pallet_contracts::chain_extension::Result<RetVal>
 	where
 		E: Ext<T = Runtime>,
 		<E::T as SysConfig>::AccountId: UncheckedFrom<<E::T as SysConfig>::Hash> + AsRef<[u8]>,
 	{
+		let func_id = env.func_id();
 		match func_id {
 			1000 => {
 				let mut env = env.buf_in_buf_out();
