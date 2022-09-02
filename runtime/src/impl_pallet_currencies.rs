@@ -3,7 +3,7 @@ use frame_support::parameter_types;
 use primitives::{AccountId, CurrencyId, TokenId};
 use sp_runtime::traits::{Convert, ConvertInto};
 
-use crate::{ContractAssetsRegistry, Runtime, Tokens};
+use crate::{ContractAssetsRegistry, Event, Runtime, Tokens};
 
 parameter_types! {
 	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
@@ -14,6 +14,7 @@ impl pallet_currencies::Config for Runtime {
 	type MultiCurrency = Tokens;
 	type ContractAssets = ContractAssetsRegistry;
 	type ConvertIntoAccountId = ConvertInto;
+	type Event = Event;
 }
 
 struct AddressConvert;

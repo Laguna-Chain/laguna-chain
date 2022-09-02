@@ -83,10 +83,23 @@ mod pallet {
 
 		/// provide mechanism to get account_id from pub key, used for contract-asset lookup
 		type ConvertIntoAccountId: Convert<[u8; 32], Self::AccountId>;
+
+		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 	}
 
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
+
+	#[pallet::event]
+	#[pallet::generate_deposit(pub fn deposit_event)]
+	pub enum Event<T: Config> {
+		Transfer {
+			from: AccountIdOf<T>,
+			to: AccountIdOf<T>,
+			amount: BalanceOf<T>,
+			// currency: Option<CurrencyIdOf<T>>,
+		},
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -108,7 +121,16 @@ mod pallet {
 		) -> DispatchResult {
 			let from = ensure_signed(origin)?;
 
-			<Self as MultiCurrency<AccountIdOf<T>>>::transfer(currency_id, &from, &to, balance)
+			<Self as MultiCurrency<AccountIdOf<T>>>::transfer(currency_id, &from, &to, balance)?;
+
+			Self::deposit_event(Event::Transfer {
+				from,
+				to,
+				// currency: currency_id,
+				amount: balance,
+			});
+
+			Ok(())
 		}
 	}
 }

@@ -229,6 +229,7 @@ impl Config for Runtime {
 	type MultiCurrency = Tokens;
 	type ContractAssets = ContractTokenRegistry;
 	type ConvertIntoAccountId = AccountConvert;
+	type Event = Event;
 }
 
 pub struct AccountConvert;
