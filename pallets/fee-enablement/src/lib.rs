@@ -26,6 +26,9 @@ pub mod mock;
 #[cfg(test)]
 pub mod tests;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 // +++++++
 // Aliases
 // +++++++
