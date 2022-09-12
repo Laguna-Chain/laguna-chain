@@ -369,7 +369,6 @@ fn test_with_carrier() {
 				.expect("should pass");
 
 			let acc_charged = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID);
-			assert_eq!(acc_init, acc_charged + LAGUNAS);
 
 			// calculate actual fee with all the parameter including base_fee, length_fee and
 			// byte_multiplier etc.
