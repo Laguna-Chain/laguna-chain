@@ -18,7 +18,7 @@ mod tests {
 	const MAX_GAS: u64 = 200_000_000_000;
 
 	fn deploy_system_contract(blob: Vec<u8>, sel_constructor: Vec<u8>) -> AccountId {
-		assert_ok!(laguna_runtime::SudoContracts::instantiate_with_code(
+		assert_ok!(laguna_runtime::SystemContractDeployer::instantiate_with_code(
 			Origin::root(),
 			0,
 			MAX_GAS,
@@ -34,7 +34,7 @@ mod tests {
 			.iter()
 			.rev()
 			.find_map(|r| {
-				if let Event::SudoContracts(pallet_system_contract_deployer::Event::Created(
+				if let Event::SystemContractDeployer(pallet_system_contract_deployer::Event::Created(
 					contract,
 				)) = &r.event
 				{

@@ -8,7 +8,7 @@ mod tests {
 	use codec::{Decode, Encode};
 	use frame_support::assert_ok;
 	use laguna_runtime::{
-		constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, SudoContracts, System,
+		constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, SystemContractDeployer, System,
 	};
 	use pallet_contracts_primitives::ExecReturnValue;
 	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
@@ -342,7 +342,7 @@ mod tests {
 					.map(|v| v.to_vec())
 					.expect("unable to parse hex string");
 
-				assert_ok!(laguna_runtime::SudoContracts::instantiate_with_code(
+				assert_ok!(laguna_runtime::SystemContractDeployer::instantiate_with_code(
 					Origin::root(),
 					0,
 					MAX_GAS,
@@ -358,7 +358,7 @@ mod tests {
 					.iter()
 					.rev()
 					.find_map(|r| {
-						if let Event::SudoContracts(
+						if let Event::SystemContractDeployer(
 							pallet_system_contract_deployer::Event::Created(contract),
 						) = &r.event
 						{

@@ -1,6 +1,6 @@
 use super::*;
 use frame_support::{assert_err, assert_ok, error, sp_runtime};
-use mock::{Call, Event, ExtBuilder, Origin, Sudo, SudoContracts, System, Test, ALICE, UNIT};
+use mock::{Call, Event, ExtBuilder, Origin, Sudo, SystemContractDeployer, System, Test, ALICE, UNIT};
 use sp_core::Bytes;
 use sp_runtime::{traits::AccountIdConversion, AccountId32};
 use std::str::FromStr;
@@ -26,8 +26,8 @@ fn test_fixed_address() {
 				.map(|v| v.to_vec())
 				.expect("unable to parse hex string");
 
-			pub type SudoContractsCall = crate::Call<Test>;
-			let call = Box::new(Call::SudoContracts(SudoContractsCall::instantiate_with_code {
+			pub type SystemContractDeployerCall = crate::Call<Test>;
+			let call = Box::new(Call::SystemContractDeployer(SystemContractDeployerCall::instantiate_with_code {
 				value: 0,
 				gas_limit: MAX_GAS,
 				storage_deposit_limit: None,
@@ -44,7 +44,7 @@ fn test_fixed_address() {
 				.iter()
 				.rev()
 				.find_map(|r| {
-					if let Event::SudoContracts(crate::Event::Created(contract)) = &r.event {
+					if let Event::SystemContractDeployer(crate::Event::Created(contract)) = &r.event {
 						Some(contract)
 					} else {
 						None
@@ -97,7 +97,7 @@ fn test_sequential_address_generation() {
 					.iter()
 					.rev()
 					.find_map(|r| {
-						if let Event::SudoContracts(crate::Event::Created(contract)) = &r.event {
+						if let Event::SystemContractDeployer(crate::Event::Created(contract)) = &r.event {
 							Some(contract)
 						} else {
 							None
@@ -135,7 +135,7 @@ fn test_only_root_access() {
 			.expect("unable to parse hex string");
 
 		assert_err!(
-			SudoContracts::instantiate_with_code(
+			SystemContractDeployer::instantiate_with_code(
 				Origin::signed(ALICE),
 				0,
 				MAX_GAS,
