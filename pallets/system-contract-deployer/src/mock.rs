@@ -177,7 +177,7 @@ construct_runtime!(
 		Timestamp: pallet_timestamp,
 		Payment: pallet_transaction_payment,
 		Contracts: pallet_contracts,
-		SudoContracts: pallet_system_contract_deployer
+		SystemContractDeployer: pallet_system_contract_deployer
 	}
 );
 

@@ -162,6 +162,6 @@ fn testnet_genesis(
 			enabled: vec![(CurrencyId::NativeToken(TokenId::Laguna), true)],
 		},
 		treasury: TreasuryConfig {},
-		sudo_contracts: Default::default(),
+		system_contract_deployer: Default::default(),
 	}
 }

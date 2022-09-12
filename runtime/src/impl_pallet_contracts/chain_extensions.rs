@@ -116,7 +116,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						let contract: AccountId = env.ext().address().clone();
 
 						// Verify that the contract is authorised to do this operation
-						if !crate::SudoContracts::is_system_contract(contract) {
+						if !crate::SystemContractDeployer::is_system_contract(contract) {
 							return Ok(RetVal::Converging(403))
 						}
 
