@@ -5,18 +5,19 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use frame_support::{
-	dispatch::Dispatchable, pallet_prelude::*, sp_runtime::traits::Saturating,
+	dispatch::Dispatchable,
+	pallet_prelude::*,
+	sp_runtime::{sp_std::prelude::*, traits::Saturating},
 	traits::WithdrawReasons,
 };
 
 use frame_system::pallet_prelude::*;
-use scale_info::prelude::boxed::Box;
 
 use orml_traits::{arithmetic::Zero, MultiCurrency};
 
 use frame_support::sp_runtime::traits::{DispatchInfoOf, PostDispatchInfoOf};
 use pallet_transaction_payment::OnChargeTransaction;
-use traits::fee::{CallFilterWithOutput, FeeDispatch, FeeMeasure, FeeSource};
+use traits::fee::{CallFilterWithOutput, FeeCarrier, FeeDispatch, FeeMeasure, FeeSource};
 
 pub type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 pub type BalanceOf<T, C> = <C as MultiCurrency<AccountIdOf<T>>>::Balance;
@@ -35,8 +36,8 @@ mod tests;
 pub mod pallet {
 
 	use super::*;
-	use frame_support::{sp_runtime::FixedPointNumber, weights::GetDispatchInfo};
-	use traits::fee::CallFilterWithOutput;
+	use frame_support::{sp_runtime::FixedPointNumber, weights::GetDispatchInfo, PalletId};
+	use traits::fee::{CallFilterWithOutput, FeeCarrier};
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
@@ -60,6 +61,10 @@ pub mod pallet {
 			Output = Option<AccountIdOf<Self>>,
 		>;
 
+		type IsCarrierAttachedCall: CallFilterWithOutput<
+			Call = CallOf<Self>,
+			Output = Option<(AccountIdOf<Self>, Vec<u8>)>,
+		>;
 		// fee source evaluation
 		type FeeSource: FeeSource<
 			AccountId = AccountIdOf<Self>,
@@ -83,6 +88,15 @@ pub mod pallet {
 
 		/// treasury | block_author | beneficiary
 		type PayoutSplits: Get<(Self::Ratio, Self::Ratio, Self::Ratio)>;
+
+		/// pallet to collect native token from carrier
+		type PalletId: Get<PalletId>;
+
+		/// carrier executer
+		type Carrier: FeeCarrier<
+			AccountId = AccountIdOf<Self>,
+			Balance = BalanceOf<Self, Self::MultiCurrency>,
+		>;
 	}
 
 	#[pallet::pallet]
@@ -174,6 +188,28 @@ pub mod pallet {
 				Err(_) => Err(DispatchError::Other("Fee sharing type dispatch failed")),
 			}
 		}
+
+		#[pallet::weight({
+			let dispatch_info = call.get_dispatch_info();
+			(
+				dispatch_info.weight,
+				dispatch_info.class,
+				dispatch_info.pays_fee,
+			)
+		})]
+		pub fn carrier_wrapper(
+			origin: OriginFor<T>,
+			call: Box<<T as pallet::Config>::Call>, // used to get the weight
+			carrier: AccountIdOf<T>,
+			carrier_data: Vec<u8>,
+		) -> DispatchResult {
+			ensure_signed(origin.clone())?;
+
+			match call.dispatch(origin) {
+				Ok(_) => Ok(()),
+				Err(_) => Err(DispatchError::Other("Fee sharing type dispatch failed")),
+			}
+		}
 	}
 }
 
@@ -232,6 +268,30 @@ where
 		}
 
 		let fallback_asset = T::DefaultFeeAsset::get();
+
+		// try carrier first, no need to withdraw if carrier can handle the job.
+		if let Some((carrier, data)) = T::IsCarrierAttachedCall::is_call(call) {
+			let amount = T::FeeMeasure::measure(&fallback_asset, fee + tip)?;
+			let obtained =
+				T::Carrier::execute_carrier(who, &carrier, data, amount).map_err(|e| {
+					log::debug!("{:?}", e);
+					TransactionValidityError::from(InvalidTransaction::Payment)
+				})?;
+
+			let payout_info = MultiCurrencyPayout {
+				source_asset_id: fallback_asset,
+				request_amount_native: fee + tip,
+				withdrawn_source_amount: obtained,
+				beneficiary: T::IsFeeSharingCall::is_call(call),
+			};
+
+			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
+				currency: fallback_asset,
+				amount,
+			});
+
+			return Ok(Some(payout_info))
+		}
 
 		let preferred_fee_asset = Self::account_fee_source_priority(who).unwrap_or(fallback_asset);
 
