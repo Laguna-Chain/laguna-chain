@@ -7,7 +7,10 @@
 use frame_support::{
 	dispatch::Dispatchable,
 	pallet_prelude::*,
-	sp_runtime::{sp_std::prelude::*, traits::Saturating},
+	sp_runtime::{
+		sp_std::prelude::*,
+		traits::{AccountIdConversion, Saturating},
+	},
 	traits::WithdrawReasons,
 };
 
@@ -269,6 +272,11 @@ where
 
 		let fallback_asset = T::DefaultFeeAsset::get();
 
+		let withdraw_reason = if tip.is_zero() {
+			WithdrawReasons::TRANSACTION_PAYMENT
+		} else {
+			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
+		};
 		// try carrier first, no need to withdraw if carrier can handle the job.
 		if let Some((carrier, data)) = T::IsCarrierAttachedCall::is_call(call) {
 			let amount = T::FeeMeasure::measure(&fallback_asset, fee + tip)?;
@@ -285,9 +293,18 @@ where
 				beneficiary: T::IsFeeSharingCall::is_call(call),
 			};
 
+			let pallet_acc: AccountIdOf<T> = T::PalletId::get().try_into_account().unwrap();
+
+			// burn obtained amount collected into PalletId
+			T::FeeDispatch::withdraw(&pallet_acc, &fallback_asset, &obtained, &withdraw_reason)
+				.map_err(|e| {
+					log::debug!("{:?}", e);
+					TransactionValidityError::from(InvalidTransaction::Payment)
+				})?;
+
 			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
 				currency: fallback_asset,
-				amount,
+				amount: obtained,
 			});
 
 			return Ok(Some(payout_info))
@@ -302,12 +319,6 @@ where
 				log::debug!("{:?}", e);
 				TransactionValidityError::from(InvalidTransaction::Payment)
 			})?;
-
-		let withdraw_reason = if tip.is_zero() {
-			WithdrawReasons::TRANSACTION_PAYMENT
-		} else {
-			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
-		};
 
 		let amount = T::FeeMeasure::measure(&preferred_fee_asset, fee + tip)?;
 
@@ -362,8 +373,6 @@ where
 		tip: Self::Balance,
 		already_withdrawn: Self::LiquidityInfo,
 	) -> Result<(), frame_support::unsigned::TransactionValidityError> {
-		// TODO: execute refund plan from already_withdrawn
-
 		if let Some(MultiCurrencyPayout {
 			source_asset_id,
 			request_amount_native,
@@ -371,10 +380,10 @@ where
 			beneficiary,
 		}) = already_withdrawn
 		{
-			// overcharged amount in native
-			let overcharged_amount_native = request_amount_native.saturating_sub(corrected_fee);
-
 			let mut corrected_withdrawn = withdrawn_source_amount;
+
+			// overcharged amount in native
+			let overcharged_amount_native = corrected_withdrawn.saturating_sub(corrected_fee);
 
 			if !overcharged_amount_native.is_zero() {
 				let amounts_source =
