@@ -64,6 +64,17 @@ pub trait FeeDispatch {
 	) -> Result<(), InvalidFeeDispatch>;
 }
 
+pub trait FeeCarrier {
+	type AccountId;
+	type Balance;
+	fn execute_carrier(
+		account: &Self::AccountId,
+		carrier_addr: &Self::AccountId,
+		carrier_data: sp_std::vec::Vec<u8>,
+		required: Self::Balance,
+	) -> Result<Self::Balance, InvalidFeeDispatch>;
+}
+
 pub enum HealthStatusError {
 	Unverified,
 	Unstable,
