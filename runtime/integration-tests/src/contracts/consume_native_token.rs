@@ -66,7 +66,7 @@ mod tests {
 			.rev()
 			.find_map(|r| {
 				if let Event::Contracts(pallet_contracts::Event::Instantiated {
-					deployer,
+					deployer: _,
 					contract,
 				}) = &r.event
 				{
