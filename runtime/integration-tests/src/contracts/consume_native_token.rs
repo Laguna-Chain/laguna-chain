@@ -34,9 +34,9 @@ mod tests {
 			.iter()
 			.rev()
 			.find_map(|r| {
-				if let Event::SystemContractDeployer(pallet_system_contract_deployer::Event::Created(
-					contract,
-				)) = &r.event
+				if let Event::SystemContractDeployer(
+					pallet_system_contract_deployer::Event::Created(contract),
+				) = &r.event
 				{
 					Some(contract)
 				} else {

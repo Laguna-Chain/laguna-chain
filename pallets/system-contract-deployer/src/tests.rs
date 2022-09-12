@@ -1,6 +1,8 @@
 use super::*;
 use frame_support::{assert_err, assert_ok, error, sp_runtime};
-use mock::{Call, Event, ExtBuilder, Origin, Sudo, SystemContractDeployer, System, Test, ALICE, UNIT};
+use mock::{
+	Call, Event, ExtBuilder, Origin, Sudo, System, SystemContractDeployer, Test, ALICE, UNIT,
+};
 use sp_core::Bytes;
 use sp_runtime::{traits::AccountIdConversion, AccountId32};
 use std::str::FromStr;
@@ -27,14 +29,16 @@ fn test_fixed_address() {
 				.expect("unable to parse hex string");
 
 			pub type SystemContractDeployerCall = crate::Call<Test>;
-			let call = Box::new(Call::SystemContractDeployer(SystemContractDeployerCall::instantiate_with_code {
-				value: 0,
-				gas_limit: MAX_GAS,
-				storage_deposit_limit: None,
-				code: blob,
-				data: sel_constructor,
-				destined_address: Some([0x11; 32]),
-			}));
+			let call = Box::new(Call::SystemContractDeployer(
+				SystemContractDeployerCall::instantiate_with_code {
+					value: 0,
+					gas_limit: MAX_GAS,
+					storage_deposit_limit: None,
+					code: blob,
+					data: sel_constructor,
+					destined_address: Some([0x11; 32]),
+				},
+			));
 
 			assert_ok!(Sudo::sudo(Origin::signed(ALICE), call));
 
@@ -44,7 +48,8 @@ fn test_fixed_address() {
 				.iter()
 				.rev()
 				.find_map(|r| {
-					if let Event::SystemContractDeployer(crate::Event::Created(contract)) = &r.event {
+					if let Event::SystemContractDeployer(crate::Event::Created(contract)) = &r.event
+					{
 						Some(contract)
 					} else {
 						None
@@ -97,7 +102,9 @@ fn test_sequential_address_generation() {
 					.iter()
 					.rev()
 					.find_map(|r| {
-						if let Event::SystemContractDeployer(crate::Event::Created(contract)) = &r.event {
+						if let Event::SystemContractDeployer(crate::Event::Created(contract)) =
+							&r.event
+						{
 							Some(contract)
 						} else {
 							None

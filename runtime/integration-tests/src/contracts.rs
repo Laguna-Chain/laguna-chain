@@ -8,7 +8,8 @@ mod tests {
 	use codec::{Decode, Encode};
 	use frame_support::assert_ok;
 	use laguna_runtime::{
-		constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, SystemContractDeployer, System,
+		constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, System,
+		SystemContractDeployer,
 	};
 	use pallet_contracts_primitives::ExecReturnValue;
 	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
