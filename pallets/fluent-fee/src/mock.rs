@@ -9,6 +9,7 @@ use frame_support::{
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
 	weights::IdentityFee,
+	PalletId,
 };
 
 use orml_traits::LockIdentifier;
@@ -194,6 +195,27 @@ impl CallFilterWithOutput for DummyFeeSharingCall {
 	}
 }
 
+pub struct DummyCarrierCall;
+
+impl CallFilterWithOutput for DummyCarrierCall {
+	type Call = Call;
+
+	type Output = Option<(AccountId, Vec<u8>)>;
+
+	fn is_call(call: &Self::Call) -> Self::Output {
+		if let Call::FluentFee(pallet::Call::<Runtime>::carrier_wrapper {
+			carrier,
+			carrier_data,
+			..
+		}) = call
+		{
+			Some((carrier.clone(), carrier_data.clone()))
+		} else {
+			None
+		}
+	}
+}
+
 // alias
 type IsSharingCall<T> = <T as pallet::Config>::IsFeeSharingCall;
 
@@ -254,9 +276,25 @@ impl FeeDispatch for DummyFeeDispatch<Tokens> {
 	}
 }
 
+impl FeeCarrier for DummyFeeDispatch<Runtime> {
+	type AccountId = AccountId;
+
+	type Balance = Balance;
+
+	fn execute_carrier(
+		account: &Self::AccountId,
+		carrier_addr: &Self::AccountId,
+		carrier_data: frame_support::sp_std::vec::Vec<u8>,
+		required: Self::Balance,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		todo!()
+	}
+}
+
 parameter_types! {
 	pub const NativeAssetId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 
+	pub const PALLETID: PalletId = PalletId(*b"lgn/carr");
 
 }
 
@@ -289,6 +327,12 @@ impl Config for Runtime {
 	type Ratio = Price;
 
 	type PayoutSplits = PayoutSplits;
+
+	type IsCarrierAttachedCall = DummyCarrierCall;
+
+	type PalletId = PALLETID;
+
+	type Carrier = DummyFeeDispatch<Runtime>;
 }
 
 impl pallet_transaction_payment::Config for Runtime {

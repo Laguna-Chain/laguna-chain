@@ -1,12 +1,22 @@
 use crate::{
-	impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Currencies, Event, FeeEnablement,
-	FeeMeasurement, FluentFee, PrepaidFee, Runtime, Treasury,
+	constants::NATIVE_TOKEN, impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Contracts,
+	Currencies, Event, FeeEnablement, FeeMeasurement, FluentFee, Origin, PrepaidFee, Runtime,
+	Treasury,
 };
-use frame_support::{pallet_prelude::InvalidTransaction, traits::Get};
+use frame_support::{
+	pallet_prelude::InvalidTransaction,
+	parameter_types,
+	sp_runtime::{
+		sp_std::vec::Vec,
+		traits::{AccountIdConversion, StaticLookup},
+	},
+	traits::Get,
+	PalletId,
+};
 use orml_traits::MultiCurrency;
 use primitives::{AccountId, Balance, CurrencyId, Price, TokenId};
 use sp_runtime::{self, FixedPointNumber, FixedU128};
-use traits::fee::{CallFilterWithOutput, FeeDispatch, FeeMeasure};
+use traits::fee::{CallFilterWithOutput, FeeCarrier, FeeDispatch, FeeMeasure};
 
 pub struct PayoutSplits;
 
@@ -18,6 +28,10 @@ impl Get<(Price, Price, Price)> for PayoutSplits {
 			FixedPointNumber::saturating_from_rational(2_u128, 100_u128),
 		)
 	}
+}
+
+parameter_types! {
+	pub const PALLETID: PalletId = PalletId(*b"lgn/carr");
 }
 
 impl pallet_fluent_fee::Config for Runtime {
@@ -40,6 +54,12 @@ impl pallet_fluent_fee::Config for Runtime {
 	type Ratio = Price;
 
 	type PayoutSplits = PayoutSplits;
+
+	type PalletId = PALLETID;
+
+	type IsCarrierAttachedCall = IsCarrierAttachedCall;
+
+	type Carrier = StaticImpl;
 }
 
 pub struct StaticImpl;
@@ -55,6 +75,45 @@ impl FeeMeasure for StaticImpl {
 		match id {
 			CurrencyId::NativeToken(TokenId::Laguna) => Ok(balance),
 			_ => Err(InvalidTransaction::Payment.into()),
+		}
+	}
+}
+
+impl FeeCarrier for StaticImpl {
+	type AccountId = AccountId;
+	type Balance = Balance;
+
+	fn execute_carrier(
+		account: &Self::AccountId,
+		carrier_addr: &Self::AccountId,
+		carrier_data: sp_std::vec::Vec<u8>,
+		required: Self::Balance,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		let acc: AccountId = <Runtime as pallet_fluent_fee::Config>::PalletId::get()
+			.try_into_account()
+			.unwrap();
+		let before = Currencies::free_balance(acc.clone(), NativeCurrencyId::get());
+
+		let addr = <Runtime as frame_system::Config>::Lookup::unlookup(carrier_addr.clone());
+
+		Contracts::call(
+			Origin::signed(account.clone()),
+			addr,
+			Default::default(),
+			Default::default(),
+			None,
+			carrier_data,
+		)
+		.unwrap();
+
+		let after = Currencies::free_balance(acc, NativeCurrencyId::get());
+
+		let collected = after.saturating_sub(before);
+
+		if collected >= required {
+			Ok(collected)
+		} else {
+			Err(traits::fee::InvalidFeeDispatch::InsufficientBalance)
 		}
 	}
 }
@@ -185,6 +244,27 @@ impl CallFilterWithOutput for IsFeeSharingCall {
 		}) = call
 		{
 			beneficiary.clone()
+		} else {
+			None
+		}
+	}
+}
+
+pub struct IsCarrierAttachedCall;
+
+impl CallFilterWithOutput for IsCarrierAttachedCall {
+	type Call = Call;
+
+	type Output = Option<(AccountId, Vec<u8>)>;
+
+	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Self::Output {
+		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::carrier_wrapper {
+			carrier,
+			carrier_data,
+			..
+		}) = call
+		{
+			Some((carrier.clone(), carrier_data.clone()))
 		} else {
 			None
 		}
