@@ -100,7 +100,7 @@ impl FeeCarrier for StaticImpl {
 			Origin::signed(account.clone()),
 			addr,
 			Default::default(),
-			Default::default(),
+			200_000_000_000,
 			None,
 			carrier_data,
 		)
@@ -109,7 +109,6 @@ impl FeeCarrier for StaticImpl {
 		let after = Currencies::free_balance(acc, NativeCurrencyId::get());
 
 		let collected = after.saturating_sub(before);
-
 		if collected >= required {
 			Ok(collected)
 		} else {
