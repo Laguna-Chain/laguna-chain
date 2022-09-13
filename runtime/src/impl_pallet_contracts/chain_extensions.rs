@@ -8,7 +8,7 @@ use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, RetVal, SysConfig, UncheckedFrom,
 };
 use primitives::{AccountId, Balance, CurrencyId, TokenId, TokenMetadata};
-use sp_runtime::DispatchError;
+use sp_runtime::{traits::AccountIdConversion, DispatchError};
 
 #[derive(Default)]
 pub struct DemoExtension;
@@ -29,7 +29,14 @@ impl ChainExtension<Runtime> for DemoExtension {
 			10 => {
 				// Whitelist contract after verification
 				// @dev: Currently only system-contracts are whitelisted
-				Ok(RetVal::Converging(0))
+				let caller: AccountId = env.ext().caller().clone();
+				let approved_deployer =
+					<Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
+						.try_into_account()
+						.expect("Invalid PalletId");
+
+				let res = (caller == approved_deployer);
+				Ok(RetVal::Converging((!res).into()))
 			},
 			100 => {
 				let arg: [u8; 32] = env.read_as()?;

@@ -100,6 +100,20 @@ mod tests {
 
                 sel_constructor.append(&mut 0_u32.encode());
 
+				// Verify that non-root accounts cannot deploy an instance of native_fungible_token
+				frame_support::assert_err_ignore_postinfo!(
+					Contracts::instantiate_with_code(
+						Origin::signed(ALICE),
+						0,
+						MAX_GAS,
+						None,
+						blob.clone(),
+						sel_constructor.clone(),
+						vec![]
+					),
+					pallet_contracts::Error::<Runtime>::ContractTrapped
+				);
+
                 let erc20_contract_addr = deploy_system_contract(blob, sel_constructor);
 
 				// 2. Test name()
