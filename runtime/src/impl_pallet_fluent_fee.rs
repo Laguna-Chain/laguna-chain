@@ -1,7 +1,6 @@
 use crate::{
-	constants::NATIVE_TOKEN, impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Contracts,
-	Currencies, Event, FeeEnablement, FeeMeasurement, FluentFee, Origin, PrepaidFee, Runtime,
-	Treasury,
+	impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Contracts, Currencies, Event,
+	FeeEnablement, FeeMeasurement, FluentFee, Origin, PrepaidFee, Runtime, Treasury,
 };
 use frame_support::{
 	pallet_prelude::InvalidTransaction,
@@ -13,9 +12,9 @@ use frame_support::{
 	traits::Get,
 	PalletId,
 };
-use orml_traits::MultiCurrency;
+use orml_traits::{BasicCurrency, MultiCurrency};
 use primitives::{AccountId, Balance, CurrencyId, Price, TokenId};
-use sp_runtime::{self, FixedPointNumber, FixedU128};
+use sp_runtime::{self, FixedPointNumber};
 use traits::fee::{CallFilterWithOutput, FeeCarrier, FeeDispatch, FeeMeasure};
 
 pub struct PayoutSplits;
@@ -88,6 +87,7 @@ impl FeeCarrier for StaticImpl {
 		carrier_addr: &Self::AccountId,
 		carrier_data: sp_std::vec::Vec<u8>,
 		required: Self::Balance,
+		post_transfer_from: bool,
 	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
 		let acc: AccountId = <Runtime as pallet_fluent_fee::Config>::PalletId::get()
 			.try_into_account()
@@ -96,6 +96,8 @@ impl FeeCarrier for StaticImpl {
 
 		let addr = <Runtime as frame_system::Config>::Lookup::unlookup(carrier_addr.clone());
 
+		// contract call that will either deposit funds to the PalletAddr or allow PalletAddr to
+		// transfer from it's free balance.
 		Contracts::call(
 			Origin::signed(account.clone()),
 			addr,
@@ -104,7 +106,13 @@ impl FeeCarrier for StaticImpl {
 			None,
 			carrier_data,
 		)
-		.unwrap();
+		.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
+
+		// allow the PalletAccount to withdraw on behalf of the user
+		if post_transfer_from {
+			<Currencies as BasicCurrency<AccountId>>::transfer(account, &acc, required)
+				.map_err(|_| traits::fee::InvalidFeeDispatch::InsufficientBalance)?;
+		}
 
 		let after = Currencies::free_balance(acc, NativeCurrencyId::get());
 
@@ -254,16 +262,17 @@ pub struct IsCarrierAttachedCall;
 impl CallFilterWithOutput for IsCarrierAttachedCall {
 	type Call = Call;
 
-	type Output = Option<(AccountId, Vec<u8>)>;
+	type Output = Option<(AccountId, Vec<u8>, bool)>;
 
 	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Self::Output {
 		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::carrier_wrapper {
 			carrier,
 			carrier_data,
+			post_transfer,
 			..
 		}) = call
 		{
-			Some((carrier.clone(), carrier_data.clone()))
+			Some((carrier.clone(), carrier_data.clone(), post_transfer.clone()))
 		} else {
 			None
 		}

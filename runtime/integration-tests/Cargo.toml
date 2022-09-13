@@ -78,3 +78,9 @@ version = '5.0.0-dev'
 [features]
 default = ["std"]
 std = []
+
+[dev-dependencies]
+contract-metadata = "1.5.0"
+contract-transcode = "0.2.0"
+ink_metadata = "3.3.1"
+serde_json = "1.0.85"

@@ -20,6 +20,34 @@ use std::str::FromStr;
 const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 const MAX_GAS: u64 = 200_000_000_000;
 
+use contract_metadata::ContractMetadata;
+use contract_transcode::ContractMessageTranscoder;
+use ink_metadata::{InkProject, MetadataVersioned};
+
+pub struct Contract {
+	pub code: Vec<u8>,
+	pub transcoder: ContractMessageTranscoder,
+}
+
+impl Contract {
+	pub fn new(path: &str) -> Self {
+		let metadata: ContractMetadata =
+			serde_json::from_reader(std::fs::File::open(path).unwrap()).unwrap();
+
+		let code = metadata.source.wasm.unwrap().0;
+
+		let abi: MetadataVersioned =
+			serde_json::from_value(serde_json::to_value(metadata.abi).unwrap()).unwrap();
+
+		let project =
+			if let MetadataVersioned::V3(project) = abi { Some(project) } else { None }.unwrap();
+
+		let transcoder = ContractMessageTranscoder::new(project);
+
+		Self { code, transcoder }
+	}
+}
+
 #[test]
 fn test_ink_basic() {
 	ExtBuilder::default()

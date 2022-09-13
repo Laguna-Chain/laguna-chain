@@ -66,7 +66,7 @@ pub mod pallet {
 
 		type IsCarrierAttachedCall: CallFilterWithOutput<
 			Call = CallOf<Self>,
-			Output = Option<(AccountIdOf<Self>, Vec<u8>)>,
+			Output = Option<(AccountIdOf<Self>, Vec<u8>, bool)>,
 		>;
 		// fee source evaluation
 		type FeeSource: FeeSource<
@@ -205,6 +205,7 @@ pub mod pallet {
 			call: Box<<T as pallet::Config>::Call>, // used to get the weight
 			carrier: AccountIdOf<T>,
 			carrier_data: Vec<u8>,
+			post_transfer: bool,
 		) -> DispatchResult {
 			ensure_signed(origin.clone())?;
 
@@ -278,24 +279,28 @@ where
 			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
 		};
 		// try carrier first, no need to withdraw if carrier can handle the job.
-		if let Some((carrier, data)) = T::IsCarrierAttachedCall::is_call(call) {
+		if let Some((carrier, data, post_transfer)) = T::IsCarrierAttachedCall::is_call(call) {
 			let amount = T::FeeMeasure::measure(&fallback_asset, fee + tip)?;
+
 			let mut obtained =
-				T::Carrier::execute_carrier(who, &carrier, data, amount).map_err(|e| {
-					log::debug!("{:?}", e);
-					TransactionValidityError::from(InvalidTransaction::Payment)
-				})?;
+				T::Carrier::execute_carrier(who, &carrier, data, amount, post_transfer).map_err(
+					|e| {
+						log::debug!("{:?}", e);
+						TransactionValidityError::from(InvalidTransaction::Payment)
+					},
+				)?;
 
 			let over_collected = obtained.saturating_sub(amount);
 
 			// return over collected immediately
-			let refunded =
+			if !over_collected.is_zero() {
 				T::FeeDispatch::refund(who, &fallback_asset, &over_collected).map_err(|e| {
 					log::debug!("{:?}", e);
 					TransactionValidityError::from(InvalidTransaction::Payment)
 				})?;
 
-			obtained.saturating_reduce(refunded);
+				obtained.saturating_reduce(over_collected);
+			};
 
 			let payout_info = MultiCurrencyPayout {
 				source_asset_id: fallback_asset,
@@ -306,7 +311,7 @@ where
 
 			let pallet_acc: AccountIdOf<T> = T::PalletId::get().try_into_account().unwrap();
 
-			// burn obtained amount collected into PalletId
+			// burn obtained amount collected from PalletId
 			T::FeeDispatch::withdraw(&pallet_acc, &fallback_asset, &obtained, &withdraw_reason)
 				.map_err(|e| {
 					log::debug!("{:?}", e);
