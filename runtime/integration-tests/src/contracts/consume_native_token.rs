@@ -15,7 +15,7 @@ use sp_runtime::traits::AccountIdConversion;
 use std::str::FromStr;
 
 const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
-const MAX_GAS: u64 = 200_000_000_000;
+pub const MAX_GAS: u64 = 200_000_000_000;
 
 pub fn deploy_system_contract(blob: Vec<u8>, sel_constructor: Vec<u8>) -> AccountId {
 	assert_ok!(laguna_runtime::SystemContractDeployer::instantiate_with_code(

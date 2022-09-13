@@ -72,6 +72,7 @@ pub trait FeeCarrier {
 		carrier_addr: &Self::AccountId,
 		carrier_data: sp_std::vec::Vec<u8>,
 		required: Self::Balance,
+		post_transfer: bool,
 	) -> Result<Self::Balance, InvalidFeeDispatch>;
 }
 
