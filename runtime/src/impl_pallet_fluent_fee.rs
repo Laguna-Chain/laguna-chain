@@ -246,7 +246,7 @@ impl CallFilterWithOutput for IsFeeSharingCall {
 			..
 		}) = call
 		{
-			value_added_info.to_owned()
+			value_added_info.clone()
 		} else {
 			None
 		}
@@ -266,7 +266,7 @@ impl CallFilterWithOutput for IsCarrierAttachedCall {
 			..
 		}) = call
 		{
-			carrier_info.to_owned()
+			carrier_info.clone()
 		} else {
 			None
 		}
