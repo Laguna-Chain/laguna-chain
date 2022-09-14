@@ -156,14 +156,13 @@ fn test_alt_fee_path() {
 }
 
 #[test]
-fn test_beneficiary() {
+fn test_value_added_fee() {
 	ExtBuilder::default()
 		.balances(vec![(ALICE, NATIVE_CURRENCY_ID, 10 * LAGUNAS)])
 		.enable_fee_source(vec![(NATIVE_CURRENCY_ID, true)])
 		.build()
 		.execute_with(|| {
 			let treasury_ratio = FixedU128::saturating_from_rational(49_u128, 100_u128);
-			let beneficiary_ratio = FixedU128::saturating_from_rational(2_u128, 100_u128);
 
 			let treasury_acc = Treasury::account_id();
 			let beneficiary_acc = EVA;
@@ -176,8 +175,9 @@ fn test_beneficiary() {
 			});
 
 			let call =
-				laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::fee_sharing_wrapper {
-					beneficiary: Some(beneficiary_acc.clone()),
+				laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::fluent_fee_wrapper {
+					value_added_info: Some((EVA, LAGUNAS)),
+					carrier_info: None,
 					call: Box::new(inner_call),
 				});
 
@@ -225,7 +225,7 @@ fn test_beneficiary() {
 			));
 
 			let treasury_reward = treasury_ratio.saturating_mul_int(fee);
-			let beneficiary_reward = beneficiary_ratio.saturating_mul_int(fee);
+			let beneficiary_reward = LAGUNAS;
 
 			assert_eq!(
 				treasury_init + treasury_reward,
@@ -322,8 +322,7 @@ fn test_with_carrier() {
 		.enable_fee_source(vec![(NATIVE_CURRENCY_ID, true)])
 		.build()
 		.execute_with(|| {
-			let (treasury_ratio, _, _) =
-				<Runtime as pallet_fluent_fee::Config>::PayoutSplits::get();
+			let (treasury_ratio, _) = <Runtime as pallet_fluent_fee::Config>::PayoutSplits::get();
 
 			let treasury_acc = Treasury::account_id();
 
@@ -355,12 +354,12 @@ fn test_with_carrier() {
 
 			(pallet_acc, U256::from(LAGUNAS)).encode_to(&mut carrier_data);
 
-			let call = laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::carrier_wrapper {
-				carrier: token_addr,
-				carrier_data,
-				call: Box::new(inner_call),
-				post_transfer: false,
-			});
+			let call =
+				laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::fluent_fee_wrapper {
+					carrier_info: Some((token_addr, carrier_data, false)),
+					value_added_info: None,
+					call: Box::new(inner_call),
+				});
 
 			let len = call.encoded_size();
 			let info = call.get_dispatch_info();
@@ -430,8 +429,7 @@ fn test_with_carrier_amm() {
 		.enable_fee_source(vec![(NATIVE_CURRENCY_ID, true)])
 		.build()
 		.execute_with(|| {
-			let (treasury_ratio, _, _) =
-				<Runtime as pallet_fluent_fee::Config>::PayoutSplits::get();
+			let (treasury_ratio, _) = <Runtime as pallet_fluent_fee::Config>::PayoutSplits::get();
 
 			let treasury_acc = Treasury::account_id();
 
@@ -521,12 +519,12 @@ fn test_with_carrier_amm() {
 				amm_contract.transcoder.encode::<_, String>("swapToken2", []).unwrap();
 			U256::from(LAGUNAS).encode_to(&mut carrier_data);
 
-			let call = laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::carrier_wrapper {
-				carrier: amm_addr,
-				carrier_data,
-				call: Box::new(inner_call),
-				post_transfer: true,
-			});
+			let call =
+				laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::fluent_fee_wrapper {
+					carrier_info: Some((amm_addr, carrier_data, true)),
+					value_added_info: None,
+					call: Box::new(inner_call),
+				});
 
 			let len = call.encoded_size();
 			let info = call.get_dispatch_info();
