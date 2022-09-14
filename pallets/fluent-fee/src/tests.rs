@@ -91,7 +91,7 @@ fn test_charge_fee() {
 }
 
 #[test]
-fn test_fee_sharing_beneficiary_works() {
+fn test_valude_added_fee_works() {
 	ExtBuilder::default()
 		.balances(vec![
 			(ALICE, NATIVE_CURRENCY_ID, 1_000_000_000_000),
@@ -140,10 +140,7 @@ fn test_fee_sharing_beneficiary_works() {
 
 			let eva_balance_after = Tokens::free_balance(NATIVE_CURRENCY_ID, &EVA);
 
-			let ratio = FixedU128::saturating_from_rational(2_u128, 100_u128);
-			let beneficiary_cut = ratio.saturating_mul_int(fee);
-
-			assert!(eva_balance_after == eva_balance_before + beneficiary_cut);
+			assert!(eva_balance_after == eva_balance_before + 1_000_000);
 		})
 }
 
