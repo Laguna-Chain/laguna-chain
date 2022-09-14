@@ -61,7 +61,7 @@ pub mod pallet {
 		// call_filter for shared call
 		type IsFeeSharingCall: CallFilterWithOutput<
 			Call = CallOf<Self>,
-			Output = Option<AccountIdOf<Self>>,
+			Output = Option<(AccountIdOf<Self>, BalanceOf<Self, Self::MultiCurrency>)>,
 		>;
 
 		type IsCarrierAttachedCall: CallFilterWithOutput<
@@ -90,7 +90,7 @@ pub mod pallet {
 		type Ratio: FixedPointNumber;
 
 		/// treasury | block_author | beneficiary
-		type PayoutSplits: Get<(Self::Ratio, Self::Ratio, Self::Ratio)>;
+		type PayoutSplits: Get<(Self::Ratio, Self::Ratio)>;
 
 		/// pallet to collect native token from carrier
 		type PalletId: Get<PalletId>;
@@ -112,13 +112,6 @@ pub mod pallet {
 			account: AccountIdOf<T>,
 			currency: Option<CurrencyOf<T, T::MultiCurrency>>,
 		},
-		FeeSharingBeneficiaryIncluded {
-			beneficiary: Option<AccountIdOf<T>>,
-		},
-		FeeSharedWithTheBeneficiary {
-			beneficiary: AccountIdOf<T>,
-			amount: BalanceOf<T, T::MultiCurrency>,
-		},
 		FeeWithdrawn {
 			currency: CurrencyOf<T, T::MultiCurrency>,
 			amount: BalanceOf<T, T::MultiCurrency>,
@@ -134,6 +127,24 @@ pub mod pallet {
 			amount: BalanceOf<T, T::MultiCurrency>,
 		},
 		FeeCorrected,
+		CarrierAttached {
+			carrier_address: AccountIdOf<T>,
+			carrier_data: Vec<u8>,
+			post_transfer: bool,
+		},
+		CarrierExecute {
+			carrier_address: AccountIdOf<T>,
+			carrier_data: Vec<u8>,
+			post_transfer: bool,
+		},
+		ValueAddedFeeSpecified {
+			recipient: AccountIdOf<T>,
+			balance: BalanceOf<T, T::MultiCurrency>,
+		},
+		ValueAddedFeeHonored {
+			recipient: AccountIdOf<T>,
+			balance: BalanceOf<T, T::MultiCurrency>,
+		},
 	}
 
 	#[pallet::storage]
@@ -167,7 +178,6 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// attach a beneficiary to arbitrary call
 		#[pallet::weight({
 			let dispatch_info = call.get_dispatch_info();
 			(
@@ -176,38 +186,26 @@ pub mod pallet {
 				dispatch_info.pays_fee,
 			)
 		})]
-		pub fn fee_sharing_wrapper(
+		pub fn fluent_fee_wrapper(
 			origin: OriginFor<T>,
 			call: Box<<T as pallet::Config>::Call>, // used to get the weight
-			beneficiary: Option<AccountIdOf<T>>,
+			carrier_info: Option<(AccountIdOf<T>, Vec<u8>, bool)>,
+			value_added_info: Option<(AccountIdOf<T>, BalanceOf<T, T::MultiCurrency>)>,
 		) -> DispatchResult {
 			ensure_signed(origin.clone())?;
 
-			if beneficiary.is_some() {
-				Self::deposit_event(Event::FeeSharingBeneficiaryIncluded { beneficiary });
+			// TODO: we might want to create condition to allow the inclusion of the carrier
+			if let Some((carrier_address, carrier_data, post_transfer)) = carrier_info {
+				Self::deposit_event(Event::<T>::CarrierAttached {
+					carrier_address,
+					carrier_data,
+					post_transfer,
+				});
 			}
-			match call.dispatch(origin) {
-				Ok(_) => Ok(()),
-				Err(_) => Err(DispatchError::Other("Fee sharing type dispatch failed")),
-			}
-		}
 
-		#[pallet::weight({
-			let dispatch_info = call.get_dispatch_info();
-			(
-				dispatch_info.weight,
-				dispatch_info.class,
-				dispatch_info.pays_fee,
-			)
-		})]
-		pub fn carrier_wrapper(
-			origin: OriginFor<T>,
-			call: Box<<T as pallet::Config>::Call>, // used to get the weight
-			carrier: AccountIdOf<T>,
-			carrier_data: Vec<u8>,
-			post_transfer: bool,
-		) -> DispatchResult {
-			ensure_signed(origin.clone())?;
+			if let Some((recipient, balance)) = value_added_info {
+				Self::deposit_event(Event::<T>::ValueAddedFeeSpecified { recipient, balance });
+			}
 
 			match call.dispatch(origin) {
 				Ok(_) => Ok(()),
@@ -224,8 +222,6 @@ impl<T: Config> Pallet<T> {
 		DefdaultFeeSource::<T>::get(account)
 	}
 }
-
-// type CallOf<T> = <T as frame_system::Config>::Call;
 
 // overview of stages during a multi-assets payout
 //
@@ -247,7 +243,7 @@ pub struct MultiCurrencyPayout<T: Config> {
 	request_amount_native: BalanceOf<T, T::MultiCurrency>,
 	// equivalent withdrawn
 	withdrawn_source_amount: BalanceOf<T, T::MultiCurrency>,
-	beneficiary: Option<AccountIdOf<T>>,
+	value_added_fee: Option<(AccountIdOf<T>, BalanceOf<T, T::MultiCurrency>)>,
 }
 
 impl<T> OnChargeTransaction<T> for Pallet<T>
@@ -279,16 +275,22 @@ where
 			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
 		};
 		// try carrier first, no need to withdraw if carrier can handle the job.
-		if let Some((carrier, data, post_transfer)) = T::IsCarrierAttachedCall::is_call(call) {
+		if let Some((carrier_address, carrier_data, post_transfer)) =
+			T::IsCarrierAttachedCall::is_call(call)
+		{
 			let amount = T::FeeMeasure::measure(&fallback_asset, fee + tip)?;
 
-			let mut obtained =
-				T::Carrier::execute_carrier(who, &carrier, data, amount, post_transfer).map_err(
-					|e| {
-						log::debug!("{:?}", e);
-						TransactionValidityError::from(InvalidTransaction::Payment)
-					},
-				)?;
+			let mut obtained = T::Carrier::execute_carrier(
+				who,
+				&carrier_address,
+				carrier_data.clone(),
+				amount,
+				post_transfer,
+			)
+			.map_err(|e| {
+				log::debug!("{:?}", e);
+				TransactionValidityError::from(InvalidTransaction::Payment)
+			})?;
 
 			let over_collected = obtained.saturating_sub(amount);
 
@@ -306,7 +308,7 @@ where
 				source_asset_id: fallback_asset,
 				request_amount_native: fee + tip,
 				withdrawn_source_amount: obtained,
-				beneficiary: T::IsFeeSharingCall::is_call(call),
+				value_added_fee: T::IsFeeSharingCall::is_call(call),
 			};
 
 			let pallet_acc: AccountIdOf<T> = T::PalletId::get().try_into_account().unwrap();
@@ -317,6 +319,12 @@ where
 					log::debug!("{:?}", e);
 					TransactionValidityError::from(InvalidTransaction::Payment)
 				})?;
+
+			Pallet::<T>::deposit_event(Event::<T>::CarrierExecute {
+				carrier_address,
+				carrier_data,
+				post_transfer,
+			});
 
 			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
 				currency: fallback_asset,
@@ -344,7 +352,7 @@ where
 				source_asset_id: preferred_fee_asset,
 				request_amount_native: fee + tip,
 				withdrawn_source_amount: amount,
-				beneficiary: T::IsFeeSharingCall::is_call(call),
+				value_added_fee: T::IsFeeSharingCall::is_call(call),
 			};
 
 			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
@@ -367,7 +375,7 @@ where
 				source_asset_id: fallback_asset,
 				request_amount_native: fee + tip,
 				withdrawn_source_amount: fallback_amount,
-				beneficiary: T::IsFeeSharingCall::is_call(call),
+				value_added_fee: T::IsFeeSharingCall::is_call(call),
 			};
 
 			Pallet::<T>::deposit_event(Event::<T>::FeeWithdrawn {
@@ -393,7 +401,7 @@ where
 			source_asset_id,
 			request_amount_native,
 			withdrawn_source_amount,
-			beneficiary,
+			value_added_fee,
 		}) = already_withdrawn
 		{
 			let mut corrected_withdrawn = withdrawn_source_amount;
@@ -427,7 +435,7 @@ where
 				&source_asset_id,
 				&tip_amount_source,
 				&corrected_withdrawn,
-				&beneficiary,
+				&value_added_fee,
 			)
 			.map_err(|_| {
 				frame_support::unsigned::TransactionValidityError::Invalid(
