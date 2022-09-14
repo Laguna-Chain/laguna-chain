@@ -60,7 +60,7 @@ pub trait FeeDispatch {
 		id: &Self::AssetId,
 		tip: &Self::Balance,
 		correted_withdrawn: &Self::Balance,
-		benefitiary: &Option<Self::AccountId>,
+		value_added_fee: &Option<(Self::AccountId, Self::Balance)>,
 	) -> Result<(), InvalidFeeDispatch>;
 }
 

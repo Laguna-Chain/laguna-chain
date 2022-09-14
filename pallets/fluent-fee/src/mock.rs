@@ -176,19 +176,20 @@ impl FeeMeasure for DummyFeeMeasure {
 	}
 }
 
-pub struct DummyFeeSharingCall;
+pub struct DummyValueAddedCall;
 
-impl CallFilterWithOutput for DummyFeeSharingCall {
+impl CallFilterWithOutput for DummyValueAddedCall {
 	type Call = Call;
 
-	type Output = Option<AccountId>;
+	type Output = Option<(AccountId, Balance)>;
 
 	fn is_call(call: &Self::Call) -> Self::Output {
-		if let Call::FluentFee(pallet::Call::<Runtime>::fee_sharing_wrapper {
-			beneficiary, ..
+		if let Call::FluentFee(pallet::Call::<Runtime>::fluent_fee_wrapper {
+			value_added_info,
+			..
 		}) = call
 		{
-			beneficiary.clone()
+			value_added_info.to_owned()
 		} else {
 			None
 		}
@@ -203,14 +204,11 @@ impl CallFilterWithOutput for DummyCarrierCall {
 	type Output = Option<(AccountId, Vec<u8>, bool)>;
 
 	fn is_call(call: &Self::Call) -> Self::Output {
-		if let Call::FluentFee(pallet::Call::<Runtime>::carrier_wrapper {
-			carrier,
-			carrier_data,
-			post_transfer,
-			..
+		if let Call::FluentFee(pallet::Call::<Runtime>::fluent_fee_wrapper {
+			carrier_info, ..
 		}) = call
 		{
-			Some((carrier.clone(), carrier_data.clone(), post_transfer.clone()))
+			carrier_info.to_owned()
 		} else {
 			None
 		}
@@ -259,17 +257,14 @@ impl FeeDispatch for DummyFeeDispatch<Tokens> {
 		id: &Self::AssetId,
 		tip: &Self::Balance,
 		corret_withdrawn: &Self::Balance,
-		benefitiary: &Option<<Runtime as frame_system::Config>::AccountId>,
+		value_added_fee: &Option<(AccountId, Balance)>,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		let payouts = corret_withdrawn.saturating_sub(*tip);
 
 		let ratio = FixedU128::saturating_from_rational(2_u128, 100_u128);
 
-		// 2% of total control paid to beneficiary
-		let beneficiary_cut = ratio.saturating_mul_int(payouts);
-
-		if let Some(target) = benefitiary {
-			Tokens::deposit(*id, target, beneficiary_cut)
+		if let Some((target, amount)) = value_added_fee {
+			Tokens::deposit(*id, target, *amount)
 				.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
 		}
 
@@ -302,12 +297,11 @@ parameter_types! {
 
 pub struct PayoutSplits;
 
-impl Get<(Price, Price, Price)> for PayoutSplits {
-	fn get() -> (Price, Price, Price) {
+impl Get<(Price, Price)> for PayoutSplits {
+	fn get() -> (Price, Price) {
 		(
 			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
 			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
-			FixedPointNumber::saturating_from_rational(2_u128, 100_u128),
 		)
 	}
 }
@@ -320,7 +314,7 @@ impl Config for Runtime {
 	type MultiCurrency = Tokens;
 	type Call = Call;
 
-	type IsFeeSharingCall = DummyFeeSharingCall;
+	type IsFeeSharingCall = DummyValueAddedCall;
 
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;

@@ -19,12 +19,11 @@ use traits::fee::{CallFilterWithOutput, FeeCarrier, FeeDispatch, FeeMeasure};
 
 pub struct PayoutSplits;
 
-impl Get<(Price, Price, Price)> for PayoutSplits {
-	fn get() -> (Price, Price, Price) {
+impl Get<(Price, Price)> for PayoutSplits {
+	fn get() -> (Price, Price) {
 		(
 			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
 			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
-			FixedPointNumber::saturating_from_rational(2_u128, 100_u128),
 		)
 	}
 }
@@ -167,15 +166,14 @@ impl FeeDispatch for StaticImpl {
 		id: &Self::AssetId,
 		tip: &Self::Balance,
 		corret_withdrawn: &Self::Balance,
-		benefitiary: &Option<<Runtime as frame_system::Config>::AccountId>,
+		value_added_info: &Option<(Self::AccountId, Self::Balance)>,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		// TODO: require carrier for erc20
 		if let CurrencyId::Erc20(_) = id {
 			unimplemented!("currently erc20 handling is not impelmented");
 		}
 
-		let (to_treasury, to_author, to_shared) =
-			<Runtime as pallet_fluent_fee::Config>::PayoutSplits::get();
+		let (to_treasury, to_author) = <Runtime as pallet_fluent_fee::Config>::PayoutSplits::get();
 
 		let treasury_account_id = Treasury::account_id();
 
@@ -219,15 +217,13 @@ impl FeeDispatch for StaticImpl {
 			});
 		}
 
-		let shared_amount = to_shared.saturating_mul_int(*corret_withdrawn);
-
-		if let Some(target) = benefitiary {
-			dispatch_with(*id, target, shared_amount)?;
+		if let Some((target, amount)) = value_added_info {
+			dispatch_with(*id, target, *amount)?;
 
 			FluentFee::deposit_event(pallet_fluent_fee::Event::<Runtime>::FeePayout {
 				receiver: target.clone(),
 				currency: *id,
-				amount: shared_amount,
+				amount: *amount,
 			});
 		}
 
@@ -242,15 +238,15 @@ pub struct IsFeeSharingCall;
 impl CallFilterWithOutput for IsFeeSharingCall {
 	type Call = Call;
 
-	type Output = Option<AccountId>;
+	type Output = Option<(AccountId, Balance)>;
 
 	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Self::Output {
-		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::fee_sharing_wrapper {
-			beneficiary,
+		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::fluent_fee_wrapper {
+			value_added_info,
 			..
 		}) = call
 		{
-			beneficiary.clone()
+			value_added_info.to_owned()
 		} else {
 			None
 		}
@@ -265,14 +261,12 @@ impl CallFilterWithOutput for IsCarrierAttachedCall {
 	type Output = Option<(AccountId, Vec<u8>, bool)>;
 
 	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Self::Output {
-		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::carrier_wrapper {
-			carrier,
-			carrier_data,
-			post_transfer,
+		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::fluent_fee_wrapper {
+			carrier_info,
 			..
 		}) = call
 		{
-			Some((carrier.clone(), carrier_data.clone(), post_transfer.clone()))
+			carrier_info.to_owned()
 		} else {
 			None
 		}

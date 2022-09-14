@@ -111,9 +111,10 @@ fn test_fee_sharing_beneficiary_works() {
 			let eva_balance_before = Tokens::free_balance(NATIVE_CURRENCY_ID, &EVA);
 			// Construct the wrapped call. This is needed to trigger the pre_dispatch() from the
 			// SignedExtension in order to charge fees.
-			let wrapped_call = Call::FluentFee(pallet::Call::fee_sharing_wrapper {
+			let wrapped_call = Call::FluentFee(pallet::Call::fluent_fee_wrapper {
 				call: Box::new(call),
-				beneficiary: Some(EVA),
+				carrier_info: None,
+				value_added_info: Some((EVA, 1_000_000)),
 			});
 
 			// get the call length and info
@@ -164,9 +165,10 @@ fn test_fee_sharing_none_works() {
 			});
 			// Construct the wrapped call. This is needed to trigger the pre_dispatch() from the
 			// SignedExtension in order to charge fees.
-			let wrapped_call = Call::FluentFee(pallet::Call::fee_sharing_wrapper {
+			let wrapped_call = Call::FluentFee(pallet::Call::fluent_fee_wrapper {
 				call: Box::new(call),
-				beneficiary: None,
+				value_added_info: None,
+				carrier_info: None,
 			});
 			// get the call length and info
 			let len = wrapped_call.encoded_size();
