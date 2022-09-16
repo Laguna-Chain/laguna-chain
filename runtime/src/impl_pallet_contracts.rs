@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use crate::{
-	constants::{LAGUNAS, MILLI_LAGUNAS},
+	constants::{LAGUNAS, MICRO_LAGUNAS, MILLI_LAGUNAS},
 	impl_frame_system::BlockWeights,
 	impl_pallet_currencies::NativeCurrencyId,
 	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight,
@@ -20,7 +20,7 @@ use sp_runtime::Perbill;
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 
 const fn deposit(items: u32, bytes: u32) -> Balance {
-	(items as Balance * LAGUNAS + (bytes as Balance) * (5 * MILLI_LAGUNAS / 100)) / 10
+	(items as Balance * MICRO_LAGUNAS + (bytes as Balance) * (5 * MICRO_LAGUNAS / 100)) / 10
 }
 
 parameter_types! {
