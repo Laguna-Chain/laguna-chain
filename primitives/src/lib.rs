@@ -12,9 +12,6 @@ use sp_runtime::{
 pub(crate) mod currency;
 pub use currency::*;
 
-pub(crate) mod time;
-pub use time::*;
-
 pub type BlockNumber = u32;
 
 pub type Signature = MultiSignature;

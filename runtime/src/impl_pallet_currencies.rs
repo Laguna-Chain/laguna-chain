@@ -1,12 +1,12 @@
 use frame_support::parameter_types;
 
-use primitives::{AccountId, CurrencyId, TokenId};
+use primitives::{AccountId, CurrencyId};
 use sp_runtime::traits::{Convert, ConvertInto};
 
-use crate::{ContractAssetsRegistry, Runtime, Tokens};
+use crate::{constants::LAGUNA_NATIVE_CURRENCY, ContractAssetsRegistry, Runtime, Tokens};
 
 parameter_types! {
-	pub const NativeCurrencyId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+	pub const NativeCurrencyId: CurrencyId = LAGUNA_NATIVE_CURRENCY;
 }
 
 impl pallet_currencies::Config for Runtime {
