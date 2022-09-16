@@ -31,6 +31,34 @@ impl ChainExtension<Runtime> for DemoExtension {
 				// @dev: Currently only system-contracts are whitelisted
 				Ok(RetVal::Converging(0))
 			},
+			11 => {
+				//  Upgrade contract using pallet-contract set_code() function
+				// @dev: This is an UNSAFE method. Only system-contracts can access it!
+
+				// Address of the contract which called the chain extension
+				let caller: AccountId = env.ext().address().clone();
+
+				// Verify that the contract is authorised to do this operation
+				if !crate::SystemContractDeployer::is_system_contract(caller) {
+					return Ok(RetVal::Converging(403))
+				}
+
+				let (contract, code_hash): (AccountId, <Runtime as frame_system::Config>::Hash) =
+					env.read_as()?;
+
+				let err_code = match crate::Contracts::set_code(
+					RawOrigin::Root.into(),
+					sp_runtime::MultiAddress::Id(contract),
+					code_hash,
+				)
+				.is_ok()
+				{
+					true => 0,
+					false => 1,
+				};
+
+				Ok(RetVal::Converging(err_code))
+			},
 			100 => {
 				let arg: [u8; 32] = env.read_as()?;
 				env.write(&arg, false, None)

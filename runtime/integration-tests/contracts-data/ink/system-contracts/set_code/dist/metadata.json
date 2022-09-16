@@ -1,0 +1,272 @@
+{
+  "source": {
+    "hash": "0xc899b71267810e30e0ca4f8f48e043a936060f5d6e4b36fa2eb03dd7f8e1b97a",
+    "language": "ink! 3.3.1",
+    "compiler": "rustc 1.60.0-nightly"
+  },
+  "contract": {
+    "name": "set_code",
+    "version": "3.3.1",
+    "authors": [
+      "[your_name] <[your_email]>"
+    ]
+  },
+  "V3": {
+    "spec": {
+      "constructors": [
+        {
+          "args": [],
+          "docs": [
+            "Constructor that initializes the `bool` value to the given `init_value`."
+          ],
+          "label": "new",
+          "payable": false,
+          "selector": "0x9bae9d5e"
+        }
+      ],
+      "docs": [],
+      "events": [
+        {
+          "args": [
+            {
+              "docs": [],
+              "indexed": true,
+              "label": "account_id",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 1
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "version",
+              "type": {
+                "displayName": [
+                  "u32"
+                ],
+                "type": 4
+              }
+            },
+            {
+              "docs": [],
+              "indexed": false,
+              "label": "code_hash",
+              "type": {
+                "displayName": [
+                  "Hash"
+                ],
+                "type": 6
+              }
+            }
+          ],
+          "docs": [
+            " Event emitted when a contract successfully upgrades"
+          ],
+          "label": "ContractUpgraded"
+        }
+      ],
+      "messages": [
+        {
+          "args": [
+            {
+              "label": "code_hash",
+              "type": {
+                "displayName": [
+                  "Hash"
+                ],
+                "type": 6
+              }
+            }
+          ],
+          "docs": [
+            " Contracts can call this method to change their code in-place.",
+            " @dev: It doesn't change any storage items. For more details refer to",
+            " https://docs.openzeppelin.com/upgrades-plugins/writing-upgradeable#modifying-your-contracts"
+          ],
+          "label": "replace_code",
+          "mutates": true,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "bool"
+            ],
+            "type": 7
+          },
+          "selector": "0xe4d2b1ca"
+        },
+        {
+          "args": [
+            {
+              "label": "addr",
+              "type": {
+                "displayName": [
+                  "AccountId"
+                ],
+                "type": 1
+              }
+            }
+          ],
+          "docs": [
+            " Returns the number of times the contract has been updated"
+          ],
+          "label": "code_version",
+          "mutates": false,
+          "payable": false,
+          "returnType": {
+            "displayName": [
+              "u32"
+            ],
+            "type": 4
+          },
+          "selector": "0xe82d14a6"
+        }
+      ]
+    },
+    "storage": {
+      "struct": {
+        "fields": [
+          {
+            "layout": {
+              "cell": {
+                "key": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "ty": 0
+              }
+            },
+            "name": "version"
+          }
+        ]
+      }
+    },
+    "types": [
+      {
+        "id": 0,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "name": "offset_key",
+                  "type": 5,
+                  "typeName": "Key"
+                }
+              ]
+            }
+          },
+          "params": [
+            {
+              "name": "K",
+              "type": 1
+            },
+            {
+              "name": "V",
+              "type": 4
+            }
+          ],
+          "path": [
+            "ink_storage",
+            "lazy",
+            "mapping",
+            "Mapping"
+          ]
+        }
+      },
+      {
+        "id": 1,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 2,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_env",
+            "types",
+            "AccountId"
+          ]
+        }
+      },
+      {
+        "id": 2,
+        "type": {
+          "def": {
+            "array": {
+              "len": 32,
+              "type": 3
+            }
+          }
+        }
+      },
+      {
+        "id": 3,
+        "type": {
+          "def": {
+            "primitive": "u8"
+          }
+        }
+      },
+      {
+        "id": 4,
+        "type": {
+          "def": {
+            "primitive": "u32"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 2,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_primitives",
+            "Key"
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "type": {
+          "def": {
+            "composite": {
+              "fields": [
+                {
+                  "type": 2,
+                  "typeName": "[u8; 32]"
+                }
+              ]
+            }
+          },
+          "path": [
+            "ink_env",
+            "types",
+            "Hash"
+          ]
+        }
+      },
+      {
+        "id": 7,
+        "type": {
+          "def": {
+            "primitive": "bool"
+          }
+        }
+      }
+    ]
+  }
+}
