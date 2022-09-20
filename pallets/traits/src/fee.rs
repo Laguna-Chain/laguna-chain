@@ -1,4 +1,4 @@
-use frame_support::{traits::WithdrawReasons, unsigned::TransactionValidityError};
+use frame_support::{traits::WithdrawReasons, unsigned::TransactionValidityError, weights::Weight};
 
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -71,6 +71,9 @@ pub trait FeeCarrier {
 		account: &Self::AccountId,
 		carrier_addr: &Self::AccountId,
 		carrier_data: sp_std::vec::Vec<u8>,
+		value: Self::Balance,
+		gas_limit: Weight,
+		storage_deposit_limit: Option<Self::Balance>,
 		required: Self::Balance,
 		post_transfer: bool,
 	) -> Result<Self::Balance, InvalidFeeDispatch>;

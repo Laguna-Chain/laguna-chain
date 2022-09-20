@@ -2,6 +2,7 @@ use crate::{
 	impl_pallet_currencies::NativeCurrencyId, Authorship, Call, Contracts, Currencies, Event,
 	FeeEnablement, FeeMeasurement, FluentFee, Origin, PrepaidFee, Runtime, Treasury,
 };
+use codec::Compact;
 use frame_support::{
 	pallet_prelude::InvalidTransaction,
 	parameter_types,
@@ -10,11 +11,12 @@ use frame_support::{
 		traits::{AccountIdConversion, StaticLookup},
 	},
 	traits::Get,
+	weights::{Weight, WeightToFee},
 	PalletId,
 };
 use orml_traits::{BasicCurrency, MultiCurrency};
 use primitives::{AccountId, Balance, CurrencyId, Price, TokenId};
-use sp_runtime::{self, FixedPointNumber};
+use sp_runtime::{self, traits::Saturating, FixedPointNumber};
 use traits::fee::{CallFilterWithOutput, FeeCarrier, FeeDispatch, FeeMeasure};
 
 pub struct PayoutSplits;
@@ -41,7 +43,7 @@ impl pallet_fluent_fee::Config for Runtime {
 
 	type Call = Call;
 
-	type IsFeeSharingCall = IsFeeSharingCall;
+	type IsFeeSharingCall = IsValueAddedCall;
 
 	type FeeSource = FeeEnablement;
 
@@ -77,6 +79,8 @@ impl FeeMeasure for StaticImpl {
 	}
 }
 
+// currently the carrier accepts arbitray contract call, it requires the fee needed for the original
+// call + consume weight for the carrier
 impl FeeCarrier for StaticImpl {
 	type AccountId = AccountId;
 	type Balance = Balance;
@@ -85,27 +89,37 @@ impl FeeCarrier for StaticImpl {
 		account: &Self::AccountId,
 		carrier_addr: &Self::AccountId,
 		carrier_data: sp_std::vec::Vec<u8>,
-		required: Self::Balance,
+		value: Self::Balance,
+		gas_limit: Weight,
+		storage_deposit_limit: Option<Self::Balance>,
+		mut required: Self::Balance,
 		post_transfer_from: bool,
 	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
 		let acc: AccountId = <Runtime as pallet_fluent_fee::Config>::PalletId::get()
 			.try_into_account()
-			.unwrap();
+			.ok_or(traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
 		let before = Currencies::free_balance(acc.clone(), NativeCurrencyId::get());
 
 		let addr = <Runtime as frame_system::Config>::Lookup::unlookup(carrier_addr.clone());
 
 		// contract call that will either deposit funds to the PalletAddr or allow PalletAddr to
 		// transfer from it's free balance.
-		Contracts::call(
+		let consumed_weight = Contracts::call(
 			Origin::signed(account.clone()),
 			addr,
-			Default::default(),
-			200_000_000_000,
-			None,
+			value,
+			gas_limit,
+			storage_deposit_limit.map(Compact::<_>::from),
 			carrier_data,
 		)
-		.map_err(|e| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
+		.ok()
+		.and_then(|o| o.actual_weight)
+		.ok_or(traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
+
+		let consumed_fee = <<Runtime as pallet_transaction_payment::Config>::WeightToFee as WeightToFee>::weight_to_fee(&consumed_weight);
+
+		// should charge fee's to compensate the carrier contract weight
+		required.saturating_accrue(consumed_fee);
 
 		// allow the PalletAccount to withdraw on behalf of the user
 		if post_transfer_from {
@@ -116,6 +130,8 @@ impl FeeCarrier for StaticImpl {
 		let after = Currencies::free_balance(acc, NativeCurrencyId::get());
 
 		let collected = after.saturating_sub(before);
+
+		// condition for succesful withdraw is collected balance is enough to cover the required
 		if collected >= required {
 			Ok(collected)
 		} else {
@@ -231,11 +247,9 @@ impl FeeDispatch for StaticImpl {
 	}
 }
 
-// TODO: the below part is currently not included in the withdraw_fee() implementation. For now it
-// is only included to satisfy the compiler errors
-pub struct IsFeeSharingCall;
+pub struct IsValueAddedCall;
 
-impl CallFilterWithOutput for IsFeeSharingCall {
+impl CallFilterWithOutput for IsValueAddedCall {
 	type Call = Call;
 
 	type Output = Option<(AccountId, Balance)>;
@@ -258,7 +272,7 @@ pub struct IsCarrierAttachedCall;
 impl CallFilterWithOutput for IsCarrierAttachedCall {
 	type Call = Call;
 
-	type Output = Option<(AccountId, Vec<u8>, bool)>;
+	type Output = Option<(AccountId, Vec<u8>, Balance, Weight, Option<Balance>, bool)>;
 
 	fn is_call(call: &<Runtime as frame_system::Config>::Call) -> Self::Output {
 		if let Call::FluentFee(pallet_fluent_fee::pallet::Call::<Runtime>::fluent_fee_wrapper {

@@ -201,7 +201,7 @@ pub struct DummyCarrierCall;
 impl CallFilterWithOutput for DummyCarrierCall {
 	type Call = Call;
 
-	type Output = Option<(AccountId, Vec<u8>, bool)>;
+	type Output = Option<(AccountId, Vec<u8>, Balance, Weight, Option<Balance>, bool)>;
 
 	fn is_call(call: &Self::Call) -> Self::Output {
 		if let Call::FluentFee(pallet::Call::<Runtime>::fluent_fee_wrapper {
@@ -274,13 +274,15 @@ impl FeeDispatch for DummyFeeDispatch<Tokens> {
 
 impl FeeCarrier for DummyFeeDispatch<Runtime> {
 	type AccountId = AccountId;
-
 	type Balance = Balance;
 
 	fn execute_carrier(
 		account: &Self::AccountId,
 		carrier_addr: &Self::AccountId,
 		carrier_data: frame_support::sp_std::vec::Vec<u8>,
+		value: Self::Balance,
+		gas_limit: Weight,
+		storage_deposit_limit: Option<Self::Balance>,
 		required: Self::Balance,
 		post_transfer: bool,
 	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {

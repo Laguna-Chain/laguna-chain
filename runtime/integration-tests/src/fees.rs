@@ -356,7 +356,7 @@ fn test_with_carrier() {
 
 			let call =
 				laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::fluent_fee_wrapper {
-					carrier_info: Some((token_addr, carrier_data, false)),
+					carrier_info: Some((token_addr, carrier_data, 0, MAX_GAS, None, false)),
 					value_added_info: None,
 					call: Box::new(inner_call),
 				});
@@ -521,7 +521,7 @@ fn test_with_carrier_amm() {
 
 			let call =
 				laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::fluent_fee_wrapper {
-					carrier_info: Some((amm_addr, carrier_data, true)),
+					carrier_info: Some((amm_addr, carrier_data, 0, MAX_GAS, None, true)),
 					value_added_info: None,
 					call: Box::new(inner_call),
 				});
