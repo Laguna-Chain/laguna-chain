@@ -16,7 +16,7 @@ use frame_support::{
 };
 use laguna_runtime::{
 	constants::LAGUNAS, Contracts, Currencies, FeeEnablement, FluentFee, Origin, PrepaidFee,
-	SystemContractDeployer, Tokens, TransactionPayment, Treasury,
+	Tokens, TransactionPayment, Treasury,
 };
 use pallet_transaction_payment::ChargeTransactionPayment;
 
@@ -52,7 +52,7 @@ fn test_basic_fee_payout() {
 
 			// pre_dispatch will trigger the SignedExtension
 			// via `TransactionPayment --> OnchargeTransaction --> FluentFee`
-			// we can test fee chargin logic by calling validate once
+			// we can test fee charging logic by calling validate once
 			let pre = ChargeTransactionPayment::<Runtime>::from(0)
 				.pre_dispatch(&ALICE, &call, &info, len)
 				.expect("should pass");
@@ -113,7 +113,7 @@ fn test_alt_fee_path() {
 
 			// pre_dispatch will trigger the SignedExtension
 			// via `TransactionPayment --> OnchargeTransaction --> FluentFee`
-			// we can test fee chargin logic by calling validate once
+			// we can test fee charging logic by calling validate once
 			let pre = ChargeTransactionPayment::<Runtime>::from(0)
 				.pre_dispatch(&ALICE, &call, &info, len)
 				.expect("should pass");
@@ -190,7 +190,7 @@ fn test_value_added_fee() {
 
 			// pre_dispatch will trigger the SignedExtension
 			// via `TransactionPayment --> OnchargeTransaction --> FluentFee`
-			// we can test fee chargin logic by calling validate once
+			// we can test fee charging logic by calling validate once
 			let pre = ChargeTransactionPayment::<Runtime>::from(0)
 				.pre_dispatch(&ALICE, &call, &info, len)
 				.expect("should pass");
@@ -326,25 +326,14 @@ fn test_with_carrier() {
 
 			let treasury_acc = Treasury::account_id();
 
-			let blob = std::fs::read(
-				"./contracts-data/ink/native_fungible_token/dist/native_fungible_token.wasm",
-			)
-			.unwrap();
+			let contract = Contract::new(
+				"./contracts-data/ink/native_fungible_token/dist/native_fungible_token.contract",
+			);
 
-			let mut sel_constructor = Bytes::from_str("0x45fd0674")
-				.map(|v| v.to_vec())
-				.expect("unable to parse selector");
-
-			0_u32.encode_to(&mut sel_constructor);
-
-			let token_addr = deploy_system_contract(blob, sel_constructor);
-
-			// prepare a call
-			let inner_call = laguna_runtime::Call::Currencies(pallet_currencies::Call::transfer {
-				to: BOB,
-				currency_id: NATIVE_CURRENCY_ID,
-				balance: LAGUNAS,
-			});
+			let token_addr = deploy_system_contract(
+				contract.code,
+				contract.transcoder.encode("create_wrapper_token", ["0"]).unwrap(),
+			);
 
 			let pallet_acc: AccountId = <Runtime as pallet_fluent_fee::Config>::PalletId::get()
 				.try_into_account()
@@ -353,6 +342,13 @@ fn test_with_carrier() {
 			let mut carrier_data = Bytes::from_str("0xa9059cbb").map(|v| v.to_vec()).unwrap();
 
 			(pallet_acc, U256::from(LAGUNAS)).encode_to(&mut carrier_data);
+
+			// prepare a call
+			let inner_call = laguna_runtime::Call::Currencies(pallet_currencies::Call::transfer {
+				to: BOB,
+				currency_id: NATIVE_CURRENCY_ID,
+				balance: LAGUNAS,
+			});
 
 			let call =
 				laguna_runtime::Call::FluentFee(pallet_fluent_fee::Call::fluent_fee_wrapper {
@@ -369,7 +365,7 @@ fn test_with_carrier() {
 
 			// pre_dispatch will trigger the SignedExtension
 			// via `TransactionPayment --> OnchargeTransaction --> FluentFee`
-			// we can test fee chargin logic by calling validate once
+			// we can test fee charging logic by calling validate once
 			let pre = ChargeTransactionPayment::<Runtime>::from(0)
 				.pre_dispatch(&ALICE, &call, &info, len)
 				.expect("should pass");
@@ -436,12 +432,6 @@ fn test_with_carrier_amm() {
 			let native_contract = Contract::new(
 				"./contracts-data/ink/native_fungible_token/dist/native_fungible_token.contract",
 			);
-
-			let mut sel_constructor = Bytes::from_str("0x45fd0674")
-				.map(|v| v.to_vec())
-				.expect("unable to parse selector");
-
-			0_u32.encode_to(&mut sel_constructor);
 
 			let native_erc20_addr = deploy_system_contract(
 				native_contract.code,
@@ -534,14 +524,14 @@ fn test_with_carrier_amm() {
 
 			// pre_dispatch will trigger the SignedExtension
 			// via `TransactionPayment --> OnchargeTransaction --> FluentFee`
-			// we can test fee chargin logic by calling validate once
+			// we can test fee charging logic by calling validate once
 			let pre = ChargeTransactionPayment::<Runtime>::from(0)
 				.pre_dispatch(&ALICE, &call, &info, len)
 				.expect("should pass");
 
 			let acc_charged = Currencies::free_balance(ALICE, NATIVE_CURRENCY_ID);
 
-			// acccount send 1 LAGUNA to carrier_contract, and allows the pallet ot take required
+			// acccount send 1 LAGUNA to carrier_contract, and allows the pallet to take required
 			// amount from it's free balance
 
 			// calculate actual fee with all the parameter including base_fee, length_fee and
