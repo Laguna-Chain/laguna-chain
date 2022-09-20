@@ -66,7 +66,14 @@ pub mod pallet {
 
 		type IsCarrierAttachedCall: CallFilterWithOutput<
 			Call = CallOf<Self>,
-			Output = Option<(AccountIdOf<Self>, Vec<u8>, bool)>,
+			Output = Option<(
+				AccountIdOf<Self>,
+				Vec<u8>,
+				BalanceOf<Self, Self::MultiCurrency>,
+				Weight,
+				Option<BalanceOf<Self, Self::MultiCurrency>>,
+				bool,
+			)>,
 		>;
 		// fee source evaluation
 		type FeeSource: FeeSource<
@@ -189,13 +196,20 @@ pub mod pallet {
 		pub fn fluent_fee_wrapper(
 			origin: OriginFor<T>,
 			call: Box<<T as pallet::Config>::Call>, // used to get the weight
-			carrier_info: Option<(AccountIdOf<T>, Vec<u8>, bool)>,
+			carrier_info: Option<(
+				AccountIdOf<T>,
+				Vec<u8>,
+				BalanceOf<T, T::MultiCurrency>,
+				Weight,
+				Option<BalanceOf<T, T::MultiCurrency>>,
+				bool,
+			)>,
 			value_added_info: Option<(AccountIdOf<T>, BalanceOf<T, T::MultiCurrency>)>,
 		) -> DispatchResult {
 			ensure_signed(origin.clone())?;
 
 			// TODO: we might want to create condition to allow the inclusion of the carrier
-			if let Some((carrier_address, carrier_data, post_transfer)) = carrier_info {
+			if let Some((carrier_address, carrier_data, .., post_transfer)) = carrier_info {
 				Self::deposit_event(Event::<T>::CarrierAttached {
 					carrier_address,
 					carrier_data,
@@ -275,8 +289,14 @@ where
 			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
 		};
 		// try carrier first, no need to withdraw if carrier can handle the job.
-		if let Some((carrier_address, carrier_data, post_transfer)) =
-			T::IsCarrierAttachedCall::is_call(call)
+		if let Some((
+			carrier_address,
+			carrier_data,
+			value,
+			max_gas,
+			storage_deposit_limit,
+			post_transfer,
+		)) = T::IsCarrierAttachedCall::is_call(call)
 		{
 			let amount = T::FeeMeasure::measure(&fallback_asset, fee + tip)?;
 
@@ -284,6 +304,9 @@ where
 				who,
 				&carrier_address,
 				carrier_data.clone(),
+				value,
+				max_gas,
+				storage_deposit_limit,
 				amount,
 				post_transfer,
 			)
