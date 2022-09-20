@@ -1,93 +1,91 @@
-#[cfg(test)]
-mod tests {
-	use crate::{ExtBuilder, ALICE, BOB, EVA};
-	use codec::{Decode, Encode};
-	use frame_support::assert_ok;
-	use laguna_runtime::{
-		constants::{LAGUNAS, MICRO_LAGUNAS},
-		Block, Contracts, Currencies, Event, Origin, Runtime, System,
-	};
-	use orml_traits::MultiCurrency;
-	use pallet_contracts_primitives::ExecReturnValue;
-	use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
-	use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId, TokenMetadata};
-	use sp_core::{hexdisplay::AsBytesRef, Bytes, U256};
-	use sp_runtime::traits::AccountIdConversion;
-	use std::str::FromStr;
+#![cfg(test)]
 
-	use laguna_runtime::constants::LAGUNA_NATIVE_CURRENCY;
-	const MAX_GAS: u64 = 200_000_000_000;
+use crate::{ExtBuilder, ALICE, BOB, EVA};
+use codec::{Decode, Encode};
+use frame_support::assert_ok;
+use laguna_runtime::{
+	constants::{LAGUNAS, LAGUNA_NATIVE_CURRENCY},
+	Block, Contracts, Currencies, Event, Origin, Runtime, System,
+};
+use orml_traits::MultiCurrency;
+use pallet_contracts_primitives::ExecReturnValue;
+use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
+use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId, TokenMetadata};
+use sp_core::{hexdisplay::AsBytesRef, Bytes, U256};
+use sp_runtime::traits::AccountIdConversion;
+use std::str::FromStr;
 
-	fn deploy_system_contract(blob: Vec<u8>, sel_constructor: Vec<u8>) -> AccountId {
-		assert_ok!(laguna_runtime::SystemContractDeployer::instantiate_with_code(
-			Origin::root(),
-			0,
-			MAX_GAS,
-			None,
-			blob,
-			sel_constructor,
-			None,
-		));
+const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
+pub const MAX_GAS: u64 = 200_000_000_000;
 
-		let evts = System::events();
+pub fn deploy_system_contract(blob: Vec<u8>, sel_constructor: Vec<u8>) -> AccountId {
+	assert_ok!(laguna_runtime::SystemContractDeployer::instantiate_with_code(
+		Origin::root(),
+		0,
+		MAX_GAS,
+		None,
+		blob,
+		sel_constructor,
+		None,
+	));
 
-		let deployed_address = evts
-			.iter()
-			.rev()
-			.find_map(|r| {
-				if let Event::SystemContractDeployer(
-					pallet_system_contract_deployer::Event::Created(contract),
-				) = &r.event
-				{
-					Some(contract)
-				} else {
-					None
-				}
-			})
-			.expect("unable to find contract");
+	let evts = System::events();
 
-		deployed_address.clone()
-	}
+	let deployed_address = evts
+		.iter()
+		.rev()
+		.find_map(|r| {
+			if let Event::SystemContractDeployer(pallet_system_contract_deployer::Event::Created(
+				contract,
+			)) = &r.event
+			{
+				Some(contract)
+			} else {
+				None
+			}
+		})
+		.expect("unable to find contract");
 
-	fn deploy_contract(blob: Vec<u8>, sel_constructor: Vec<u8>) -> AccountId {
-		assert_ok!(Contracts::instantiate_with_code(
-			Origin::signed(ALICE),
-			0,
-			MAX_GAS,
-			None,
-			blob,
-			sel_constructor,
-			vec![]
-		));
+	deployed_address.clone()
+}
 
-		let evts = System::events();
+pub fn deploy_contract(blob: Vec<u8>, sel_constructor: Vec<u8>) -> AccountId {
+	assert_ok!(Contracts::instantiate_with_code(
+		Origin::signed(ALICE),
+		0,
+		MAX_GAS,
+		None,
+		blob,
+		sel_constructor,
+		vec![]
+	));
 
-		let deployed_address = evts
-			.iter()
-			.rev()
-			.find_map(|r| {
-				if let Event::Contracts(pallet_contracts::Event::Instantiated {
-					deployer: _,
-					contract,
-				}) = &r.event
-				{
-					Some(contract)
-				} else {
-					None
-				}
-			})
-			.expect("unable to find contract");
+	let evts = System::events();
 
-		deployed_address.clone()
-	}
+	let deployed_address = evts
+		.iter()
+		.rev()
+		.find_map(|r| {
+			if let Event::Contracts(pallet_contracts::Event::Instantiated { deployer, contract }) =
+				&r.event
+			{
+				Some(contract)
+			} else {
+				None
+			}
+		})
+		.expect("unable to find contract");
 
-	#[test]
-	fn test_ink_multilayer_erc20() {
-		let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-			.try_into_account()
-			.expect("Invalid PalletId");
-		ExtBuilder::default()
-			.balances(vec![(ALICE, LAGUNA_NATIVE_CURRENCY, 10*LAGUNAS),(BOB, LAGUNA_NATIVE_CURRENCY, 10*LAGUNAS),(EVA, LAGUNA_NATIVE_CURRENCY, 10*LAGUNAS), (deploying_key, LAGUNA_NATIVE_CURRENCY, 10*LAGUNAS)])
+	deployed_address.clone()
+}
+
+#[test]
+fn test_ink_multilayer_erc20() {
+	let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
+		.try_into_account()
+		.expect("Invalid PalletId");
+	ExtBuilder::default()
+			.balances(vec![(ALICE, LAGUNA_TOKEN, 10*LAGUNAS),(BOB, LAGUNA_TOKEN, 10*LAGUNAS),(EVA, LAGUNA_TOKEN, 10*LAGUNAS), (deploying_key, LAGUNA_TOKEN, 10*LAGUNAS)])
 			.build()
 			.execute_with(|| {
 
@@ -330,15 +328,16 @@ mod tests {
 				assert_eq!(allowance, (3*LAGUNAS).into());
 				assert_eq!(Currencies::free_balance(EVA, LAGUNA_NATIVE_CURRENCY), 7*LAGUNAS);
 			});
-	}
+}
 
-	#[test]
-	fn test_solang_multilayer_amm() {
-		let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-			.try_into_account()
-			.expect("Invalid PalletId");
-		ExtBuilder::default()
+#[test]
+fn test_solang_multilayer_amm() {
+	let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
+		.try_into_account()
+		.expect("Invalid PalletId");
+	ExtBuilder::default()
 			.balances(vec![(ALICE, LAGUNA_NATIVE_CURRENCY, 1000*LAGUNAS), (deploying_key, LAGUNA_NATIVE_CURRENCY, 10*LAGUNAS)])
+
 			.build()
 			.execute_with(|| {
 				// @NOTE: Just a simple test method to verify multilayer interaction and ERC20 works!
@@ -545,5 +544,4 @@ mod tests {
 				assert_eq!(native_bal_before - native_bal_after, U256::exp10(0));
 				assert_eq!(std_bal_after - std_bal_before, U256::exp10(4));
 			});
-	}
 }

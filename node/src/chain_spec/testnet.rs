@@ -36,9 +36,6 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				<laguna_runtime::Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
 					.try_into_account().expect("Invalid PalletId");
 
-			// init supploy of 1B
-			let mut init_supploy = LAGUNAS << 9;
-
 			testnet_genesis(
 				wasm_binary,
 				// Initial PoA authorities

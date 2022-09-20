@@ -91,7 +91,7 @@ fn test_charge_fee() {
 }
 
 #[test]
-fn test_fee_sharing_beneficiary_works() {
+fn test_valude_added_fee_works() {
 	ExtBuilder::default()
 		.balances(vec![
 			(ALICE, NATIVE_CURRENCY_ID, 1_000_000_000_000),
@@ -111,9 +111,10 @@ fn test_fee_sharing_beneficiary_works() {
 			let eva_balance_before = Tokens::free_balance(NATIVE_CURRENCY_ID, &EVA);
 			// Construct the wrapped call. This is needed to trigger the pre_dispatch() from the
 			// SignedExtension in order to charge fees.
-			let wrapped_call = Call::FluentFee(pallet::Call::fee_sharing_wrapper {
+			let wrapped_call = Call::FluentFee(pallet::Call::fluent_fee_wrapper {
 				call: Box::new(call),
-				beneficiary: Some(EVA),
+				carrier_info: None,
+				value_added_info: Some((EVA, 1_000_000)),
 			});
 
 			// get the call length and info
@@ -139,10 +140,7 @@ fn test_fee_sharing_beneficiary_works() {
 
 			let eva_balance_after = Tokens::free_balance(NATIVE_CURRENCY_ID, &EVA);
 
-			let ratio = FixedU128::saturating_from_rational(2_u128, 100_u128);
-			let beneficiary_cut = ratio.saturating_mul_int(fee);
-
-			assert!(eva_balance_after == eva_balance_before + beneficiary_cut);
+			assert!(eva_balance_after == eva_balance_before + 1_000_000);
 		})
 }
 
@@ -164,9 +162,10 @@ fn test_fee_sharing_none_works() {
 			});
 			// Construct the wrapped call. This is needed to trigger the pre_dispatch() from the
 			// SignedExtension in order to charge fees.
-			let wrapped_call = Call::FluentFee(pallet::Call::fee_sharing_wrapper {
+			let wrapped_call = Call::FluentFee(pallet::Call::fluent_fee_wrapper {
 				call: Box::new(call),
-				beneficiary: None,
+				value_added_info: None,
+				carrier_info: None,
 			});
 			// get the call length and info
 			let len = wrapped_call.encoded_size();

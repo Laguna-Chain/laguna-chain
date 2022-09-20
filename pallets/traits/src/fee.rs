@@ -1,4 +1,4 @@
-use frame_support::{traits::WithdrawReasons, unsigned::TransactionValidityError};
+use frame_support::{traits::WithdrawReasons, unsigned::TransactionValidityError, weights::Weight};
 
 use codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -60,8 +60,23 @@ pub trait FeeDispatch {
 		id: &Self::AssetId,
 		tip: &Self::Balance,
 		correted_withdrawn: &Self::Balance,
-		benefitiary: &Option<Self::AccountId>,
+		value_added_fee: &Option<(Self::AccountId, Self::Balance)>,
 	) -> Result<(), InvalidFeeDispatch>;
+}
+
+pub trait FeeCarrier {
+	type AccountId;
+	type Balance;
+	fn execute_carrier(
+		account: &Self::AccountId,
+		carrier_addr: &Self::AccountId,
+		carrier_data: sp_std::vec::Vec<u8>,
+		value: Self::Balance,
+		gas_limit: Weight,
+		storage_deposit_limit: Option<Self::Balance>,
+		required: Self::Balance,
+		post_transfer: bool,
+	) -> Result<Self::Balance, InvalidFeeDispatch>;
 }
 
 pub enum HealthStatusError {
