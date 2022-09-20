@@ -4,7 +4,8 @@ use crate::{ExtBuilder, ALICE, BOB, EVA};
 use codec::{Decode, Encode};
 use frame_support::assert_ok;
 use laguna_runtime::{
-	constants::LAGUNAS, Block, Contracts, Currencies, Event, Origin, Runtime, System,
+	constants::{LAGUNAS, LAGUNA_NATIVE_CURRENCY},
+	Block, Contracts, Currencies, Event, Origin, Runtime, System,
 };
 use orml_traits::MultiCurrency;
 use pallet_contracts_primitives::ExecReturnValue;
@@ -327,7 +328,6 @@ fn test_ink_multilayer_erc20() {
 				assert_eq!(allowance, (3*LAGUNAS).into());
 				assert_eq!(Currencies::free_balance(EVA, LAGUNA_NATIVE_CURRENCY), 7*LAGUNAS);
 			});
-<<<<<<< HEAD
 }
 
 #[test]
@@ -338,27 +338,6 @@ fn test_solang_multilayer_amm() {
 	ExtBuilder::default()
 			.balances(vec![(ALICE, LAGUNA_NATIVE_CURRENCY, 1000*LAGUNAS), (deploying_key, LAGUNA_NATIVE_CURRENCY, 10*LAGUNAS)])
 
-||||||| 34e5ed0
-	}
-
-	#[test]
-	fn test_solang_multilayer_amm() {
-		let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-			.try_into_account()
-			.expect("Invalid PalletId");
-		ExtBuilder::default()
-			.balances(vec![(ALICE, LAGUNA_TOKEN, 1000*LAGUNAS), (deploying_key, LAGUNA_TOKEN, 10*LAGUNAS)])
-=======
-}
-
-#[test]
-fn test_solang_multilayer_amm() {
-	let deploying_key = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-		.try_into_account()
-		.expect("Invalid PalletId");
-	ExtBuilder::default()
-			.balances(vec![(ALICE, LAGUNA_TOKEN, 1000*LAGUNAS), (deploying_key, LAGUNA_TOKEN, 10*LAGUNAS)])
->>>>>>> addc7614cab8667ffd4b07d8463f0e1f9d0243c7
 			.build()
 			.execute_with(|| {
 				// @NOTE: Just a simple test method to verify multilayer interaction and ERC20 works!
