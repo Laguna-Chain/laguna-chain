@@ -146,7 +146,7 @@ construct_runtime!(
 			Treasury: pallet_treasury,
 
 			Contracts: pallet_contracts,
-			SudoContracts: pallet_system_contract_deployer,
+			SystemContractDeployer: pallet_system_contract_deployer,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 
 		}

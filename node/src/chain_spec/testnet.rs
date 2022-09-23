@@ -3,6 +3,8 @@
 use primitives::{AccountId, CurrencyId, TokenId};
 
 use laguna_runtime::{
+	constants::{LAGUNAS, LAGUNA_NATIVE_CURRENCY},
+	impl_pallet_treasury::TreasuryPalletId,
 	AuraConfig, FeeEnablementConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
 	TokensConfig, TreasuryConfig, WASM_BINARY,
 };
@@ -11,7 +13,6 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 
 use super::util::{authority_keys_from_seed, get_account_id_from_seed};
-use frame_support::PalletId;
 use sc_service::ChainType;
 use sp_core::sr25519;
 use sp_runtime::traits::AccountIdConversion;
@@ -152,16 +153,31 @@ fn testnet_genesis(
 			key: Some(root_key),
 		},
 		tokens: TokensConfig {
-			balances: endowed_accounts
-				.iter()
-				.cloned()
-				.map(|k| (k, CurrencyId::NativeToken(TokenId::Laguna), 1 << 60))
-				.collect(),
+			balances: {
+				let mut balances = vec![];
+
+				// init supploy of 1B
+				let mut init_supply = LAGUNAS * 10_u128.pow(9);
+
+				let endowed_amount = LAGUNAS * 10_u128.pow(3);
+
+				let treasury_account: AccountId =
+					TreasuryPalletId::get().try_into_account().unwrap();
+
+				for acc in endowed_accounts {
+					balances.push((acc, LAGUNA_NATIVE_CURRENCY, endowed_amount));
+					init_supply = init_supply.checked_sub(endowed_amount).unwrap();
+				}
+
+				balances.push((treasury_account, LAGUNA_NATIVE_CURRENCY, init_supply));
+
+				balances
+			},
 		},
 		fee_enablement: FeeEnablementConfig {
 			enabled: vec![(CurrencyId::NativeToken(TokenId::Laguna), true)],
 		},
 		treasury: TreasuryConfig {},
-		sudo_contracts: Default::default(),
+		system_contract_deployer: Default::default(),
 	}
 }

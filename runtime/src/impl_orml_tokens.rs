@@ -4,6 +4,7 @@ use frame_support::{
 	traits::{ConstU32, Contains},
 };
 use primitives::{AccountId, Amount, Balance, CurrencyId, TokenId};
+use sp_runtime::traits::Zero;
 
 pub struct DustRemovalWhitelist;
 
@@ -22,12 +23,7 @@ orml_traits::parameter_type_with_key! {
 	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
 
 		match currency_id {
-			&CurrencyId::NativeToken(token) => {
-				match token {
-					TokenId::Laguna => MICRO_LAGUNAS,
-					TokenId::FeeToken => MICRO_LAGUNAS,
-				}
-			},
+			&CurrencyId::NativeToken(token) => Zero::zero(),
 			_ => Balance::max_value() // unreachable ED value for unverified currency type
 		}
 	};

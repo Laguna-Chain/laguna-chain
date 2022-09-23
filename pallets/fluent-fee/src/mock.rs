@@ -9,6 +9,7 @@ use frame_support::{
 	traits::{Contains, Everything},
 	unsigned::TransactionValidityError,
 	weights::IdentityFee,
+	PalletId,
 };
 
 use orml_traits::LockIdentifier;
@@ -175,19 +176,39 @@ impl FeeMeasure for DummyFeeMeasure {
 	}
 }
 
-pub struct DummyFeeSharingCall;
+pub struct DummyValueAddedCall;
 
-impl CallFilterWithOutput for DummyFeeSharingCall {
+impl CallFilterWithOutput for DummyValueAddedCall {
 	type Call = Call;
 
-	type Output = Option<AccountId>;
+	type Output = Option<(AccountId, Balance)>;
 
 	fn is_call(call: &Self::Call) -> Self::Output {
-		if let Call::FluentFee(pallet::Call::<Runtime>::fee_sharing_wrapper {
-			beneficiary, ..
+		if let Call::FluentFee(pallet::Call::<Runtime>::fluent_fee_wrapper {
+			value_added_info,
+			..
 		}) = call
 		{
-			beneficiary.clone()
+			value_added_info.to_owned()
+		} else {
+			None
+		}
+	}
+}
+
+pub struct DummyCarrierCall;
+
+impl CallFilterWithOutput for DummyCarrierCall {
+	type Call = Call;
+
+	type Output = Option<(AccountId, Vec<u8>, Balance, Weight, Option<Balance>, bool)>;
+
+	fn is_call(call: &Self::Call) -> Self::Output {
+		if let Call::FluentFee(pallet::Call::<Runtime>::fluent_fee_wrapper {
+			carrier_info, ..
+		}) = call
+		{
+			carrier_info.to_owned()
 		} else {
 			None
 		}
@@ -236,17 +257,14 @@ impl FeeDispatch for DummyFeeDispatch<Tokens> {
 		id: &Self::AssetId,
 		tip: &Self::Balance,
 		corret_withdrawn: &Self::Balance,
-		benefitiary: &Option<<Runtime as frame_system::Config>::AccountId>,
+		value_added_fee: &Option<(AccountId, Balance)>,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		let payouts = corret_withdrawn.saturating_sub(*tip);
 
 		let ratio = FixedU128::saturating_from_rational(2_u128, 100_u128);
 
-		// 2% of total control paid to beneficiary
-		let beneficiary_cut = ratio.saturating_mul_int(payouts);
-
-		if let Some(target) = benefitiary {
-			Tokens::deposit(*id, target, beneficiary_cut)
+		if let Some((target, amount)) = value_added_fee {
+			Tokens::deposit(*id, target, *amount)
 				.map_err(|_| traits::fee::InvalidFeeDispatch::UnresolvedRoute)?;
 		}
 
@@ -254,20 +272,38 @@ impl FeeDispatch for DummyFeeDispatch<Tokens> {
 	}
 }
 
+impl FeeCarrier for DummyFeeDispatch<Runtime> {
+	type AccountId = AccountId;
+	type Balance = Balance;
+
+	fn execute_carrier(
+		account: &Self::AccountId,
+		carrier_addr: &Self::AccountId,
+		carrier_data: frame_support::sp_std::vec::Vec<u8>,
+		value: Self::Balance,
+		gas_limit: Weight,
+		storage_deposit_limit: Option<Self::Balance>,
+		required: Self::Balance,
+		post_transfer: bool,
+	) -> Result<Self::Balance, traits::fee::InvalidFeeDispatch> {
+		todo!()
+	}
+}
+
 parameter_types! {
 	pub const NativeAssetId: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);
 
+	pub const PALLETID: PalletId = PalletId(*b"lgn/carr");
 
 }
 
 pub struct PayoutSplits;
 
-impl Get<(Price, Price, Price)> for PayoutSplits {
-	fn get() -> (Price, Price, Price) {
+impl Get<(Price, Price)> for PayoutSplits {
+	fn get() -> (Price, Price) {
 		(
 			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
 			FixedPointNumber::saturating_from_rational(49_u128, 100_u128),
-			FixedPointNumber::saturating_from_rational(2_u128, 100_u128),
 		)
 	}
 }
@@ -280,7 +316,7 @@ impl Config for Runtime {
 	type MultiCurrency = Tokens;
 	type Call = Call;
 
-	type IsFeeSharingCall = DummyFeeSharingCall;
+	type IsFeeSharingCall = DummyValueAddedCall;
 
 	type FeeSource = DummyFeeSource;
 	type FeeMeasure = DummyFeeMeasure;
@@ -289,6 +325,12 @@ impl Config for Runtime {
 	type Ratio = Price;
 
 	type PayoutSplits = PayoutSplits;
+
+	type IsCarrierAttachedCall = DummyCarrierCall;
+
+	type PalletId = PALLETID;
+
+	type Carrier = DummyFeeDispatch<Runtime>;
 }
 
 impl pallet_transaction_payment::Config for Runtime {
