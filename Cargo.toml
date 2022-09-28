@@ -19,5 +19,6 @@ members = [
   'pallets/prepaid',
   'pallets/currencies/rpc',
   'pallets/currencies/rpc/runtime-api',
+  'pallets/evm-compat'
 ] 
 resolver = "2" # use the new resolver for better dependency resolution

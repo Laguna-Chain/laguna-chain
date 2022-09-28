@@ -7,17 +7,22 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use frame_support::{self, construct_runtime};
+use frame_support::{self, construct_runtime, dispatch::Dispatchable};
 
+use frame_support::pallet_prelude::TransactionValidityError;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::{
 	app_crypto::sp_core::OpaqueMetadata,
 	create_runtime_str, generic, impl_opaque_keys,
-	traits::{BlakeTwo256, Block as BlockT, NumberFor},
+	traits::{
+		BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf, StaticLookup,
+	},
 	transaction_validity::{TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, KeyTypeId,
 };
+
+use sp_core::H160;
 
 use sp_std::prelude::*;
 
@@ -48,6 +53,7 @@ pub mod impl_pallet_treasury;
 
 pub mod impl_pallet_authorship;
 pub mod impl_pallet_currencies;
+pub mod impl_pallet_evm_compat;
 pub mod impl_pallet_fee_enablement;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
@@ -148,14 +154,17 @@ construct_runtime!(
 			Contracts: pallet_contracts,
 			SystemContractDeployer: pallet_system_contract_deployer,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
-
+			EvmCompat: pallet_evm_compat
 		}
 );
 
 // The following types are copied from substrate-node-template to boostrap development
 
 /// Unchecked extrinsic type as expected by this runtime.
-pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
+pub type UncheckedExtrinsic =
+	fp_self_contained::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
+
+pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, Call, SignedExtra, H160>;
 
 /// Block type as expected by this runtime.
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
@@ -183,6 +192,64 @@ pub type Executive = frame_executive::Executive<
 	Runtime,
 	AllPalletsWithSystem,
 >;
+
+impl fp_self_contained::SelfContainedCall for Call {
+	type SignedInfo = AccountId;
+
+	fn is_self_contained(&self) -> bool {
+		match self {
+			Call::EvmCompat(call) => call.is_self_contained(),
+			_ => false,
+		}
+	}
+
+	fn check_self_contained(&self) -> Option<Result<Self::SignedInfo, TransactionValidityError>> {
+		match self {
+			Call::EvmCompat(call) => call.check_self_contained(),
+			_ => None,
+		}
+	}
+
+	fn validate_self_contained(
+		&self,
+		info: &Self::SignedInfo,
+		dispatch_info: &DispatchInfoOf<Call>,
+		len: usize,
+	) -> Option<TransactionValidity> {
+		match self {
+			Call::EvmCompat(call) => call.validate_self_contained(info, dispatch_info, len),
+			_ => None,
+		}
+	}
+
+	fn pre_dispatch_self_contained(
+		&self,
+		info: &Self::SignedInfo,
+		dispatch_info: &DispatchInfoOf<Call>,
+		len: usize,
+	) -> Option<Result<(), TransactionValidityError>> {
+		match self {
+			Call::EvmCompat(call) => call.pre_dispatch_self_contained(info, dispatch_info, len),
+			_ => None,
+		}
+	}
+
+	fn apply_self_contained(
+		self,
+		info: Self::SignedInfo,
+	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
+		match self {
+			call @ Call::EvmCompat(pallet_evm_compat::Call::transact { .. }) => Some(
+				call.dispatch(Origin::from(pallet_evm_compat::RawOrigin::EthereumTransaction(
+					<<Runtime as pallet_evm_compat::Config>::AddrLookup as StaticLookup>::unlookup(
+						info,
+					),
+				))),
+			),
+			_ => None,
+		}
+	}
+}
 
 // expose runtime apis, required by node services
 // this allow software outside of the wasm blob to access internal functionalities

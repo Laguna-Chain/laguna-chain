@@ -223,12 +223,17 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 	let rpc_extensions_builder = {
 		let client = client.clone();
 		let pool = transaction_pool.clone();
+		let network = network.clone();
 
 		// Boxed so we can pass it to the background task
 		Box::new(move |deny_unsafe, _| {
 			// client dependency to build the rpc extension
-			let deps =
-				crate::rpc::FullDeps { client: client.clone(), pool: pool.clone(), deny_unsafe };
+			let deps = crate::rpc::FullDeps {
+				client: client.clone(),
+				pool: pool.clone(),
+				deny_unsafe,
+				network: network.clone(),
+			};
 
 			// full rpc extension
 			crate::rpc::create_full(deps).map_err(Into::into)

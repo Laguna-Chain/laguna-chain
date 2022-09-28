@@ -70,6 +70,12 @@ hex-literal = "0.3.4"
 jsonrpsee = {version = "0.14.0", features = ["server"]}
 pallet-currencies-rpc = {version = "0.1.0", path = "../pallets/currencies/rpc"}
 
+
+fc-rpc-core = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" }
+sc-network = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27" }
+hex = "0.4.3"
+ethereum-types = "0.13.1"
+
 [features]
 default = []
 runtime-benchmarks = ["laguna-runtime/runtime-benchmarks"]
