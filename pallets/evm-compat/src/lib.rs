@@ -27,7 +27,7 @@ use codec::Decode;
 use frame_support::sp_runtime::traits::StaticLookup;
 pub use pallet::*;
 use sp_core::{crypto::UncheckedFrom, H160, U256};
-use sp_io::crypto::secp256k1_ecdsa_recover;
+use sp_io::crypto::{secp256k1_ecdsa_recover, secp256k1_ecdsa_recover_compressed};
 
 #[cfg(test)]
 mod mock;
@@ -150,7 +150,6 @@ where
 		// FIXME: etherem use same input field to contain both code and data, we need a way to
 		// communicate with tool about our choice of this.
 		let mut input_buf = &self.inner().input[..];
-		dbg!(&input_buf.len());
 
 		// decode first few bytes as U256 with scale_codec
 		let (sel, code) = <(Vec<u8>, Vec<u8>)>::decode(&mut input_buf).unwrap();
@@ -170,9 +169,7 @@ where
 			Default::default(),
 		)
 		.map_err(|e| e.error)
-		.map(|o| {
-			dbg!(o);
-		})?;
+		.map(|o| {})?;
 
 		Ok(())
 	}
@@ -206,9 +203,9 @@ where
 
 		let msg = <[u8; 32]>::try_from(msg_raw).ok()?;
 
-		secp256k1_ecdsa_recover(&sig.0, &msg)
+		secp256k1_ecdsa_recover_compressed(&sig.0, &msg)
 			.ok()
-			.and_then(|o| sp_core::ecdsa::Public::from_full(&o).ok())
+			.map(sp_core::ecdsa::Public::from_raw)
 			.and_then(|pk| pk.to_eth_address().ok())
 			.map(H160)
 	}
