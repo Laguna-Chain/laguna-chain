@@ -16,9 +16,9 @@ pub type BlockNumber = u32;
 
 pub type Signature = MultiSignature;
 
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-
 pub type AccountPublic = <Signature as Verify>::Signer;
+
+pub type AccountId = <AccountPublic as IdentifyAccount>::AccountId;
 
 pub type Balance = u128;
 

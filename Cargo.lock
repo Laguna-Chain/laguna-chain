@@ -325,6 +325,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "auto_impl"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7862e21c893d65a1650125d157eaeec691439379a1cee17ee49031b79236ada4"
+dependencies = [
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1534,6 +1546,55 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
+name = "evm"
+version = "0.35.0"
+source = "git+https://github.com/rust-blockchain/evm?rev=01bcbd2205a212c34451d3b4fabc962793b057d3#01bcbd2205a212c34451d3b4fabc962793b057d3"
+dependencies = [
+ "auto_impl",
+ "ethereum",
+ "evm-core",
+ "evm-gasometer",
+ "evm-runtime",
+ "log",
+ "parity-scale-codec",
+ "primitive-types",
+ "rlp",
+ "scale-info",
+ "sha3 0.10.5",
+]
+
+[[package]]
+name = "evm-core"
+version = "0.35.0"
+source = "git+https://github.com/rust-blockchain/evm?rev=01bcbd2205a212c34451d3b4fabc962793b057d3#01bcbd2205a212c34451d3b4fabc962793b057d3"
+dependencies = [
+ "parity-scale-codec",
+ "primitive-types",
+ "scale-info",
+]
+
+[[package]]
+name = "evm-gasometer"
+version = "0.35.0"
+source = "git+https://github.com/rust-blockchain/evm?rev=01bcbd2205a212c34451d3b4fabc962793b057d3#01bcbd2205a212c34451d3b4fabc962793b057d3"
+dependencies = [
+ "evm-core",
+ "evm-runtime",
+ "primitive-types",
+]
+
+[[package]]
+name = "evm-runtime"
+version = "0.35.0"
+source = "git+https://github.com/rust-blockchain/evm?rev=01bcbd2205a212c34451d3b4fabc962793b057d3#01bcbd2205a212c34451d3b4fabc962793b057d3"
+dependencies = [
+ "auto_impl",
+ "evm-core",
+ "primitive-types",
+ "sha3 0.10.5",
+]
+
+[[package]]
 name = "exit-future"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1684,6 +1745,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9c384f161156f5260c24a097c56119f9be8c798586aecc13afbcbe7b7e26bf8"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "fp-ethereum"
+version = "1.0.0-dev"
+source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.27#32f9c7eaf5aa550191c90e14476b145e5d7833d7"
+dependencies = [
+ "ethereum",
+ "ethereum-types",
+ "fp-evm",
+ "frame-support",
+ "parity-scale-codec",
+ "sp-core 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
+ "sp-std 4.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
+]
+
+[[package]]
+name = "fp-evm"
+version = "3.0.0-dev"
+source = "git+https://github.com/paritytech/frontier.git?branch=polkadot-v0.9.27#32f9c7eaf5aa550191c90e14476b145e5d7833d7"
+dependencies = [
+ "evm",
+ "frame-support",
+ "parity-scale-codec",
+ "sp-core 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
+ "sp-std 4.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
 ]
 
 [[package]]
@@ -2634,6 +2721,7 @@ version = "0.1.0"
 dependencies = [
  "contract-metadata",
  "contract-transcode",
+ "fp-self-contained",
  "frame-benchmarking",
  "frame-executive",
  "frame-support",
@@ -2652,6 +2740,7 @@ dependencies = [
  "pallet-contracts-primitives",
  "pallet-contracts-rpc-runtime-api",
  "pallet-currencies",
+ "pallet-evm-compat",
  "pallet-fee-enablement",
  "pallet-fluent-fee",
  "pallet-grandpa",
@@ -4551,17 +4640,24 @@ name = "pallet-evm-compat"
 version = "0.1.0"
 dependencies = [
  "ethereum",
+ "fp-ethereum",
+ "fp-self-contained",
  "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "hex",
+ "libsecp256k1",
  "log",
- "orml-tokens",
  "orml-traits",
+ "pallet-balances",
  "pallet-contracts",
  "pallet-contracts-primitives",
+ "pallet-randomness-collective-flip",
+ "pallet-timestamp",
  "pallet-transaction-payment",
  "parity-scale-codec",
  "primitives",
+ "rlp",
  "scale-info",
  "sp-core 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
  "sp-io 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",

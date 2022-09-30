@@ -10,16 +10,18 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use frame_support::{self, construct_runtime, dispatch::Dispatchable};
 
 use frame_support::pallet_prelude::TransactionValidityError;
+use impl_frame_system::BlockHashCount;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::{
 	app_crypto::sp_core::OpaqueMetadata,
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
-		BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf, StaticLookup,
+		BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf,
+		SignedExtension, StaticLookup,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, KeyTypeId,
+	ApplyExtrinsicResult, KeyTypeId, SaturatedConversion,
 };
 
 use sp_core::H160;
@@ -164,7 +166,10 @@ construct_runtime!(
 pub type UncheckedExtrinsic =
 	fp_self_contained::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 
+// pub type CheckedExtrinsic = <UncheckedExtrinsic as Checkable>::Checked;
 pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, Call, SignedExtra, H160>;
+
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 
 /// Block type as expected by this runtime.
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
@@ -193,8 +198,33 @@ pub type Executive = frame_executive::Executive<
 	AllPalletsWithSystem,
 >;
 
+/// create default extra for tx request coming from eth rpc
+fn new_extra(nonce: Index, tip: Balance) -> SignedExtra {
+	let period =
+		BlockHashCount::get().checked_next_power_of_two().map(|c| c / 2).unwrap_or(2) as u64;
+
+	let current_block = System::block_number()
+		.saturated_into::<u64>()
+		// The `System::block_number` is initialized with `n+1`,
+		// so the actual block number is `n`.
+		.saturating_sub(1);
+
+	(
+		frame_system::CheckNonZeroSender::<Runtime>::new(),
+		frame_system::CheckSpecVersion::<Runtime>::new(),
+		frame_system::CheckTxVersion::<Runtime>::new(),
+		frame_system::CheckGenesis::<Runtime>::new(),
+		frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+		frame_system::CheckNonce::<Runtime>::from(Index::from(nonce)),
+		frame_system::CheckWeight::<Runtime>::new(),
+		// fee and tipping related
+		// TODO: justify whether we need to include if "feeless" transaction is included
+		pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+	)
+}
+
 impl fp_self_contained::SelfContainedCall for Call {
-	type SignedInfo = AccountId;
+	type SignedInfo = (H160, AccountId, SignedExtra);
 
 	fn is_self_contained(&self) -> bool {
 		match self {
@@ -204,10 +234,15 @@ impl fp_self_contained::SelfContainedCall for Call {
 	}
 
 	fn check_self_contained(&self) -> Option<Result<Self::SignedInfo, TransactionValidityError>> {
-		match self {
-			Call::EvmCompat(call) => call.check_self_contained(),
-			_ => None,
+		if let Call::EvmCompat(call) = self {
+			if let Some(Ok((source, origin, (nonce, tip)))) = call.check_self_contained() {
+				let extra = new_extra(nonce.as_u32(), tip.as_u128());
+
+				return Some(Ok((source, origin, extra)))
+			}
 		}
+
+		None
 	}
 
 	fn validate_self_contained(
@@ -216,10 +251,12 @@ impl fp_self_contained::SelfContainedCall for Call {
 		dispatch_info: &DispatchInfoOf<Call>,
 		len: usize,
 	) -> Option<TransactionValidity> {
-		match self {
-			Call::EvmCompat(call) => call.validate_self_contained(info, dispatch_info, len),
-			_ => None,
+		if let Call::EvmCompat(call) = self {
+			let (source, origin, extra) = info;
+			return Some(extra.validate(origin, self, dispatch_info, len))
 		}
+
+		None
 	}
 
 	fn pre_dispatch_self_contained(
@@ -228,10 +265,12 @@ impl fp_self_contained::SelfContainedCall for Call {
 		dispatch_info: &DispatchInfoOf<Call>,
 		len: usize,
 	) -> Option<Result<(), TransactionValidityError>> {
-		match self {
-			Call::EvmCompat(call) => call.pre_dispatch_self_contained(info, dispatch_info, len),
-			_ => None,
+		if let Call::EvmCompat(call) = self {
+			let (source, origin, extra) = info;
+			return Some(extra.clone().pre_dispatch(origin, self, dispatch_info, len).map(|_| ()))
 		}
+
+		None
 	}
 
 	fn apply_self_contained(
@@ -239,13 +278,10 @@ impl fp_self_contained::SelfContainedCall for Call {
 		info: Self::SignedInfo,
 	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
 		match self {
-			call @ Call::EvmCompat(pallet_evm_compat::Call::transact { .. }) => Some(
-				call.dispatch(Origin::from(pallet_evm_compat::RawOrigin::EthereumTransaction(
-					<<Runtime as pallet_evm_compat::Config>::AddrLookup as StaticLookup>::unlookup(
-						info,
-					),
+			call @ Call::EvmCompat(pallet_evm_compat::Call::transact { .. }) =>
+				Some(call.dispatch(Origin::from(
+					pallet_evm_compat::RawOrigin::EthereumTransaction(info.0),
 				))),
-			),
 			_ => None,
 		}
 	}

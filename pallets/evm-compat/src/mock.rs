@@ -2,13 +2,22 @@ use super::*;
 
 use frame_support::{
 	construct_runtime, parameter_types,
-	sp_runtime::traits::{BlakeTwo256, IdentityLookup},
-	traits::{Contains, Everything},
+	sp_runtime::{
+		self,
+		traits::{
+			BlakeTwo256, DispatchInfoOf, IdentityLookup, PostDispatchInfoOf, SignedExtension,
+		},
+	},
+	traits::Everything,
+	weights::IdentityFee,
+	PalletId,
 };
 
-use orml_traits::LockIdentifier;
-use primitives::{AccountId, Amount, Balance, BlockNumber, CurrencyId, Header, Index};
-use sp_core::H256;
+use frame_support::sp_runtime::Perbill;
+use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
+use pallet_transaction_payment::CurrencyAdapter;
+use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
+use sp_core::{ecdsa, keccak_256, sr25519, Pair, H256};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -32,7 +41,7 @@ impl frame_system::Config for Runtime {
 
 	type BlockNumber = BlockNumber;
 
-	type Hash = H256;
+	type Hash = Hash;
 
 	type Hashing = BlakeTwo256;
 
@@ -52,7 +61,7 @@ impl frame_system::Config for Runtime {
 
 	type PalletInfo = PalletInfo;
 
-	type AccountData = orml_tokens::AccountData<Balance>;
+	type AccountData = pallet_balances::AccountData<Balance>;
 
 	type OnNewAccount = ();
 
@@ -71,52 +80,155 @@ parameter_types! {
 	pub const ExistentialDeposit: u64 = 2;
 }
 
-pub struct DustRemovalWhitelist;
+impl pallet_balances::Config for Runtime {
+	type Balance = Balance;
+	type DustRemoval = ();
+	type Event = Event;
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = frame_system::Pallet<Runtime>;
+	type MaxLocks = ();
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	type WeightInfo = ();
+}
 
-impl Contains<AccountId> for DustRemovalWhitelist {
-	fn contains(_t: &AccountId) -> bool {
-		// TODO: all account are possible to be dust-removed now
-		false
+impl pallet_randomness_collective_flip::Config for Runtime {}
+
+pub const MILLISECS_PER_BLOCK: u64 = 6000;
+pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
+
+parameter_types! {
+	pub const MinimumPeriod: u64 = SLOT_DURATION / 2;
+}
+
+impl pallet_timestamp::Config for Runtime {
+	type Moment = u64;
+	type OnTimestampSet = ();
+	type MinimumPeriod = MinimumPeriod;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const TransactionByteFee: Balance = 1;
+	pub OperationalFeeMultiplier: u8 = 5;
+}
+
+impl pallet_transaction_payment::Config for Runtime {
+	// TODO: add benchmark around cross pallet interaction between fee
+	type Event = Event;
+	type OnChargeTransaction = CurrencyAdapter<Balances, ()>;
+	type OperationalFeeMultiplier = OperationalFeeMultiplier;
+	type WeightToFee = IdentityFee<Balance>;
+	type FeeMultiplierUpdate = ();
+
+	type LengthToFee = IdentityFee<Balance>;
+}
+
+const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
+
+pub const UNIT: u128 = 100_000_000_000_000_000;
+const fn deposit(items: u32, bytes: u32) -> Balance {
+	(items as Balance * UNIT + (bytes as Balance) * (5 * UNIT / 10000 / 100)) / 10
+}
+
+const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
+
+const WEIGHT_PER_SECOND: Weight = 1_000_000_000_000;
+
+parameter_types! {
+	pub const DepositPerItem: Balance = deposit(1, 0);
+	pub const DepositPerByte: Balance = deposit(0, 1);
+	pub BlockWeights: frame_system::limits::BlockWeights = frame_system::limits::BlockWeights
+	::with_sensible_defaults(2 * WEIGHT_PER_SECOND, NORMAL_DISPATCH_RATIO);
+	// The lazy deletion runs inside on_initialize.
+	pub DeletionWeightLimit: Weight = AVERAGE_ON_INITIALIZE_RATIO *
+		BlockWeights::get().max_block;
+	pub DeletionQueueDepth: u32 = ((DeletionWeightLimit::get() / (
+			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(1) -
+			<Runtime as pallet_contracts::Config>::WeightInfo::on_initialize_per_queue_item(0)
+		)) / 5) as u32;
+	pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
+}
+
+impl pallet_contracts::Config for Runtime {
+	type Time = Timestamp;
+	type Randomness = RandomnessCollectiveFlip;
+	type Currency = Balances;
+	type Event = Event;
+	type Call = Call;
+
+	type CallFilter = frame_support::traits::Nothing;
+	type WeightPrice = Payment;
+	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
+	type ChainExtension = ();
+	type Schedule = Schedule;
+	type CallStack = [pallet_contracts::Frame<Self>; 31];
+	type DeletionQueueDepth = DeletionQueueDepth;
+	type DeletionWeightLimit = DeletionWeightLimit;
+
+	type DepositPerByte = DepositPerByte;
+
+	type DepositPerItem = DepositPerItem;
+
+	type AddressGenerator = DefaultAddressGenerator;
+
+	// TODO: use arbitrary value now, need to adjust usage later
+	type ContractAccessWeight = DefaultContractAccessWeight<()>;
+
+	type MaxCodeLen = ConstU32<{ 256 * 1024 }>;
+	type RelaxedMaxCodeLen = ConstU32<{ 512 * 1024 }>;
+	type MaxStorageKeyLen = ConstU32<128>;
+}
+
+impl Config for Runtime {
+	type AddrLookup = DummyLookup;
+
+	type BalanceConvert = BalanceConvert;
+}
+
+pub struct BalanceConvert;
+
+impl Convert<U256, Balance> for BalanceConvert {
+	fn convert(a: U256) -> Balance {
+		a.as_u128()
 	}
 }
 
-orml_traits::parameter_type_with_key! {
-	pub ExistentialDeposits: |_currency: CurrencyId| -> Balance {
-		Balance::min_value()
-	};
+pub struct DummyLookup;
+
+impl StaticLookup for DummyLookup {
+	type Source = H160;
+
+	type Target = AccountId;
+
+	fn lookup(s: Self::Source) -> Result<Self::Target, frame_support::error::LookupError> {
+		let seed = [0x11; 32];
+		let pair = ecdsa::Pair::from_seed_slice(&seed).unwrap();
+		let ss_pair = sr25519::Pair::from_seed_slice(&seed).unwrap();
+
+		let addr = pair.public().to_eth_address().unwrap();
+
+		if addr == s.0 {
+			return Ok(ss_pair.public().into())
+		}
+
+		Err(frame_support::error::LookupError)
+	}
+
+	fn unlookup(t: Self::Target) -> Self::Source {
+		let seed = [0x11; 32];
+		let pair = ecdsa::Pair::from_seed_slice(&seed).unwrap();
+		let ss_pair = sr25519::Pair::from_seed_slice(&seed).unwrap();
+
+		let addr = pair.public().to_eth_address().unwrap();
+
+		if t == ss_pair.public().into() {
+			return addr.into()
+		}
+
+		unimplemented!()
+	}
 }
-
-pub type ReserveIdentifier = [u8; 8];
-
-impl orml_tokens::Config for Runtime {
-	type Event = Event;
-
-	type Balance = Balance;
-
-	type Amount = Amount;
-
-	type CurrencyId = CurrencyId;
-
-	type WeightInfo = ();
-
-	type ExistentialDeposits = ExistentialDeposits;
-
-	type OnDust = ();
-
-	type MaxLocks = ();
-
-	type DustRemovalWhitelist = DustRemovalWhitelist;
-
-	type MaxReserves = ConstU32<2>;
-
-	type ReserveIdentifier = ReserveIdentifier;
-
-	type OnNewTokenAccount = ();
-
-	type OnKilledTokenAccount = ();
-}
-
-impl Config for Runtime {}
 
 construct_runtime!(
 
@@ -126,23 +238,141 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
-		EvmCompat: crate,
-		Tokens: orml_tokens
+		// Sudo: pallet_sudo,
+
+		Balances: pallet_balances,
+		Contracts: pallet_contracts,
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
+		Timestamp: pallet_timestamp,
+		Payment: pallet_transaction_payment,
+
+		EvmCompat: crate
 	}
 );
 
+pub struct AccountInfo {
+	pub address: H160,
+	pub account_id: AccountId,
+	pub private_key: H256,
+}
+
+impl AccountInfo {
+	fn from_seed(seed: &[u8]) -> Self {
+		let private_key = H256::from_slice(seed); //H256::from_low_u64_be((i + 1) as u64);
+		let secret_key = libsecp256k1::SecretKey::parse_slice(&private_key[..]).unwrap();
+		let public_key = &libsecp256k1::PublicKey::from_secret_key(&secret_key).serialize()[1..65];
+		let address = H160::from(H256::from(keccak_256(public_key)));
+
+		let mut data = [0u8; 32];
+		data[0..20].copy_from_slice(&address[..]);
+
+		AccountInfo {
+			private_key,
+			account_id: AccountId::from(Into::<[u8; 32]>::into(data)),
+			address,
+		}
+	}
+}
+
+pub fn address_build(seed: u8) -> AccountInfo {
+	let private_key = H256::from_slice(&[(seed + 0x11) as u8; 32]);
+	let secret_key = libsecp256k1::SecretKey::parse_slice(&private_key[..]).unwrap();
+	let public_key = &libsecp256k1::PublicKey::from_secret_key(&secret_key).serialize()[1..65];
+	let address = H160::from(H256::from(keccak_256(public_key)));
+
+	let prefix = b"evm";
+
+	let mut data = [0u8; 32];
+	data.copy_from_slice(prefix);
+
+	data[0..20].copy_from_slice(&address[..]);
+
+	AccountInfo { private_key, account_id: AccountId::from(Into::<[u8; 32]>::into(data)), address }
+}
+
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
-pub const EVA: AccountId = AccountId::new([5u8; 32]);
-pub const ID_1: LockIdentifier = *b"1       ";
+
+parameter_types! {
+	pub const ChainId: u64 = 42;
+}
+
+type Extra = ();
+
+impl fp_self_contained::SelfContainedCall for Call {
+	type SignedInfo = (H160, AccountId, (U256, U256));
+
+	fn is_self_contained(&self) -> bool {
+		match self {
+			Call::EvmCompat(call) => call.is_self_contained(),
+			_ => false,
+		}
+	}
+
+	fn check_self_contained(&self) -> Option<Result<Self::SignedInfo, TransactionValidityError>> {
+		match self {
+			Call::EvmCompat(call) => call.check_self_contained(),
+			_ => None,
+		}
+	}
+
+	fn validate_self_contained(
+		&self,
+		info: &Self::SignedInfo,
+		dispatch_info: &DispatchInfoOf<Call>,
+		len: usize,
+	) -> Option<TransactionValidity> {
+		if let Call::EvmCompat(call) = self {
+			return Some(().validate(&0, &(), &(), len))
+		}
+
+		None
+	}
+
+	fn pre_dispatch_self_contained(
+		&self,
+		info: &Self::SignedInfo,
+		dispatch_info: &DispatchInfoOf<Call>,
+		len: usize,
+	) -> Option<Result<(), TransactionValidityError>> {
+		match self {
+			Call::EvmCompat(call) => Some(().pre_dispatch(&0, &(), &(), len)),
+			_ => None,
+		}
+	}
+
+	fn apply_self_contained(
+		self,
+		info: Self::SignedInfo,
+	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
+		match self {
+			call @ Call::EvmCompat(crate::Call::transact { .. }) =>
+				Some(call.dispatch(Origin::from(crate::RawOrigin::EthereumTransaction(info.0)))),
+			_ => None,
+		}
+	}
+}
 
 #[derive(Default)]
-pub struct ExtBuilder {}
+pub struct ExtBuilder {
+	balances: Vec<(AccountId, Balance)>,
+}
 
 impl ExtBuilder {
+	pub fn balances(mut self, balances: Vec<(AccountId, Balance)>) -> Self {
+		self.balances = balances;
+		self
+	}
+
 	pub fn build(self) -> sp_io::TestExternalities {
 		// construct test storage for the mock runtime
 		let mut t = frame_system::GenesisConfig::default().build_storage::<Runtime>().unwrap();
+
+		pallet_balances::GenesisConfig::<Runtime> {
+			balances: self.balances.into_iter().collect::<Vec<_>>(),
+		}
+		.assimilate_storage(&mut t)
+		.unwrap();
 
 		let mut ext = sp_io::TestExternalities::new(t);
 		ext.execute_with(|| System::set_block_number(1));

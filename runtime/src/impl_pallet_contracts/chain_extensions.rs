@@ -35,7 +35,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						.try_into_account()
 						.expect("Invalid PalletId");
 
-				let res = (caller == approved_deployer);
+				let res = caller == approved_deployer;
 				Ok(RetVal::Converging((!res).into()))
 			},
 			100 => {
