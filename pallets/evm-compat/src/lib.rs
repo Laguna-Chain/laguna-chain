@@ -38,8 +38,8 @@ use pallet_evm::AddressMapping;
 use codec::Decode;
 use frame_support::sp_runtime::traits::StaticLookup;
 pub use pallet::*;
-use sp_core::{crypto::UncheckedFrom, ecdsa, keccak_256, H160, H256, U256};
-use sp_io::crypto::secp256k1_ecdsa_recover_compressed;
+use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
+use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
 
 #[cfg(test)]
 mod mock;
@@ -270,7 +270,7 @@ impl<T: Config> Pallet<T> {
 	// NOTICE: this is derived from Acala's implementation
 	fn evm_domain_separator() -> [u8; 32] {
 		let domain_hash =
-			keccak_256(b"EIP712Domain(string name,string version,uint256 chainId,bytes32 salt)");
+			keccak_256!(b"EIP712Domain(string name,string version,uint256 chainId,bytes32 salt)");
 		let mut domain_seperator_msg = domain_hash.to_vec();
 		domain_seperator_msg.extend_from_slice(&keccak_256(b"LGNA Proxy")); // name
 		domain_seperator_msg.extend_from_slice(&keccak_256(b"1")); // version
@@ -281,7 +281,7 @@ impl<T: Config> Pallet<T> {
 			frame_system::Pallet::<T>::block_hash(T::BlockNumber::zero()).as_ref(),
 		); // genesis block hash as salt
 
-		keccak_256(&domain_seperator_msg[..])
+		keccak_256!(domain_seperator_msg)
 	}
 
 	fn evm_proxy_payload(who: &T::AccountId, nonce: &U256) -> [u8; 32] {
