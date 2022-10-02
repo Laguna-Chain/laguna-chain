@@ -6,28 +6,38 @@
 //! for this to work, the runtiem need to:
 //! 1. prove that incoming eth signed requeset is self_contained
 //! 2. lookup from H160 to AccountId is possible
+//!
+//!
+//!
+//! ### account and origin mapping
+//!
+//! considered the following scenario:
+//! 1. user start with one substrate account, presumably sr25519 pairs.
+//! 2. user start with one ethereum account, a ECDSA pair
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::HasCompact;
-use ethereum::{TransactionAction, TransactionV2 as Transaction};
+use ethereum::{Account, TransactionAction, TransactionV2 as Transaction};
 use frame_support::{
 	crypto::ecdsa::ECDSAExt,
 	dispatch::Dispatchable,
 	pallet_prelude::*,
 	sp_io,
-	sp_runtime::traits::Convert,
+	sp_runtime::traits::{Convert, IdentifyAccount},
 	sp_std::{fmt::Debug, prelude::*},
-	traits::{Currency, OriginTrait},
+	traits::Currency,
 	weights::{DispatchInfo, PostDispatchInfo},
 };
 use frame_system::pallet_prelude::*;
+use pallet_contracts::AddressGenerator;
+use pallet_evm::AddressMapping;
 
 use codec::Decode;
 use frame_support::sp_runtime::traits::StaticLookup;
 pub use pallet::*;
-use sp_core::{crypto::UncheckedFrom, H160, U256};
-use sp_io::crypto::{secp256k1_ecdsa_recover, secp256k1_ecdsa_recover_compressed};
+use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
+use sp_io::crypto::secp256k1_ecdsa_recover_compressed;
 
 #[cfg(test)]
 mod mock;
@@ -39,8 +49,6 @@ type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 type BalanceOf<T> =
 	<<T as pallet_contracts::Config>::Currency as Currency<AccountIdOf<T>>>::Balance;
-
-type SysOrigin<T> = <T as frame_system::Config>::Origin;
 
 #[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, MaxEncodedLen, TypeInfo)]
 pub enum RawOrigin {
@@ -57,6 +65,7 @@ where
 	}
 }
 
+/// allow the call to be limited at signed eth transaction
 pub struct EnsureEthereumTransaction;
 impl<O: Into<Result<RawOrigin, O>> + From<RawOrigin>> EnsureOrigin<O>
 	for EnsureEthereumTransaction
@@ -78,9 +87,10 @@ mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config + pallet_contracts::Config {
-		type AddrLookup: StaticLookup<Source = H160, Target = AccountIdOf<Self>>;
-
 		type BalanceConvert: Convert<U256, BalanceOf<Self>>;
+		type AddressMapping: AddressMapping<AccountIdOf<Self>>;
+
+		type ContractAddressMapping: AddressMapping<AccountIdOf<Self>>;
 	}
 
 	#[pallet::pallet]
@@ -99,19 +109,26 @@ mod pallet {
 		// we rely on self_contained call to fetch the correct origin from the eth-transaction
 		// payload
 		#[pallet::weight(200_000_000)]
-		pub fn transact(origin: OriginFor<T>, t: Transaction) -> DispatchResult {
+		pub fn transact(origin: OriginFor<T>, t: Transaction) -> DispatchResultWithPostInfo {
+			// only allow origin obtained from self_contained_call
 			let source = ensure_ethereum_transaction(origin)?;
 
+			// convert it to pallet_contract instructions
 			let runner = ContractTransactionAdapter::<T>::from_tx(&t);
-			runner.call_or_create(source)?;
 
-			Ok(())
+			runner.call_or_create(source)
+		}
+
+		#[pallet::weight(200_000_000)]
+		pub fn claim(origin: OriginFor<T>, signed_claim: H256) -> DispatchResultWithPostInfo {
+			todo!()
 		}
 	}
 }
 
 use fp_ethereum::TransactionData;
 
+// once we have the TransactionData we can start mapping it to pallet_contract call args
 struct ContractTransactionAdapter<T>((TransactionData, PhantomData<T>));
 
 impl<T: Config> ContractTransactionAdapter<T>
@@ -126,41 +143,47 @@ where
 		Self((TransactionData::from(tx), Default::default()))
 	}
 
-	fn call_or_create(&self, source: H160) -> DispatchResult {
+	fn call_or_create(&self, source: H160) -> DispatchResultWithPostInfo {
 		match self.inner().action {
-			TransactionAction::Call(_) => self.execute_call_request(source),
+			TransactionAction::Call(target) => self.execute_call_request(source, target),
 			TransactionAction::Create => self.execute_create_request(source),
 		}
 	}
 
-	fn execute_call_request(&self, source: H160) -> DispatchResult {
-		let target = if let TransactionAction::Call(target) = self.inner().action {
-			Some(target)
-		} else {
-			None
-		}
-		.unwrap();
+	fn execute_call_request(&self, source: H160, target: H160) -> DispatchResultWithPostInfo {
+		let contract_addr = Pallet::<T>::account_from_contract_addr(target);
 
-		let contract_addr = <T::AddrLookup as StaticLookup>::lookup(target)?;
+		let contract_addr_source =
+			<<T as frame_system::Config>::Lookup as StaticLookup>::unlookup(contract_addr);
 
-		Ok(())
+		// mapped origin has no known key pair
+		let elevated_origin = Pallet::<T>::to_mapped_origin(source);
+
+		// FIXME: make storage_deposit configurable
+		pallet_contracts::Pallet::<T>::call(
+			elevated_origin,
+			contract_addr_source,
+			Pallet::<T>::balance_convert(self.inner().value),
+			self.inner().gas_limit.as_u64(),
+			None,
+			self.inner().input.clone(),
+		)
 	}
 
-	fn execute_create_request(&self, source: H160) -> DispatchResult {
+	fn execute_create_request(&self, source: H160) -> DispatchResultWithPostInfo {
 		// FIXME: etherem use same input field to contain both code and data, we need a way to
 		// communicate with tool about our choice of this.
 		let mut input_buf = &self.inner().input[..];
 
-		// decode first few bytes as U256 with scale_codec
+		// scale-codec can split vec's on the fly
 		let (sel, code) = <(Vec<u8>, Vec<u8>)>::decode(&mut input_buf).unwrap();
 
-		let acc = Pallet::<T>::source_lookup(source).unwrap();
+		// this origin cannot be controled from outside
+		let elevated_origin = Pallet::<T>::to_mapped_origin(source);
 
-		let raw_origin = frame_support::dispatch::RawOrigin::Signed(acc);
-		let sys_origin = OriginFor::<T>::from(raw_origin);
-
+		// FIXME: make storage_deposit configurable, make salt configurable
 		pallet_contracts::Pallet::<T>::instantiate_with_code(
-			sys_origin,
+			elevated_origin,
 			Pallet::<T>::balance_convert(self.inner().value),
 			self.inner().gas_limit.as_u64(),
 			None,
@@ -168,20 +191,27 @@ where
 			sel,
 			Default::default(),
 		)
-		.map_err(|e| e.error)
-		.map(|o| {})?;
-
-		Ok(())
 	}
 }
 
 impl<T: Config> Pallet<T> {
-	fn source_lookup(source: H160) -> Option<AccountIdOf<T>> {
-		<<T as Config>::AddrLookup as StaticLookup>::lookup(source).ok()
-	}
-
 	fn balance_convert(eth_balance: U256) -> BalanceOf<T> {
 		<<T as Config>::BalanceConvert as Convert<U256, BalanceOf<T>>>::convert(eth_balance)
+	}
+
+	// given a signed source: H160, elevate it to a substrate signed AccountId
+	fn to_mapped_origin(source: H160) -> OriginFor<T> {
+		let account_id = Self::to_mapped_account(source);
+
+		frame_system::RawOrigin::Signed(account_id).into()
+	}
+
+	fn to_mapped_account(source: H160) -> AccountIdOf<T> {
+		<T::AddressMapping as AddressMapping<AccountIdOf<T>>>::into_account_id(source)
+	}
+
+	pub fn account_from_contract_addr(target: H160) -> AccountIdOf<T> {
+		<T::ContractAddressMapping as AddressMapping<AccountIdOf<T>>>::into_account_id(target)
 	}
 }
 
@@ -194,11 +224,14 @@ where
 {
 	pub(crate) fn recover_tx_signer(transaction: &Transaction) -> Option<H160> {
 		let (msg, sig) = Self::unpack_transaction(transaction);
-		Self::recover_signer(&msg, &sig)
+		Self::recover_signer(&msg, &sig).and_then(|p| p.to_eth_address().map(H160).ok())
 	}
 
 	/// try recover uncompressed signer from a raw payload
-	pub(crate) fn recover_signer(msg_raw: &[u8], signed_payload_raw: &[u8]) -> Option<H160> {
+	pub(crate) fn recover_signer(
+		msg_raw: &[u8],
+		signed_payload_raw: &[u8],
+	) -> Option<ecdsa::Public> {
 		let sig = sp_core::ecdsa::Signature::try_from(signed_payload_raw).ok()?;
 
 		let msg = <[u8; 32]>::try_from(msg_raw).ok()?;
@@ -206,11 +239,12 @@ where
 		secp256k1_ecdsa_recover_compressed(&sig.0, &msg)
 			.ok()
 			.map(sp_core::ecdsa::Public::from_raw)
-			.and_then(|pk| pk.to_eth_address().ok())
-			.map(H160)
 	}
 
 	pub(crate) fn unpack_transaction(transaction: &Transaction) -> ([u8; 32], [u8; 65]) {
+		// in addition to typical ECDSA signature, eth tx use chain_id in it's signature to avoid
+		// replay attack
+
 		let mut sig = [0u8; 65];
 		let mut msg = [0u8; 32];
 
@@ -243,29 +277,6 @@ where
 
 		(msg, sig)
 	}
-
-	fn call_or_create(origin: OriginFor<T>, t: Transaction) -> DispatchResult {
-		let action = match &t {
-			Transaction::Legacy(t) => t.action,
-			Transaction::EIP2930(t) => t.action,
-			Transaction::EIP1559(t) => t.action,
-		};
-
-		match action {
-			ethereum::TransactionAction::Call(_) => Self::call(origin, t),
-			ethereum::TransactionAction::Create => Self::create(origin, t),
-		}?;
-
-		Ok(())
-	}
-
-	fn call(origin: OriginFor<T>, t: Transaction) -> DispatchResult {
-		todo!()
-	}
-
-	fn create(origin: OriginFor<T>, t: Transaction) -> DispatchResult {
-		todo!()
-	}
 }
 
 #[repr(u8)]
@@ -277,6 +288,8 @@ enum TransactionValidationError {
 	InvalidGasLimit,
 	MaxFeePerGasTooLow,
 }
+
+type CheckedInfo<T> = (H160, AccountIdOf<T>, (U256, U256));
 
 impl<T> Call<T>
 where
@@ -291,17 +304,16 @@ where
 		matches!(self, Call::transact { .. })
 	}
 
-	pub fn check_self_contained(
-		&self,
-	) -> Option<Result<(H160, AccountIdOf<T>, (U256, U256)), TransactionValidityError>> {
+	pub fn check_self_contained(&self) -> Option<Result<CheckedInfo<T>, TransactionValidityError>> {
 		match self {
 			Call::transact { t } => {
 				let rs = Pallet::<T>::recover_tx_signer(t)
-					.and_then(|s| {
-						<<T as Config>::AddrLookup as StaticLookup>::lookup(s).ok().map(|o| {
-							let extra = self.expose_extra();
-							(s, o, extra)
-						})
+					.map(|s| {
+						let o = <<T as Config>::AddressMapping as AddressMapping<AccountIdOf<T>>>::into_account_id(
+							s,
+						);
+						let extra = self.expose_extra();
+						(s, o, extra)
 					})
 					.ok_or_else(|| {
 						InvalidTransaction::Custom(
@@ -316,7 +328,7 @@ where
 		}
 	}
 
-	pub fn expose_extra(&self) -> (U256, U256) {
+	fn expose_extra(&self) -> (U256, U256) {
 		if let Call::transact { t } = self {
 			let TransactionData { nonce, max_priority_fee_per_gas, .. } = TransactionData::from(t);
 			return (nonce, max_priority_fee_per_gas.unwrap_or_default())

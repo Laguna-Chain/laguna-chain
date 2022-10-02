@@ -15,9 +15,10 @@ use frame_support::{
 
 use frame_support::sp_runtime::Perbill;
 use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
+use pallet_evm::HashedAddressMapping;
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
-use sp_core::{ecdsa, keccak_256, sr25519, Pair, H256};
+use sp_core::{ecdsa, keccak_256, sr25519, KeccakHasher, Pair, H256};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -170,7 +171,7 @@ impl pallet_contracts::Config for Runtime {
 
 	type DepositPerItem = DepositPerItem;
 
-	type AddressGenerator = DefaultAddressGenerator;
+	type AddressGenerator = EvmCompatAdderssGenerator;
 
 	// TODO: use arbitrary value now, need to adjust usage later
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
@@ -181,9 +182,24 @@ impl pallet_contracts::Config for Runtime {
 }
 
 impl Config for Runtime {
-	type AddrLookup = DummyLookup;
-
 	type BalanceConvert = BalanceConvert;
+
+	type AddressMapping = HashedAddressMapping<KeccakHasher>;
+
+	type ContractAddressMapping = PlainContractAddressMapping;
+}
+
+pub struct PlainContractAddressMapping;
+
+impl AddressMapping<AccountId> for PlainContractAddressMapping {
+	fn into_account_id(address: H160) -> AccountId {
+		let mut out = [0_u8; 32];
+
+		out[0..12].copy_from_slice(&b"evm_contract"[..]);
+		out[12..].copy_from_slice(&address.0);
+
+		out.into()
+	}
 }
 
 pub struct BalanceConvert;
@@ -194,39 +210,28 @@ impl Convert<U256, Balance> for BalanceConvert {
 	}
 }
 
-pub struct DummyLookup;
+/// generate account address in H160 compatible form
+pub struct EvmCompatAdderssGenerator;
 
-impl StaticLookup for DummyLookup {
-	type Source = H160;
+type CodeHash<T> = <T as frame_system::Config>::Hash;
 
-	type Target = AccountId;
+impl AddressGenerator<Runtime> for EvmCompatAdderssGenerator {
+	fn generate_address(
+		deploying_address: &<Runtime as frame_system::Config>::AccountId,
+		code_hash: &CodeHash<Runtime>,
+		salt: &[u8],
+	) -> <Runtime as frame_system::Config>::AccountId {
+		let generated = <DefaultAddressGenerator as AddressGenerator<Runtime>>::generate_address(
+			deploying_address,
+			code_hash,
+			salt,
+		);
 
-	fn lookup(s: Self::Source) -> Result<Self::Target, frame_support::error::LookupError> {
-		let seed = [0x11; 32];
-		let pair = ecdsa::Pair::from_seed_slice(&seed).unwrap();
-		let ss_pair = sr25519::Pair::from_seed_slice(&seed).unwrap();
+		let raw: [u8; 32] = generated.into();
 
-		let addr = pair.public().to_eth_address().unwrap();
+		let h_addr = H160::from_slice(&raw[0..20]);
 
-		if addr == s.0 {
-			return Ok(ss_pair.public().into())
-		}
-
-		Err(frame_support::error::LookupError)
-	}
-
-	fn unlookup(t: Self::Target) -> Self::Source {
-		let seed = [0x11; 32];
-		let pair = ecdsa::Pair::from_seed_slice(&seed).unwrap();
-		let ss_pair = sr25519::Pair::from_seed_slice(&seed).unwrap();
-
-		let addr = pair.public().to_eth_address().unwrap();
-
-		if t == ss_pair.public().into() {
-			return addr.into()
-		}
-
-		unimplemented!()
+		PlainContractAddressMapping::into_account_id(h_addr)
 	}
 }
 

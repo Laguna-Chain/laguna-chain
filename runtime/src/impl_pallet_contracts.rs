@@ -4,6 +4,7 @@ use crate::{
 	constants::{LAGUNAS, MICRO_LAGUNAS, MILLI_LAGUNAS},
 	impl_frame_system::BlockWeights,
 	impl_pallet_currencies::NativeCurrencyId,
+	impl_pallet_evm_compat::{EvmCompatAdderssGenerator, PlainContractAddressMapping},
 	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight,
 };
 use frame_support::{parameter_types, traits::ConstU32};
@@ -61,7 +62,7 @@ impl pallet_contracts::Config for Runtime {
 
 	type DepositPerItem = DepositPerItem;
 
-	type AddressGenerator = CustomAddressGenerator;
+	type AddressGenerator = EvmCompatAdderssGenerator;
 
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 

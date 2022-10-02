@@ -200,6 +200,7 @@ pub type Executive = frame_executive::Executive<
 
 /// create default extra for tx request coming from eth rpc
 fn new_extra(nonce: Index, tip: Balance) -> SignedExtra {
+	// TODO: allow eth-client to contain custom Era
 	let period =
 		BlockHashCount::get().checked_next_power_of_two().map(|c| c / 2).unwrap_or(2) as u64;
 
@@ -215,7 +216,7 @@ fn new_extra(nonce: Index, tip: Balance) -> SignedExtra {
 		frame_system::CheckTxVersion::<Runtime>::new(),
 		frame_system::CheckGenesis::<Runtime>::new(),
 		frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
-		frame_system::CheckNonce::<Runtime>::from(Index::from(nonce)),
+		frame_system::CheckNonce::<Runtime>::from(nonce),
 		frame_system::CheckWeight::<Runtime>::new(),
 		// fee and tipping related
 		// TODO: justify whether we need to include if "feeless" transaction is included

@@ -64,10 +64,10 @@ sp-runtime = {default-features = false, git = 'https://github.com/paritytech/sub
 sp-session = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 
-
 sp-transaction-pool = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-version = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 fp-self-contained = {default-features = false, git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
+pallet-evm = {default-features = false, git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
 
 
 # parity SCALE codec
@@ -75,9 +75,6 @@ codec = {default-features = false, features = ['derive'], package = 'parity-scal
 hex-literal = {version = '0.3.1'}
 pallet-currencies-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
-
-# workaround for https://github.com/paritytech/substrate/issues/11706
-syn = {version = "1.0.99"}
 
 # build dependency for the wasm runtime
 [build-dependencies.substrate-wasm-builder]
@@ -128,6 +125,7 @@ std = [
   'pallet-currencies-runtime-api/std',
   'pallet-transaction-payment/std',
   'pallet-evm-compat/std',
+  'pallet-evm/std',
   'pallet-transaction-payment-rpc-runtime-api/std',
   "pallet-fluent-fee/std",
   'pallet-contracts/std',
