@@ -1,5 +1,5 @@
 use frame_support::{
-	sp_runtime::traits::{Convert, Keccak256},
+	sp_runtime::traits::{AccountIdConversion, Convert, Keccak256},
 	traits::ConstU64,
 };
 use pallet_contracts::AddressGenerator;
@@ -50,16 +50,26 @@ impl AddressGenerator<Runtime> for EvmCompatAdderssGenerator {
 		code_hash: &CodeHash<Runtime>,
 		salt: &[u8],
 	) -> <Runtime as frame_system::Config>::AccountId {
+		let key: AccountId = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
+			.try_into_account()
+			.expect("Invalid PalletId");
+
 		let generated = <CustomAddressGenerator as AddressGenerator<Runtime>>::generate_address(
 			deploying_address,
 			code_hash,
 			salt,
 		);
-
 		let raw: [u8; 32] = generated.into();
 
-		let h_addr = H160::from_slice(&raw[0..20]);
+		let h_addr = if *deploying_address == key {
+			// we took trailing 20 bytes as input for system contracts
+			H160::from_slice(&raw[12..])
+		} else {
+			// we took leading 20 bytes as input from normal contracts
+			H160::from_slice(&raw[0..20])
+		};
 
+		// add contract-specific prefix
 		PlainContractAddressMapping::into_account_id(h_addr)
 	}
 }

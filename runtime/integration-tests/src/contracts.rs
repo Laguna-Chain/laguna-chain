@@ -389,6 +389,10 @@ fn test_fixed_address() {
 				})
 				.expect("unable to find contract");
 
-			assert_eq!(deployed_addr, &AccountId32::from([0x11; 32]));
+			let mut expected = [0_u8; 32];
+			expected[0..12].copy_from_slice(b"evm_contract");
+			expected[12..].copy_from_slice(&[0x11; 20]);
+
+			assert_eq!(deployed_addr, &AccountId32::from(expected));
 		})
 }
