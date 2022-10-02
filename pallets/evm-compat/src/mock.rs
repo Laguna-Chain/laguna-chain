@@ -8,17 +8,18 @@ use frame_support::{
 			BlakeTwo256, DispatchInfoOf, IdentityLookup, PostDispatchInfoOf, SignedExtension,
 		},
 	},
-	traits::Everything,
+	traits::{ConstU64, Everything},
 	weights::IdentityFee,
-	PalletId,
 };
 
 use frame_support::sp_runtime::Perbill;
-use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
+use pallet_contracts::{
+	weights::WeightInfo, AddressGenerator, DefaultAddressGenerator, DefaultContractAccessWeight,
+};
 use pallet_evm::HashedAddressMapping;
 use pallet_transaction_payment::CurrencyAdapter;
-use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
-use sp_core::{ecdsa, keccak_256, sr25519, KeccakHasher, Pair, H256};
+use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, Header, Index};
+use sp_core::{keccak_256, KeccakHasher, H256};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -181,12 +182,38 @@ impl pallet_contracts::Config for Runtime {
 	type MaxStorageKeyLen = ConstU32<128>;
 }
 
+parameter_types! {
+	pub const ProxyDepositBase: u64 = 1;
+	pub const ProxyDepositFactor: u64 = 1;
+	pub const MaxProxies: u16 = 4;
+	pub const MaxPending: u32 = 2;
+	pub const AnnouncementDepositBase: u64 = 1;
+	pub const AnnouncementDepositFactor: u64 = 1;
+}
+
+impl pallet_proxy::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type Currency = Balances;
+	type ProxyType = ();
+	type ProxyDepositBase = ProxyDepositBase;
+	type ProxyDepositFactor = ProxyDepositFactor;
+	type MaxProxies = ConstU32<32>;
+	type WeightInfo = ();
+	type MaxPending = ConstU32<32>;
+	type CallHasher = BlakeTwo256;
+	type AnnouncementDepositBase = AnnouncementDepositBase;
+	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+}
+
 impl Config for Runtime {
 	type BalanceConvert = BalanceConvert;
 
 	type AddressMapping = HashedAddressMapping<KeccakHasher>;
 
 	type ContractAddressMapping = PlainContractAddressMapping;
+
+	type ChainId = ConstU64<100>;
 }
 
 pub struct PlainContractAddressMapping;
@@ -250,6 +277,7 @@ construct_runtime!(
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip,
 		Timestamp: pallet_timestamp,
 		Payment: pallet_transaction_payment,
+		Proxy: pallet_proxy,
 
 		EvmCompat: crate
 	}
@@ -351,7 +379,7 @@ impl fp_self_contained::SelfContainedCall for Call {
 		info: Self::SignedInfo,
 	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
 		match self {
-			call @ Call::EvmCompat(crate::Call::transact { .. }) =>
+			call @ Call::EvmCompat(_) =>
 				Some(call.dispatch(Origin::from(crate::RawOrigin::EthereumTransaction(info.0)))),
 			_ => None,
 		}

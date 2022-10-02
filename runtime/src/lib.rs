@@ -9,24 +9,26 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use frame_support::{self, construct_runtime, dispatch::Dispatchable};
 
-use frame_support::pallet_prelude::TransactionValidityError;
+use frame_support::{
+	pallet_prelude::TransactionValidityError,
+	sp_runtime::{
+		app_crypto::sp_core::OpaqueMetadata,
+		create_runtime_str, generic, impl_opaque_keys,
+		traits::{
+			BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf,
+			SignedExtension,
+		},
+		transaction_validity::{TransactionSource, TransactionValidity},
+		ApplyExtrinsicResult, KeyTypeId, SaturatedConversion,
+	},
+};
 use impl_frame_system::BlockHashCount;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_runtime::{
-	app_crypto::sp_core::OpaqueMetadata,
-	create_runtime_str, generic, impl_opaque_keys,
-	traits::{
-		BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf,
-		SignedExtension, StaticLookup,
-	},
-	transaction_validity::{TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, KeyTypeId, SaturatedConversion,
-};
 
 use sp_core::H160;
 
-use sp_std::prelude::*;
+use frame_support::sp_std::prelude::*;
 
 pub mod contract_extensions;
 
@@ -60,6 +62,7 @@ pub mod impl_pallet_fee_enablement;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
 pub mod impl_pallet_prepaid;
+pub mod impl_pallet_proxy;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
 pub mod impl_pallet_system_contract_deployer;
@@ -78,7 +81,7 @@ mod weights;
 pub mod opaque {
 	use super::*;
 
-	pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
+	pub use frame_support::sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
 
 	/// Opaque block header type.
 	pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
@@ -112,6 +115,8 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 pub fn native_version() -> NativeVersion {
 	NativeVersion { runtime_version: VERSION, can_author_with: Default::default() }
 }
+
+use frame_support::sp_runtime;
 
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
@@ -156,7 +161,8 @@ construct_runtime!(
 			Contracts: pallet_contracts,
 			SystemContractDeployer: pallet_system_contract_deployer,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
-			EvmCompat: pallet_evm_compat
+			EvmCompat: pallet_evm_compat,
+			Proxy: pallet_proxy,
 		}
 );
 

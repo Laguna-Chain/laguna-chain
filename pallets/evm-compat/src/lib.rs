@@ -18,25 +18,27 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::HasCompact;
-use ethereum::{Account, TransactionAction, TransactionV2 as Transaction};
+use ethereum::{TransactionAction, TransactionV2 as Transaction};
 use frame_support::{
 	crypto::ecdsa::ECDSAExt,
 	dispatch::Dispatchable,
 	pallet_prelude::*,
+	sp_core_hashing_proc_macro::keccak_256,
 	sp_io,
-	sp_runtime::traits::{Convert, IdentifyAccount},
+	sp_runtime::traits::Convert,
 	sp_std::{fmt::Debug, prelude::*},
 	traits::Currency,
 	weights::{DispatchInfo, PostDispatchInfo},
 };
 use frame_system::pallet_prelude::*;
-use pallet_contracts::AddressGenerator;
+use orml_traits::arithmetic::Zero;
+
 use pallet_evm::AddressMapping;
 
 use codec::Decode;
 use frame_support::sp_runtime::traits::StaticLookup;
 pub use pallet::*;
-use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
+use sp_core::{crypto::UncheckedFrom, ecdsa, keccak_256, H160, H256, U256};
 use sp_io::crypto::secp256k1_ecdsa_recover_compressed;
 
 #[cfg(test)]
@@ -86,11 +88,15 @@ mod pallet {
 	use super::*;
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_contracts::Config {
+	pub trait Config:
+		frame_system::Config + pallet_contracts::Config + pallet_proxy::Config
+	{
 		type BalanceConvert: Convert<U256, BalanceOf<Self>>;
 		type AddressMapping: AddressMapping<AccountIdOf<Self>>;
 
 		type ContractAddressMapping: AddressMapping<AccountIdOf<Self>>;
+
+		type ChainId: Get<u64>;
 	}
 
 	#[pallet::pallet]
@@ -98,6 +104,10 @@ mod pallet {
 
 	#[pallet::origin]
 	pub type Origin = RawOrigin;
+
+	#[pallet::storage]
+	#[pallet::getter(fn has_proxy)]
+	pub type ProxyAccount<T: Config> = StorageMap<_, Blake2_128Concat, H160, AccountIdOf<T>>;
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
@@ -120,8 +130,17 @@ mod pallet {
 		}
 
 		#[pallet::weight(200_000_000)]
-		pub fn claim(origin: OriginFor<T>, signed_claim: H256) -> DispatchResultWithPostInfo {
-			todo!()
+		pub fn set_proxy(
+			origin: OriginFor<T>,
+			who: AccountIdOf<T>,
+			nonce: U256,
+			sig: Vec<u8>,
+		) -> DispatchResult {
+			let source = ensure_ethereum_transaction(origin)?;
+
+			if Pallet::<T>::has_proxy(source).is_some() {}
+
+			Pallet::<T>::allow_proxy(source, who)
 		}
 	}
 }
@@ -213,6 +232,75 @@ impl<T: Config> Pallet<T> {
 	pub fn account_from_contract_addr(target: H160) -> AccountIdOf<T> {
 		<T::ContractAddressMapping as AddressMapping<AccountIdOf<T>>>::into_account_id(target)
 	}
+
+	pub fn allow_proxy(source: H160, target: AccountIdOf<T>) -> DispatchResult {
+		let source_account = Pallet::<T>::to_mapped_account(source);
+
+		let rs = pallet_proxy::Pallet::<T>::add_proxy_delegate(
+			&source_account,
+			target.clone(),
+			Default::default(),
+			Default::default(),
+		);
+
+		ProxyAccount::<T>::insert(source, target);
+
+		rs
+	}
+
+	pub fn remove_proxy(source: H160, target: AccountIdOf<T>) -> DispatchResult {
+		let source_account = Pallet::<T>::to_mapped_account(source);
+
+		let rs = pallet_proxy::Pallet::<T>::remove_proxy_delegate(
+			&source_account,
+			target,
+			Default::default(),
+			Default::default(),
+		);
+
+		ProxyAccount::<T>::remove(source);
+
+		rs
+	}
+
+	pub fn is_delegated_by(source: H160) -> Option<AccountIdOf<T>> {
+		Pallet::<T>::has_proxy(source)
+	}
+
+	// NOTICE: this is derived from Acala's implementation
+	fn evm_domain_separator() -> [u8; 32] {
+		let domain_hash =
+			keccak_256!(b"EIP712Domain(string name,string version,uint256 chainId,bytes32 salt)");
+		let mut domain_seperator_msg = domain_hash.to_vec();
+		domain_seperator_msg.extend_from_slice(&keccak_256(b"LGNA Proxy")); // name
+		domain_seperator_msg.extend_from_slice(&keccak_256(b"1")); // version
+		domain_seperator_msg.extend_from_slice(&Into::<[u8; 32]>::into(<u64 as Into<U256>>::into(
+			T::ChainId::get(),
+		))); // chain id
+		domain_seperator_msg.extend_from_slice(
+			frame_system::Pallet::<T>::block_hash(T::BlockNumber::zero()).as_ref(),
+		); // genesis block hash as salt
+
+		keccak_256!(domain_seperator_msg)
+	}
+
+	fn evm_proxy_payload(who: &T::AccountId, nonce: &U256) -> [u8; 32] {
+		let tx_type_hash = keccak_256(b"Transaction(bytes proxyAccount, uint256 nonce)");
+		let mut tx_msg = tx_type_hash.to_vec();
+		tx_msg.extend_from_slice(&keccak_256(&who.encode()));
+		tx_msg.extend_from_slice(&Into::<[u8; 32]>::into(*nonce));
+		keccak_256(tx_msg.as_slice())
+	}
+
+	fn eip712_payload(proxy_account: &AccountIdOf<T>, nonce: &U256) -> Vec<u8> {
+		let domain_separator = Self::evm_domain_separator();
+		let payload_hash = Self::evm_proxy_payload(proxy_account, nonce);
+
+		let mut msg = b"\x19\x01".to_vec();
+		msg.extend_from_slice(&domain_separator);
+		msg.extend_from_slice(&payload_hash);
+		msg
+	}
 }
 
 // NOTICE: this is mostly copy from pallet-ethereum
@@ -277,6 +365,12 @@ where
 
 		(msg, sig)
 	}
+
+	fn verify_proxy_request(who: &AccountIdOf<T>, nonce: &U256, sig: &[u8]) -> Option<H160> {
+		let msg = keccak_256(&Self::eip712_payload(who, nonce)[..]);
+
+		Self::recover_signer(&msg, sig).and_then(|pk| pk.to_eth_address().ok().map(H160))
+	}
 }
 
 #[repr(u8)]
@@ -324,16 +418,37 @@ where
 
 				Some(rs)
 			},
+			Call::set_proxy { who, nonce, sig } => {
+				let rs = Pallet::<T>::verify_proxy_request(who, nonce, sig)
+					.map(|s| {
+						let o = <<T as Config>::AddressMapping as AddressMapping<AccountIdOf<T>>>::into_account_id(
+						s,
+					);
+						let extra = self.expose_extra();
+						(s, o, extra)
+					})
+					.ok_or_else(|| {
+						InvalidTransaction::Custom(
+							TransactionValidationError::InvalidSignature as u8,
+						)
+						.into()
+					});
+
+				Some(rs)
+			},
 			_ => None,
 		}
 	}
 
 	fn expose_extra(&self) -> (U256, U256) {
-		if let Call::transact { t } = self {
-			let TransactionData { nonce, max_priority_fee_per_gas, .. } = TransactionData::from(t);
-			return (nonce, max_priority_fee_per_gas.unwrap_or_default())
+		match self {
+			Call::transact { t } => {
+				let TransactionData { nonce, max_priority_fee_per_gas, .. } =
+					TransactionData::from(t);
+				(nonce, max_priority_fee_per_gas.unwrap_or_default())
+			},
+			Call::set_proxy { who, nonce, sig } => (*nonce, Default::default()),
+			_ => Default::default(),
 		}
-
-		Default::default()
 	}
 }

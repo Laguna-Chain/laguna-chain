@@ -1,7 +1,6 @@
 use crate::{Call, Event, Runtime};
-use frame_support::{parameter_types, traits::KeyOwnerProofSystem};
+use frame_support::{parameter_types, sp_runtime::KeyTypeId, traits::KeyOwnerProofSystem};
 use pallet_grandpa::AuthorityId as GrandpaId;
-use sp_runtime::KeyTypeId;
 
 // borderline aura and grandpa impl from substrate-node-template
 parameter_types! {

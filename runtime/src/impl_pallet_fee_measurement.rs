@@ -1,8 +1,8 @@
 use frame_support::parameter_types;
 
+use frame_support::sp_runtime::FixedPointNumber;
 use orml_traits::PriceProvider;
 use primitives::{Balance, CurrencyId, Price};
-use sp_runtime::FixedPointNumber;
 
 use crate::{
 	impl_pallet_currencies::NativeCurrencyId, impl_pallet_prepaid::PREPAIDTOKENID, Runtime,

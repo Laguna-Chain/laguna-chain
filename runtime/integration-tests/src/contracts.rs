@@ -6,7 +6,7 @@ pub mod cross_contract;
 
 use crate::{ExtBuilder, ALICE};
 use codec::{Decode, Encode};
-use frame_support::assert_ok;
+use frame_support::{assert_ok, sp_runtime::traits::AccountIdConversion};
 use laguna_runtime::{
 	constants::LAGUNAS, Block, Contracts, Event, Origin, Runtime, System, SystemContractDeployer,
 };
@@ -14,7 +14,6 @@ use pallet_contracts_primitives::ExecReturnValue;
 use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
 use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId};
 use sp_core::{crypto::AccountId32, hexdisplay::AsBytesRef, Bytes};
-use sp_runtime::traits::AccountIdConversion;
 use std::str::FromStr;
 
 const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);

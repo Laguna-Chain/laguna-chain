@@ -1,8 +1,7 @@
-use frame_support::log::error;
+use frame_support::{log::error, sp_runtime::DispatchError};
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, RetVal, SysConfig, UncheckedFrom,
 };
-use sp_runtime::DispatchError;
 
 use super::Runtime;
 

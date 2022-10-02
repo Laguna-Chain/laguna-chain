@@ -14,9 +14,9 @@ use pallet_system_contract_deployer::CustomAddressGenerator;
 
 mod chain_extensions;
 use chain_extensions::DemoExtension;
+use frame_support::sp_runtime::Perbill;
 use pallet_contracts::weights::WeightInfo;
 use primitives::Balance;
-use sp_runtime::Perbill;
 
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 

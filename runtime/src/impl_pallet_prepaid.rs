@@ -1,6 +1,10 @@
-use frame_support::{parameter_types, traits::Get, PalletId};
+use frame_support::{
+	parameter_types,
+	sp_runtime::{FixedPointNumber, FixedU128},
+	traits::Get,
+	PalletId,
+};
 use primitives::{CurrencyId, TokenId};
-use sp_runtime::{FixedPointNumber, FixedU128};
 
 use crate::{impl_pallet_currencies::NativeCurrencyId, Currencies, Event, Runtime};
 

@@ -241,3 +241,57 @@ fn test_create() {
 			assert_ok!(Call::EvmCompat(call).apply_self_contained(info.clone()).unwrap());
 		});
 }
+
+#[test]
+fn test_proxy() {
+	let pair = ecdsa::Pair::from_seed_slice(&RawSeed).unwrap();
+
+	let dev_acc = EvmCompat::to_mapped_account(H160(pair.public().to_eth_address().unwrap()));
+
+	ExtBuilder::default()
+		.balances(vec![(dev_acc, 2 << 64), (ALICE, 2 << 64)])
+		.build()
+		.execute_with(|| {
+			let source_addr = pair.public().to_eth_address().map(H160).unwrap();
+
+			let source_acc = EvmCompat::to_mapped_account(source_addr);
+			assert_eq!(Balances::free_balance(&source_acc), 2 << 64);
+
+			let call = Call::Balances(pallet_balances::Call::transfer { dest: ALICE, value: 1000 });
+			assert!(Proxy::proxy(
+				Origin::signed(ALICE),
+				source_acc.clone(),
+				None,
+				Box::new(call.clone())
+			)
+			.is_err());
+			assert_ok!(EvmCompat::allow_proxy(source_addr, ALICE));
+
+			assert_ok!(Proxy::proxy(Origin::signed(ALICE), source_acc, None, Box::new(call)));
+		});
+}
+
+#[test]
+fn test_proxy_self_contained() {
+	let pair = ecdsa::Pair::from_seed_slice(&RawSeed).unwrap();
+	let dev_addr = H160(pair.public().to_eth_address().unwrap());
+	let dev_acc = EvmCompat::to_mapped_account(dev_addr);
+
+	ExtBuilder::default()
+		.balances(vec![(dev_acc, 2 << 64), (ALICE, 2 << 64)])
+		.build()
+		.execute_with(|| {
+			let payload = EvmCompat::eip712_payload(&ALICE, &Default::default());
+			let payload_hash = keccak_256(&payload[..]);
+
+			let sig = pair.sign_prehashed(&payload_hash).0.to_vec();
+
+			let call =
+				crate::Call::<Runtime>::set_proxy { nonce: Default::default(), who: ALICE, sig };
+			let info = call.check_self_contained().unwrap().unwrap();
+
+			assert_ok!(Call::EvmCompat(call).apply_self_contained(info).unwrap());
+
+			assert_eq!(EvmCompat::has_proxy(dev_addr), Some(ALICE));
+		});
+}

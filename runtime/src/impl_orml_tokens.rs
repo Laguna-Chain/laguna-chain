@@ -1,10 +1,10 @@
 use crate::{constants::MICRO_LAGUNAS, Event, Runtime};
 use frame_support::{
 	parameter_types,
+	sp_runtime::traits::Zero,
 	traits::{ConstU32, Contains},
 };
 use primitives::{AccountId, Amount, Balance, CurrencyId, TokenId};
-use sp_runtime::traits::Zero;
 
 pub struct DustRemovalWhitelist;
 
