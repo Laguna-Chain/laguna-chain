@@ -3129,6 +3129,7 @@ dependencies = [
  "pallet-system-contract-deployer",
  "pallet-transaction-payment",
  "pallet-transaction-payment-rpc",
+ "parity-scale-codec",
  "primitives",
  "rlp",
  "sc-basic-authorship",

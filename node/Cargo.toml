@@ -23,6 +23,7 @@ primitives = {path = "../primitives"}
 # laguna chain runtime
 laguna-runtime = {path = "../runtime"}
 
+codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}
 sc-basic-authorship = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sc-cli = {features = ['wasmtime'], git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sc-client-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
@@ -59,7 +60,7 @@ frame-support = {git = 'https://github.com/paritytech/substrate.git', branch = "
 pallet-contracts-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 
 pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-system-contract-deployer = {path = "../pallets/system-contract-deployer", default-features = false}
+pallet-system-contract-deployer = {path = "../pallets/system-contract-deployer"}
 
 # requird for benchmark cli-parsing and conduct runtime-benchmark
 frame-benchmarking = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}

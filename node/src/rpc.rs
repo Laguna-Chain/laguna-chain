@@ -14,6 +14,7 @@ use pallet_transaction_payment_rpc::{
 };
 use sc_client_api::backend::{Backend, StorageProvider};
 use sc_rpc_api::DenyUnsafe;
+use sc_transaction_pool::{ChainApi, Pool};
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -23,11 +24,13 @@ use substrate_frame_rpc_system::{AccountNonceApi, System, SystemApiServer};
 mod evm_rpc_compat;
 use fc_rpc_core::{EthApiServer, NetApiServer};
 use sc_network::NetworkService;
-pub struct FullDeps<Client, Pool> {
+pub struct FullDeps<Client, P, A: ChainApi> {
 	pub client: Arc<Client>,
-	pub pool: Arc<Pool>,
+	pub pool: Arc<P>,
+	pub graph: Arc<Pool<A>>,
 	pub deny_unsafe: DenyUnsafe,
 	pub network: Arc<NetworkService<Block, Hash>>,
+	pub is_authority: bool,
 }
 use jsonrpsee::RpcModule;
 
@@ -35,7 +38,7 @@ type RpcExtension = Result<RpcModule<()>, Box<dyn std::error::Error + Send + Syn
 
 /// construct and mount all interface to io_handler
 /// runtime need meet the requirement by impl the constraint from impl_runtime_apis! macro
-pub fn create_full<Client, Pool, BE>(deps: FullDeps<Client, Pool>) -> RpcExtension
+pub fn create_full<Client, Pool, BE, A>(deps: FullDeps<Client, Pool, A>) -> RpcExtension
 // TODO: provide additional rpc interface by adding Client: SomeConstraint
 where
 	BE: Backend<Block> + 'static,
@@ -53,10 +56,11 @@ where
 	Client::Api: EvmCompatApiRuntimeApi<Block, AccountId, Balance>,
 	Client::Api: BlockBuilder<Block>, // should be able to produce block
 	Pool: TransactionPool<Block = Block> + 'static, // can submit tx into tx-pool
+	A: ChainApi<Block = Block> + 'static,
 {
 	let mut module = RpcModule::new(());
 
-	let FullDeps { client, pool, deny_unsafe, network } = deps;
+	let FullDeps { client, pool, deny_unsafe, network, is_authority, graph } = deps;
 
 	// ++++++++++++++++
 	// operational rpcs
@@ -75,13 +79,13 @@ where
 	module.merge(EvmCompatRpc::new(client.clone()).into_rpc())?;
 
 	module.merge(evm_rpc_compat::Net::new(client.clone(), network.clone(), true).into_rpc())?;
-
 	module.merge(
 		evm_rpc_compat::EthApi::new(
 			client.clone(),
 			pool.clone(),
+			graph.clone(),
 			network.clone(),
-			true,
+			is_authority,
 			Some(laguna_runtime::TransactionConverter),
 		)
 		.into_rpc(),

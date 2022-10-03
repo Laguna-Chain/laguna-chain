@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::Codec;
-use sp_core::{ecdsa, H160};
+use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
 
 sp_api::decl_runtime_apis! {
@@ -16,5 +16,17 @@ sp_api::decl_runtime_apis! {
 		fn source_is_backed_by(source: H160) -> Option<AccountId>;
 
 		fn check_contract_is_evm_compat(contract_addr: AccountId) -> Option<H160>;
+
+		fn chain_id() -> u64;
+
+		fn balances(address: H160) -> U256;
+
+
+		fn block_hash(number: u32) -> H256;
+
+		fn storage_at(address: H160, index: U256,) -> H256;
+
+		fn account_nonce(addrss: H160) -> U256;
+
 	}
 }

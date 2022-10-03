@@ -7,9 +7,10 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use frame_support::{self, construct_runtime, crypto::ecdsa::ECDSAExt, dispatch::Dispatchable};
-
+use constants::LAGUNA_NATIVE_CURRENCY;
 use frame_support::{
+	self, construct_runtime,
+	dispatch::Dispatchable,
 	pallet_prelude::TransactionValidityError,
 	sp_runtime::{
 		app_crypto::sp_core::OpaqueMetadata,
@@ -21,13 +22,15 @@ use frame_support::{
 		transaction_validity::{TransactionSource, TransactionValidity},
 		ApplyExtrinsicResult, KeyTypeId, SaturatedConversion,
 	},
+	traits::Get,
 };
 use impl_frame_system::BlockHashCount;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
+use sp_runtime::traits::UniqueSaturatedInto;
 
 use codec::{Decode, Encode};
-use sp_core::{ecdsa, H160};
+use sp_core::{Bytes, H160, H256, U256};
 
 use frame_support::sp_std::prelude::*;
 
@@ -552,6 +555,40 @@ impl_runtime_apis! {
 				None
 			 }
 		}
+
+		fn chain_id() -> u64 {
+			<Runtime as pallet_evm_compat::Config>::ChainId::get()
+		}
+
+		fn balances(address: H160) -> U256 {
+
+			let addr = EvmCompat::to_mapped_account(address);
+
+			Currencies::free_balance(addr, LAGUNA_NATIVE_CURRENCY).into()
+		}
+
+
+		fn block_hash(number: u32) -> H256 {
+			H256::from_slice(System::block_hash(number).as_ref())
+		}
+
+		fn storage_at(address: H160, index: U256,) -> H256 {
+			// FIXME: do proper storage lookup
+			Default::default()
+		}
+
+		fn account_nonce(address: H160) -> U256 {
+
+			let addr = EvmCompat::to_mapped_account(address);
+
+			let nonce = System::account_nonce(&addr);
+
+			U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce))
+
+		}
+
+
+
 	}
 
 	// TODO: add other needed runtime-api

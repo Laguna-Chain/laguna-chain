@@ -224,6 +224,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		let client = client.clone();
 		let pool = transaction_pool.clone();
 		let network = network.clone();
+		let is_authority = role.is_authority();
 
 		// Boxed so we can pass it to the background task
 		Box::new(move |deny_unsafe, _| {
@@ -231,6 +232,8 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			let deps = crate::rpc::FullDeps {
 				client: client.clone(),
 				pool: pool.clone(),
+				graph: pool.pool().clone(),
+				is_authority,
 				deny_unsafe,
 				network: network.clone(),
 			};

@@ -12,9 +12,12 @@ use frame_support::{
 	crypto::ecdsa::ECDSAExt,
 	sp_runtime::{traits::Hash, MultiSigner},
 };
+use hex::FromHex;
 use orml_traits::arithmetic::Zero;
 use primitives::IdentifyAccount;
-use sp_core::{ecdsa, keccak_256, Bytes, Pair, H160, H256, U256};
+use sp_core::{
+	bytes::from_hex, ecdsa, hexdisplay::AsBytesRef, keccak_256, Bytes, Pair, H160, H256, U256,
+};
 use sp_io::crypto::secp256k1_ecdsa_recover;
 
 // NOTICE: many of the underlying construct are taken from pallet-ethereum's test
