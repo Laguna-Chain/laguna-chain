@@ -7,7 +7,7 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use frame_support::{self, construct_runtime, dispatch::Dispatchable};
+use frame_support::{self, construct_runtime, crypto::ecdsa::ECDSAExt, dispatch::Dispatchable};
 
 use frame_support::{
 	pallet_prelude::TransactionValidityError,
@@ -26,7 +26,8 @@ use impl_frame_system::BlockHashCount;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 
-use sp_core::H160;
+use codec::{Decode, Encode};
+use sp_core::{ecdsa, H160};
 
 use frame_support::sp_std::prelude::*;
 
@@ -294,6 +295,25 @@ impl fp_self_contained::SelfContainedCall for Call {
 	}
 }
 
+pub struct TransactionConverter;
+
+impl fp_rpc::ConvertTransaction<UncheckedExtrinsic> for TransactionConverter {
+	fn convert_transaction(&self, t: ethereum::TransactionV2) -> UncheckedExtrinsic {
+		UncheckedExtrinsic::new_unsigned(pallet_evm_compat::Call::<Runtime>::transact { t }.into())
+	}
+}
+
+impl fp_rpc::ConvertTransaction<opaque::UncheckedExtrinsic> for TransactionConverter {
+	fn convert_transaction(&self, t: ethereum::TransactionV2) -> opaque::UncheckedExtrinsic {
+		let extrinsic = UncheckedExtrinsic::new_unsigned(
+			pallet_evm_compat::Call::<Runtime>::transact { t }.into(),
+		);
+		let encoded = extrinsic.encode();
+		opaque::UncheckedExtrinsic::decode(&mut &encoded[..])
+			.expect("Encoded extrinsic is always valid")
+	}
+}
+
 // expose runtime apis, required by node services
 // this allow software outside of the wasm blob to access internal functionalities
 // often referred to as breaking the "wasm boundary" within substrate ecosystem
@@ -485,7 +505,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_currencies_runtime_api::CurrenciesApi<Block, AccountId, Balance> for Runtime {
+	impl pallet_currencies_rpc_runtime_api::CurrenciesApi<Block, AccountId, Balance> for Runtime {
 		fn list_assets() -> Vec<CurrencyId> {
 			ContractAssetsRegistry::enabled_assets().iter().map(|v| CurrencyId::Erc20(*v.as_ref())).collect::<_>()
 		}
@@ -496,6 +516,41 @@ impl_runtime_apis! {
 
 		fn total_balance(account: AccountId, asset: CurrencyId) -> Option<Balance> {
 			Some(Currencies::total_balance(account, asset))
+		}
+	}
+
+
+	impl fp_rpc::ConvertTransactionRuntimeApi<Block> for Runtime {
+
+		fn convert_transaction(t: ethereum::TransactionV2) -> <Block as BlockT>::Extrinsic {
+			UncheckedExtrinsic::new_unsigned(
+				pallet_evm_compat::Call::<Runtime>::transact { t }.into(),
+			)
+		}
+	}
+
+
+	impl pallet_evm_compat_rpc_runtime_api::EvmCompatApi<Block, AccountId, Balance> for Runtime {
+
+		fn source_to_mapped_address(source: H160) -> AccountId {
+			EvmCompat::to_mapped_account(source)
+		}
+
+		fn source_is_backed_by(source: H160) -> Option<AccountId>{
+			EvmCompat::has_proxy(source)
+		}
+
+		fn check_contract_is_evm_compat(contract_addr: AccountId) -> Option<H160>{
+			let addr_raw = <[u8; 32]>::from(contract_addr);
+			if addr_raw.starts_with(b"evm_contract:")
+			 {
+
+				let source = H160::from_slice(&addr_raw[12..]);
+				Some(source)
+
+			 } else {
+				None
+			 }
 		}
 	}
 

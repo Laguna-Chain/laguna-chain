@@ -38,7 +38,7 @@ use pallet_evm::AddressMapping;
 use codec::Decode;
 use frame_support::sp_runtime::traits::StaticLookup;
 pub use pallet::*;
-use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
+use sp_core::{crypto::UncheckedFrom, ecdsa, H160, U256};
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
 
 #[cfg(test)]
@@ -82,8 +82,6 @@ impl<O: Into<Result<RawOrigin, O>> + From<RawOrigin>> EnsureOrigin<O>
 
 #[frame_support::pallet]
 mod pallet {
-
-	use frame_support::sp_runtime::traits::Convert;
 
 	use super::*;
 
@@ -136,6 +134,7 @@ mod pallet {
 			nonce: U256,
 			sig: Vec<u8>,
 		) -> DispatchResult {
+			// FIXME: should we let the backed proxy be configurable?
 			let source = ensure_ethereum_transaction(origin)?;
 
 			if Pallet::<T>::has_proxy(source).is_some() {}
@@ -225,7 +224,7 @@ impl<T: Config> Pallet<T> {
 		frame_system::RawOrigin::Signed(account_id).into()
 	}
 
-	fn to_mapped_account(source: H160) -> AccountIdOf<T> {
+	pub fn to_mapped_account(source: H160) -> AccountIdOf<T> {
 		<T::AddressMapping as AddressMapping<AccountIdOf<T>>>::into_account_id(source)
 	}
 

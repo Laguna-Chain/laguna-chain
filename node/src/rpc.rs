@@ -1,11 +1,13 @@
 // expose rpc, derived from substrate-node-template
 
+use fp_rpc::ConvertTransactionRuntimeApi;
 use laguna_runtime::opaque::Block;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Index};
 use std::sync::Arc;
 
 use pallet_contracts_rpc::{Contracts, ContractsApiServer, ContractsRuntimeApi};
 use pallet_currencies_rpc::{CurrenciesApiServer, CurrenciesRpc, CurrenciesRuntimeApi};
+use pallet_evm_compat_rpc::{EvmCompatApiRuntimeApi, EvmCompatApiServer, EvmCompatRpc};
 
 use pallet_transaction_payment_rpc::{
 	TransactionPayment, TransactionPaymentApiServer, TransactionPaymentRuntimeApi,
@@ -46,8 +48,11 @@ where
 	Client::Api: TransactionPaymentRuntimeApi<Block, Balance>,
 	Client::Api: ContractsRuntimeApi<Block, AccountId, Balance, BlockNumber, Hash>,
 	Client::Api: CurrenciesRuntimeApi<Block, AccountId, Balance>,
+	Client::Api: ConvertTransactionRuntimeApi<Block>,
+	Client::Api: ConvertTransactionRuntimeApi<Block>,
+	Client::Api: EvmCompatApiRuntimeApi<Block, AccountId, Balance>,
 	Client::Api: BlockBuilder<Block>, // should be able to produce block
-	Pool: TransactionPool + 'static,  // can submit tx into tx-pool
+	Pool: TransactionPool<Block = Block> + 'static, // can submit tx into tx-pool
 {
 	let mut module = RpcModule::new(());
 
@@ -57,7 +62,7 @@ where
 	// operational rpcs
 	// ++++++++++++++++
 
-	module.merge(System::new(client.clone(), pool, deny_unsafe).into_rpc())?;
+	module.merge(System::new(client.clone(), pool.clone(), deny_unsafe).into_rpc())?;
 	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 
 	// ++++++++++
@@ -67,8 +72,20 @@ where
 	module.merge(Contracts::new(client.clone()).into_rpc())?;
 	module.merge(CurrenciesRpc::new(client.clone()).into_rpc())?;
 
+	module.merge(EvmCompatRpc::new(client.clone()).into_rpc())?;
+
 	module.merge(evm_rpc_compat::Net::new(client.clone(), network.clone(), true).into_rpc())?;
-	module.merge(evm_rpc_compat::EthApi::new(client.clone(), network.clone(), true).into_rpc())?;
+
+	module.merge(
+		evm_rpc_compat::EthApi::new(
+			client.clone(),
+			pool.clone(),
+			network.clone(),
+			true,
+			Some(laguna_runtime::TransactionConverter),
+		)
+		.into_rpc(),
+	)?;
 
 	Ok(module)
 }

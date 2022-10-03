@@ -4,14 +4,25 @@ use fc_rpc_core::{
 		BlockNumber, Bytes, CallRequest, FeeHistory, Index, PeerCount, Receipt, RichBlock,
 		SyncStatus, Transaction, TransactionRequest, Work,
 	},
-	EthApiServer, EthPubSubApiServer, NetApiServer,
+	EthApiServer, NetApiServer,
 };
-use jsonrpsee::core::{async_trait, Error as CoreError, RpcResult as Result};
-use sc_client_api::HeaderBackend;
+
+use fc_rpc::format;
+use fp_rpc::ConvertTransactionRuntimeApi;
+use jsonrpsee::core::{async_trait, RpcResult as Result};
+use sc_client_api::{HeaderBackend, StateBackend, StorageProvider};
 use sc_network::{ExHashT, NetworkService};
-use sp_api::ProvideRuntimeApi;
+use sc_transaction_pool_api::{InPoolTransaction, TransactionPool};
+
+use sc_transaction_pool_api::TransactionSource;
+use sp_api::{ApiExt, ProvideRuntimeApi};
 use sp_core::{H160, H256, U256};
-use sp_runtime::{generic::BlockId, traits::Block as BlockT};
+use sp_runtime::{
+	generic::BlockId,
+	traits::{BlakeTwo256, Block as BlockT},
+};
+
+use sc_client_api::Backend;
 use std::{marker::PhantomData, sync::Arc};
 
 pub struct Net<B: BlockT, C, H: ExHashT> {
@@ -69,27 +80,45 @@ where
 	}
 }
 
-pub struct EthApi<B: BlockT, C, H: ExHashT> {
+pub struct EthApi<B: BlockT, C, H: ExHashT, CT, BE, P> {
 	client: Arc<C>,
 	network: Arc<NetworkService<B, H>>,
+	convert_transaction: Option<CT>,
 	peer_count_as_hex: bool,
+	pool: Arc<P>,
+	_marker: PhantomData<BE>,
 }
 
-impl<B: BlockT, C, H: ExHashT> EthApi<B, C, H> {
+impl<B: BlockT, C, H: ExHashT, CT, BE, P> EthApi<B, C, H, CT, BE, P> {
 	pub fn new(
 		client: Arc<C>,
+		pool: Arc<P>,
 		network: Arc<NetworkService<B, H>>,
 		peer_count_as_hex: bool,
+		convert_transaction: Option<CT>,
 	) -> Self {
-		Self { client, network, peer_count_as_hex }
+		Self {
+			client,
+			pool,
+			network,
+			peer_count_as_hex,
+			convert_transaction,
+			_marker: Default::default(),
+		}
 	}
 }
 
 #[async_trait]
-impl<B, C, H: ExHashT> EthApiServer for EthApi<B, C, H>
+impl<B, C, H: ExHashT, CT, BE, P> EthApiServer for EthApi<B, C, H, CT, BE, P>
 where
 	B: BlockT<Hash = H256> + Send + Sync + 'static,
+	C: ProvideRuntimeApi<B> + StorageProvider<B, BE>,
+	BE: Backend<B> + 'static,
+	BE::State: StateBackend<BlakeTwo256>,
+	C::Api: ConvertTransactionRuntimeApi<B>,
 	C: HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
+	CT: fp_rpc::ConvertTransaction<<B as BlockT>::Extrinsic> + Send + Sync + 'static,
+	P: TransactionPool<Block = B> + Send + Sync + 'static,
 {
 	// ########################################################################
 	// Client
@@ -313,8 +342,82 @@ where
 		todo!()
 	}
 
+	// NOTICE: eth-rpc expects encoding with rlp, where substrate defaults to scale-codec!!!
 	/// Sends signed transaction, returning its hash.
 	async fn send_raw_transaction(&self, bytes: Bytes) -> Result<H256> {
-		todo!()
+		let slice = &bytes.0[..];
+		if slice.is_empty() {
+			return Err(internal_err("transaction data is empty"))
+		}
+		let first = slice.first().unwrap();
+		let transaction = if first > &0x7f {
+			// Legacy transaction. Decode and wrap in envelope.
+			match rlp::decode::<ethereum::TransactionV0>(slice) {
+				Ok(transaction) => ethereum::TransactionV2::Legacy(transaction),
+				Err(_) => return Err(internal_err("decode transaction failed")),
+			}
+		} else {
+			// Typed Transaction.
+			// `ethereum` crate decode implementation for `TransactionV2` expects a valid rlp input,
+			// and EIP-1559 breaks that assumption by prepending a version byte.
+			// We re-encode the payload input to get a valid rlp, and the decode implementation will
+			// strip them to check the transaction version byte.
+			let extend = rlp::encode(&slice);
+			match rlp::decode::<ethereum::TransactionV2>(&extend[..]) {
+				Ok(transaction) => transaction,
+				Err(_) => return Err(internal_err("decode transaction failed")),
+			}
+		};
+
+		let transaction_hash = transaction.hash();
+
+		let block_hash = BlockId::hash(self.client.info().best_hash);
+		let api_version = match self
+			.client
+			.runtime_api()
+			.api_version::<dyn ConvertTransactionRuntimeApi<B>>(&block_hash)
+		{
+			Ok(api_version) => api_version,
+			_ => return Err(internal_err("cannot access runtime api")),
+		};
+
+		let extrinsic = match api_version {
+			Some(2) =>
+				match self.client.runtime_api().convert_transaction(&block_hash, transaction) {
+					Ok(extrinsic) => extrinsic,
+					Err(_) => return Err(internal_err("cannot access runtime api")),
+				},
+			Some(1) => {
+				if let ethereum::TransactionV2::Legacy(legacy_transaction) = transaction {
+					// To be compatible with runtimes that do not support transactions v2
+					#[allow(deprecated)]
+					match self
+						.client
+						.runtime_api()
+						.convert_transaction_before_version_2(&block_hash, legacy_transaction)
+					{
+						Ok(extrinsic) => extrinsic,
+						Err(_) => return Err(internal_err("cannot access runtime api")),
+					}
+				} else {
+					return Err(internal_err("This runtime not support eth transactions v2"))
+				}
+			},
+			None =>
+				if let Some(ref convert_transaction) = self.convert_transaction {
+					convert_transaction.convert_transaction(transaction.clone())
+				} else {
+					return Err(internal_err(
+						"No TransactionConverter is provided and the runtime api ConvertTransactionRuntimeApi is not found"
+					));
+				},
+			_ => return Err(internal_err("ConvertTransactionRuntimeApi version not supported")),
+		};
+
+		self.pool
+			.submit_one(&block_hash, TransactionSource::Local, extrinsic)
+			.await
+			.map(move |_| transaction_hash)
+			.map_err(|err| internal_err(format::Geth::pool_error(err)))
 	}
 }

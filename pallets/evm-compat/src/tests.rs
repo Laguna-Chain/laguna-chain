@@ -2,35 +2,26 @@ use core::str::FromStr;
 
 use crate::{
 	mock::{Call, ChainId, Origin, *},
-	RawOrigin, Transaction,
+	Transaction,
 };
 use codec::Encode;
-use ethereum::{
-	LegacyTransaction, LegacyTransactionMessage, TransactionAction, TransactionSignature,
-};
+use ethereum::{LegacyTransactionMessage, TransactionSignature};
+use fp_self_contained::SelfContainedCall;
 use frame_support::{
 	assert_ok,
 	crypto::ecdsa::ECDSAExt,
-	sp_runtime::{
-		app_crypto::ed25519,
-		traits::{Hash, StaticLookup},
-		MultiSignature, MultiSigner,
-	},
-	weights::GetDispatchInfo,
+	sp_runtime::{traits::Hash, MultiSigner},
 };
 use orml_traits::arithmetic::Zero;
-use primitives::{AccountId, IdentifyAccount, Signature};
-use rlp::RlpStream;
-use sp_core::{blake2_256, ecdsa, keccak_256, sr25519, Bytes, Pair, H160, H256, U256};
-type SignedPayload = frame_support::sp_runtime::generic::SignedPayload<Call, ()>;
-use fp_self_contained::{CheckedExtrinsic, SelfContainedCall};
-use sp_io::crypto::{secp256k1_ecdsa_recover, secp256k1_ecdsa_recover_compressed};
+use primitives::IdentifyAccount;
+use sp_core::{ecdsa, keccak_256, Bytes, Pair, H160, H256, U256};
+use sp_io::crypto::secp256k1_ecdsa_recover;
 
 // NOTICE: many of the underlying construct are taken from pallet-ethereum's test
 
 pub struct LegacyTxMsg(LegacyTransactionMessage);
 
-const RawSeed: [u8; 32] = [0x11; 32];
+const RAWSEED: [u8; 32] = [0x11; 32];
 
 impl LegacyTxMsg {
 	pub fn sign(&self, key: &H256) -> Transaction {
@@ -117,7 +108,7 @@ fn dummy_contract_call(target: H160, input: Vec<u8>, chain_id: u64) -> LegacyTra
 #[test]
 fn test_sign() {
 	// substrate ecdsa generate pubkey with compress on, so recovered address is in compressed form
-	let pair = ecdsa::Pair::from_seed_slice(&RawSeed).unwrap();
+	let pair = ecdsa::Pair::from_seed_slice(&RAWSEED).unwrap();
 
 	let msg = b"hello";
 	let hashed_payload = keccak_256(msg);
@@ -133,7 +124,7 @@ fn test_sign() {
 
 #[test]
 fn test_basic() {
-	let pair = ecdsa::Pair::from_seed_slice(&RawSeed).unwrap();
+	let pair = ecdsa::Pair::from_seed_slice(&RAWSEED).unwrap();
 
 	let signer = MultiSigner::Ecdsa(pair.public());
 
@@ -164,7 +155,7 @@ fn test_basic() {
 
 #[test]
 fn test_create() {
-	let pair = ecdsa::Pair::from_seed_slice(&RawSeed).unwrap();
+	let pair = ecdsa::Pair::from_seed_slice(&RAWSEED).unwrap();
 
 	let signer = MultiSigner::Ecdsa(pair.public());
 
@@ -244,7 +235,7 @@ fn test_create() {
 
 #[test]
 fn test_proxy() {
-	let pair = ecdsa::Pair::from_seed_slice(&RawSeed).unwrap();
+	let pair = ecdsa::Pair::from_seed_slice(&RAWSEED).unwrap();
 
 	let dev_acc = EvmCompat::to_mapped_account(H160(pair.public().to_eth_address().unwrap()));
 
@@ -273,7 +264,7 @@ fn test_proxy() {
 
 #[test]
 fn test_proxy_self_contained() {
-	let pair = ecdsa::Pair::from_seed_slice(&RawSeed).unwrap();
+	let pair = ecdsa::Pair::from_seed_slice(&RAWSEED).unwrap();
 	let dev_addr = H160(pair.public().to_eth_address().unwrap());
 	let dev_acc = EvmCompat::to_mapped_account(dev_addr);
 

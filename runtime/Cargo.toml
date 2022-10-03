@@ -24,6 +24,9 @@ pallet-contracts = {default-features = false, git = 'https://github.com/parityte
 pallet-contracts-primitives = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-evm-compat = {path = "../pallets/evm-compat", default-features = false}
+pallet-evm-compat-rpc-runtime-api = {path = "../pallets/evm-compat/rpc/runtime-api", default-features = false}
+
 
 # monetary system
 orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.27"}
@@ -36,7 +39,6 @@ pallet-treasury = {default-features = false, git = 'https://github.com/paritytec
 
 # fee and validator
 pallet-fee-enablement = {path = "../pallets/fee-enablement", default-features = false}
-pallet-evm-compat = {path = "../pallets/evm-compat", default-features = false}
 pallet-fee-measurement = {path = "../pallets/fee-measurement", default-features = false}
 pallet-fluent-fee = {path = "../pallets/fluent-fee", default-features = false}
 pallet-prepaid = {path = "../pallets/prepaid", default-features = false}
@@ -67,12 +69,15 @@ sp-session = {default-features = false, git = 'https://github.com/paritytech/sub
 sp-transaction-pool = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-version = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 fp-self-contained = {default-features = false, git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
+fp-rpc = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" , default-features = false}
 pallet-evm = {default-features = false, git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
+ethereum = { version = "0.12.0", default-features = false, features = ["with-codec"] }
+
 
 # parity SCALE codec
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}
 hex-literal = {version = '0.3.1'}
-pallet-currencies-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
+pallet-currencies-rpc-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
 
 # build dependency for the wasm runtime
@@ -118,10 +123,11 @@ std = [
   'pallet-scheduler/std',
   'pallet-treasury/std',
   'pallet-currencies/std',
-  'pallet-currencies-runtime-api/std',
+  'pallet-currencies-rpc-runtime-api/std',
   'pallet-transaction-payment/std',
   'pallet-evm-compat/std',
   'pallet-evm/std',
+  'ethereum/std',
   'pallet-transaction-payment-rpc-runtime-api/std',
   "pallet-fluent-fee/std",
   'pallet-contracts/std',
@@ -132,7 +138,9 @@ std = [
   'pallet-fee-measurement/std',
   'pallet-proxy/std',
   'fp-self-contained/std',
+  "fp-rpc/std",
   'traits/std',
   'pallet-contract-asset-registry/std',
   'pallet-system-contract-deployer/std',
+  
 ]

@@ -1,6 +1,6 @@
 [package]
 edition = "2021"
-name = "pallet-currencies-rpc"
+name = "pallet-evm-compat-rpc"
 version = "0.1.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -9,7 +9,7 @@ version = "0.1.0"
 codec = {version = "3.0.0", package = "parity-scale-codec"}
 serde = {version = "1.0.137", features = ["derive"]}
 
-pallet-currencies-rpc-runtime-api = {version = "0.1.0", path = "runtime-api"}
+pallet-evm-compat-rpc-runtime-api = {version = "0.1.0", path = "runtime-api"}
 primitives = {version = "0.1.0", path = "../../../primitives"}
 
 sp-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
