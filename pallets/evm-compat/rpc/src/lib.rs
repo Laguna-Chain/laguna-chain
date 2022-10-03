@@ -14,7 +14,7 @@ pub use pallet_evm_compat_rpc_runtime_api::EvmCompatApi as EvmCompatApiRuntimeAp
 use sp_api::{BlockId, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
 use sp_runtime::{
-	app_crypto::{ecdsa, sp_core::H160},
+	app_crypto::sp_core::H160,
 	traits::{Block as BlockT, Header as HeaderT},
 };
 

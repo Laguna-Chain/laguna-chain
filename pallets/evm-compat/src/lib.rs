@@ -89,7 +89,6 @@ mod pallet {
 	pub trait Config:
 		frame_system::Config + pallet_contracts::Config + pallet_proxy::Config
 	{
-		type BalanceConvert: Convert<U256, BalanceOf<Self>>;
 		type AddressMapping: AddressMapping<AccountIdOf<Self>>;
 
 		type ContractAddressMapping: AddressMapping<AccountIdOf<Self>>;
@@ -112,6 +111,7 @@ mod pallet {
 	where
 		OriginFor<T>: Into<Result<RawOrigin, OriginFor<T>>>,
 		T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
+		BalanceOf<T>: TryFrom<U256> + Into<U256>,
 		<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
 	{
 		// we rely on self_contained call to fetch the correct origin from the eth-transaction
@@ -151,6 +151,7 @@ struct ContractTransactionAdapter<T>((TransactionData, PhantomData<T>));
 
 impl<T: Config> ContractTransactionAdapter<T>
 where
+	BalanceOf<T>: TryFrom<U256> + Into<U256>,
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
 	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
 {
@@ -181,7 +182,7 @@ where
 		pallet_contracts::Pallet::<T>::call(
 			elevated_origin,
 			contract_addr_source,
-			Pallet::<T>::balance_convert(self.inner().value),
+			self.inner().value.try_into().unwrap_or_default(),
 			self.inner().gas_limit.as_u64(),
 			None,
 			self.inner().input.clone(),
@@ -202,7 +203,7 @@ where
 		// FIXME: make storage_deposit configurable, make salt configurable
 		pallet_contracts::Pallet::<T>::instantiate_with_code(
 			elevated_origin,
-			Pallet::<T>::balance_convert(self.inner().value),
+			self.inner().value.try_into().unwrap_or_default(),
 			self.inner().gas_limit.as_u64(),
 			None,
 			code,
@@ -213,10 +214,6 @@ where
 }
 
 impl<T: Config> Pallet<T> {
-	fn balance_convert(eth_balance: U256) -> BalanceOf<T> {
-		<<T as Config>::BalanceConvert as Convert<U256, BalanceOf<T>>>::convert(eth_balance)
-	}
-
 	// given a signed source: H160, elevate it to a substrate signed AccountId
 	fn to_mapped_origin(source: H160) -> OriginFor<T> {
 		let account_id = Self::to_mapped_account(source);
@@ -391,6 +388,7 @@ where
 	<T as frame_system::Config>::Call:
 		Dispatchable<Info = DispatchInfo, PostInfo = PostDispatchInfo>,
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
+	BalanceOf<T>: TryFrom<U256> + Into<U256>,
 	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
 {
 	pub fn is_self_contained(&self) -> bool {

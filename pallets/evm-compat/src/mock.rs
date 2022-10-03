@@ -207,8 +207,6 @@ impl pallet_proxy::Config for Runtime {
 }
 
 impl Config for Runtime {
-	type BalanceConvert = BalanceConvert;
-
 	type AddressMapping = HashedAddressMapping<KeccakHasher>;
 
 	type ContractAddressMapping = PlainContractAddressMapping;

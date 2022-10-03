@@ -11,7 +11,6 @@ use sp_core::{H160, U256};
 use crate::Runtime;
 
 impl pallet_evm_compat::Config for Runtime {
-	type BalanceConvert = BalanceConvert;
 	type AddressMapping = HashedAddressMapping<Keccak256>;
 	type ContractAddressMapping = PlainContractAddressMapping;
 
