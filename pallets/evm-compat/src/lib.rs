@@ -32,6 +32,7 @@ use frame_support::{
 };
 use frame_system::pallet_prelude::*;
 use orml_traits::arithmetic::Zero;
+use scale_info::prelude::format;
 
 use pallet_evm::AddressMapping;
 
