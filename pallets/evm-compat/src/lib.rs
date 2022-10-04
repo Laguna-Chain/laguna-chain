@@ -25,7 +25,7 @@ use frame_support::{
 	pallet_prelude::*,
 	sp_core_hashing_proc_macro::keccak_256,
 	sp_io,
-	sp_runtime::traits::Convert,
+	sp_runtime::traits::{Hash as HashT, Keccak256},
 	sp_std::{fmt::Debug, prelude::*},
 	traits::Currency,
 	weights::{DispatchInfo, PostDispatchInfo},
@@ -37,8 +37,9 @@ use pallet_evm::AddressMapping;
 
 use codec::Decode;
 use frame_support::sp_runtime::traits::StaticLookup;
+use hex::FromHex;
 pub use pallet::*;
-use sp_core::{crypto::UncheckedFrom, ecdsa, H160, U256};
+use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
 
 #[cfg(test)]
@@ -297,6 +298,12 @@ impl<T: Config> Pallet<T> {
 		msg.extend_from_slice(&payload_hash);
 		msg
 	}
+
+	pub fn storage_key(index: impl Into<u32>) -> Option<Vec<u8>> {
+		// string padded to [u8 ;32]
+		let key_str = format!("{:032X}", index.into());
+		<[u8; 32]>::from_hex(key_str).ok().map(|v| v.to_vec())
+	}
 }
 
 // NOTICE: this is mostly copy from pallet-ethereum
@@ -366,6 +373,19 @@ where
 		let msg = keccak_256(&Self::eip712_payload(who, nonce)[..]);
 
 		Self::recover_signer(&msg, sig).and_then(|pk| pk.to_eth_address().ok().map(H160))
+	}
+
+	pub fn storage_at(source: &H160, index: impl Into<u32>) -> Option<H256> {
+		let contract_addr = Self::account_from_contract_addr(*source);
+
+		// TODO: properly handle storage key decoding problem
+		pallet_contracts::Pallet::<T>::get_storage(
+			contract_addr,
+			Self::storage_key(index).unwrap_or_default(),
+		)
+		.ok()
+		.flatten()
+		.map(|v| <Keccak256 as HashT>::hash(&v[..]))
 	}
 }
 

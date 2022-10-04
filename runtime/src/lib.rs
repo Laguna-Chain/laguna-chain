@@ -30,7 +30,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_runtime::traits::UniqueSaturatedInto;
 
 use codec::{Decode, Encode};
-use sp_core::{Bytes, H160, H256, U256};
+use sp_core::{H160, H256, U256};
 
 use frame_support::sp_std::prelude::*;
 
@@ -73,7 +73,7 @@ pub mod impl_pallet_system_contract_deployer;
 pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
 
-impl pallet_randomness_collective_flip::Config for Runtime {}
+use impl_pallet_evm_compat::{ETH_ACC_PREFIX, ETH_CONTRACT_PREFIX};
 
 pub mod constants;
 
@@ -369,7 +369,6 @@ impl_runtime_apis! {
 		}
 	}
 
-
 	impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
 		fn validate_transaction(
 			source: TransactionSource,
@@ -545,9 +544,8 @@ impl_runtime_apis! {
 
 		fn check_contract_is_evm_compat(contract_addr: AccountId) -> Option<H160>{
 			let addr_raw = <[u8; 32]>::from(contract_addr);
-			if addr_raw.starts_with(b"evm_contract:")
+			if addr_raw.starts_with(ETH_CONTRACT_PREFIX)
 			 {
-
 				let source = H160::from_slice(&addr_raw[12..]);
 				Some(source)
 
@@ -561,9 +559,7 @@ impl_runtime_apis! {
 		}
 
 		fn balances(address: H160) -> U256 {
-
 			let addr = EvmCompat::to_mapped_account(address);
-
 			Currencies::free_balance(addr, LAGUNA_NATIVE_CURRENCY).into()
 		}
 
@@ -572,23 +568,24 @@ impl_runtime_apis! {
 			H256::from_slice(System::block_hash(number).as_ref())
 		}
 
-		fn storage_at(address: H160, index: U256,) -> H256 {
-			// FIXME: do proper storage lookup
-			Default::default()
+		fn storage_at(address: H160, index: U256) -> H256 {
+			EvmCompat::storage_at(&address, index.as_u32()).unwrap_or_default()
 		}
 
 		fn account_nonce(address: H160) -> U256 {
-
 			let addr = EvmCompat::to_mapped_account(address);
-
 			let nonce = System::account_nonce(&addr);
-
 			U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce))
-
 		}
 
+		fn call(from: H160, target: H160, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) -> pallet_contracts_primitives::ContractExecResult<Balance>{
 
+			// TODO: can contract call this endpoint?
+			let origin = EvmCompat::to_mapped_account(from);
+			let dest = EvmCompat::account_from_contract_addr(target);
 
+			Contracts::bare_call(origin, dest, value, gas_limit, storage_deposit_limit, input, CONTRACTS_DEBUG_OUTPUT)
+		}
 	}
 
 	// TODO: add other needed runtime-api
@@ -661,8 +658,6 @@ impl_runtime_apis! {
 			if batches.is_empty() {
 				return Err("no benchmark items found".into())
 			}
-
-
 			Ok(batches)
 		}
 	}

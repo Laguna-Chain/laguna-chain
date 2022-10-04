@@ -4800,6 +4800,7 @@ dependencies = [
 name = "pallet-evm-compat-rpc-runtime-api"
 version = "0.1.0"
 dependencies = [
+ "pallet-contracts-primitives",
  "parity-scale-codec",
  "primitives",
  "scale-info",

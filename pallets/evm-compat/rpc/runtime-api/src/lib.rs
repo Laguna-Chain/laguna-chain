@@ -1,6 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::Codec;
+use pallet_contracts_primitives::ContractExecResult;
 use sp_core::{H160, H256, U256};
 use sp_std::vec::Vec;
 
@@ -28,5 +29,6 @@ sp_api::decl_runtime_apis! {
 
 		fn account_nonce(addrss: H160) -> U256;
 
+		fn call(from: H160, target: H160, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) -> ContractExecResult<Balance>;
 	}
 }

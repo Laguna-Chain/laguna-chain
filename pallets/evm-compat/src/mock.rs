@@ -227,14 +227,6 @@ impl AddressMapping<AccountId> for PlainContractAddressMapping {
 	}
 }
 
-pub struct BalanceConvert;
-
-impl Convert<U256, Balance> for BalanceConvert {
-	fn convert(a: U256) -> Balance {
-		a.as_u128()
-	}
-}
-
 /// generate account address in H160 compatible form
 pub struct EvmCompatAdderssGenerator;
 

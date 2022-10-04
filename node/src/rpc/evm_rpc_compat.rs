@@ -30,7 +30,8 @@ use sp_runtime::{
 pub mod block_mapper;
 pub mod pending_api;
 use block_mapper::BlockMapper;
-use pending_api::pending_runtime_api;
+
+pub mod deferrable_runtime_api;
 
 use sc_client_api::Backend;
 use std::{marker::PhantomData, sync::Arc};
@@ -80,7 +81,7 @@ where
 			.client
 			.runtime_api()
 			.chain_id(&BlockId::Hash(hash))
-			.map_err(|_| internal_err("fetch runtime chain id failed"))?
+			.map_err(|_| internal_err("fetch runtime version failed"))?
 			.to_string())
 	}
 
@@ -289,37 +290,32 @@ where
 
 	/// Returns balance of the given account.
 	fn balance(&self, address: H160, number: Option<BlockNumber>) -> Result<U256> {
-		let api = self.client.runtime_api();
-
 		let mapper = BlockMapper::from_client(self.client.clone());
 
-		if let Some(id) = mapper.map_block(number) {
+		let id = mapper.map_block(number);
+		let deferred_api = self.deferrable_runtime_api(id.is_none())?;
+
+		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+
+		Self::run_with_api(deferred_api, |api| {
 			api.balances(&id, address)
-				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))
-		} else {
-			let pending_api = pending_runtime_api(self.client.as_ref(), self.graph.as_ref())?;
-			pending_api
-				.balances(&BlockId::Hash(self.client.info().best_hash), address)
-				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))
-		}
+				.map_err(|err| internal_err(format!("fetch runtime balance failed: {:?}", err)))
+		})
 	}
 
 	/// Returns content of the storage at given address.
 	fn storage_at(&self, address: H160, index: U256, number: Option<BlockNumber>) -> Result<H256> {
 		let mapper = BlockMapper::from_client(self.client.clone());
 
-		if let Some(id) = mapper.map_block(number) {
-			let api = self.client.runtime_api();
+		let id = mapper.map_block(number);
+		let deferred_api = self.deferrable_runtime_api(id.is_none())?;
 
+		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+
+		Self::run_with_api(deferred_api, |api| {
 			api.storage_at(&id, address, index)
-				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))
-		} else {
-			let pending_api = pending_runtime_api(self.client.as_ref(), self.graph.as_ref())?;
-
-			pending_api
-				.storage_at(&BlockId::Hash(self.client.info().best_hash), address, index)
-				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))
-		}
+				.map_err(|err| internal_err(format!("fetch runtime storage_at failed: {:?}", err)))
+		})
 	}
 
 	/// Returns the number of transactions sent from given address at given time (block number).
@@ -328,14 +324,15 @@ where
 
 		if let Some(id) = mapper.map_block(number) {
 			let api = self.client.runtime_api();
-			api.account_nonce(&id, address)
-				.map_err(|err| internal_err(format!("fetch runtime chain id failed: {:?}", err)))
+			api.account_nonce(&id, address).map_err(|err| {
+				internal_err(format!("fetch runtime transaction_count failed: {:?}", err))
+			})
 		} else {
 			let block = BlockId::Hash(self.client.info().best_hash);
 
 			let nonce =
 				self.client.runtime_api().account_nonce(&block, address).map_err(|err| {
-					internal_err(format!("fetch runtime account basic failed: {:?}", err))
+					internal_err(format!("fetch runtime transaction_count failed: {:?}", err))
 				})?;
 
 			let mut current_nonce = nonce;
@@ -364,7 +361,41 @@ where
 
 	/// Call contract, returning the output data.
 	fn call(&self, request: CallRequest, number: Option<BlockNumber>) -> Result<Bytes> {
-		Err(internal_err("call not supported"))
+		let mapper = BlockMapper::from_client(self.client.clone());
+
+		let id = mapper.map_block(number);
+		let deferred_api = self.deferrable_runtime_api(id.is_none())?;
+
+		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+
+		Self::run_with_api(deferred_api, |api| {
+			let CallRequest { from, to, value, ref data, gas_price, .. } = request;
+			let get_args = || -> Option<(H160, H160, Balance, Vec<u8>, u64)> {
+				Some((
+					from?,
+					to?,
+					value.map(|v| v.unique_saturated_into())?,
+					data.clone().map(|v| v.0.to_vec())?,
+					gas_price.map(|v| v.unique_saturated_into())?,
+				))
+			};
+			get_args().ok_or_else(|| internal_err("missing args when call")).and_then(
+				|(from, to, value, data, gas_price)| {
+					api.call(&id, from, to, value, data, gas_price, None)
+						.map_err(|err| {
+							internal_err(format!("fetch runtime call failed: {:?}", err))
+						})
+						.and_then(|v| {
+							v.result
+								.map(|o| o.data)
+								.map_err(|err| {
+									internal_err(format!("fetch runtime call failed: {:?}", err))
+								})
+								.map(|v| v.to_vec().into())
+						})
+				},
+			)
+		})
 	}
 
 	/// Estimate gas needed for execution of given contract.

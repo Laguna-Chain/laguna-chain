@@ -17,13 +17,16 @@ impl pallet_evm_compat::Config for Runtime {
 	type ChainId = ConstU64<1000>;
 }
 
+pub const ETH_ACC_PREFIX: &[u8; 4] = b"evm:";
+pub const ETH_CONTRACT_PREFIX: &[u8; 12] = b"evm_contract";
+
 pub struct PlainContractAddressMapping;
 
 impl AddressMapping<AccountId> for PlainContractAddressMapping {
 	fn into_account_id(address: H160) -> AccountId {
 		let mut out = [0_u8; 32];
 
-		out[0..12].copy_from_slice(&b"evm_contract"[..]);
+		out[0..12].copy_from_slice(ETH_CONTRACT_PREFIX);
 		out[12..].copy_from_slice(&address.0);
 
 		out.into()
