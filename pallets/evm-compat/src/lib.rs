@@ -37,11 +37,12 @@ use scale_info::prelude::format;
 use pallet_evm::AddressMapping;
 
 use codec::Decode;
-use frame_support::sp_runtime::traits::StaticLookup;
+use frame_support::{sp_runtime::traits::StaticLookup, traits::tokens::ExistenceRequirement};
 use hex::FromHex;
 pub use pallet::*;
 use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
+type CurrencyOf<T> = <T as pallet_contracts::Config>::Currency;
 
 #[cfg(test)]
 mod mock;
@@ -84,6 +85,8 @@ impl<O: Into<Result<RawOrigin, O>> + From<RawOrigin>> EnsureOrigin<O>
 
 #[frame_support::pallet]
 mod pallet {
+
+	use orml_traits::BasicCurrency;
 
 	use super::*;
 
@@ -142,6 +145,14 @@ mod pallet {
 			if Pallet::<T>::has_proxy(source).is_some() {}
 
 			Pallet::<T>::allow_proxy(source, who)
+		}
+
+		#[pallet::weight(200_000_000)]
+		pub fn transfer(origin: OriginFor<T>, target: H160, value: BalanceOf<T>) -> DispatchResult {
+			let who = ensure_signed(origin)?;
+			let target_acc = Self::to_mapped_account(target);
+
+			CurrencyOf::<T>::transfer(&who, &target_acc, value, ExistenceRequirement::KeepAlive)
 		}
 	}
 }
