@@ -13,6 +13,9 @@ pallet-evm-compat-rpc-runtime-api = {version = "0.1.0", path = "runtime-api"}
 primitives = {version = "0.1.0", path = "../../../primitives"}
 
 sp-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-contracts-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+
 sp-blockchain = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-runtime = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-std = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}

@@ -75,6 +75,7 @@ pallet-evm-compat-rpc = {version = "0.1.0", path = "../pallets/evm-compat/rpc"}
 fc-rpc-core = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" }
 fp-rpc = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" }
 fc-rpc = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" }
+pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27" }
 ethereum = { version = "0.12.0", features = ["with-codec"] }
 rlp = "0.5"
 

@@ -3123,6 +3123,7 @@ dependencies = [
  "hex-literal",
  "jsonrpsee",
  "laguna-runtime",
+ "pallet-contracts-primitives",
  "pallet-contracts-rpc",
  "pallet-currencies-rpc",
  "pallet-evm-compat-rpc",
@@ -4775,7 +4776,9 @@ dependencies = [
  "pallet-transaction-payment",
  "parity-scale-codec",
  "primitives",
+ "rlp",
  "scale-info",
+ "serde_json",
  "sp-core 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
  "sp-io 6.0.0 (git+https://github.com/paritytech/substrate.git?branch=polkadot-v0.9.27)",
  "traits",
@@ -4786,6 +4789,8 @@ name = "pallet-evm-compat-rpc"
 version = "0.1.0"
 dependencies = [
  "jsonrpsee",
+ "pallet-contracts-primitives",
+ "pallet-contracts-rpc",
  "pallet-evm-compat-rpc-runtime-api",
  "parity-scale-codec",
  "primitives",

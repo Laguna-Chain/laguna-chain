@@ -16,7 +16,7 @@ use frame_support::{
 		app_crypto::sp_core::OpaqueMetadata,
 		create_runtime_str, generic, impl_opaque_keys,
 		traits::{
-			BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf,
+			BlakeTwo256, Block as BlockT, DispatchInfoOf, Extrinsic, NumberFor, PostDispatchInfoOf,
 			SignedExtension,
 		},
 		transaction_validity::{TransactionSource, TransactionValidity},
@@ -24,10 +24,12 @@ use frame_support::{
 	},
 	traits::Get,
 };
+use pallet_contracts_primitives::ExecReturnValue;
+
 use impl_frame_system::BlockHashCount;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_runtime::traits::UniqueSaturatedInto;
+use sp_runtime::{traits::UniqueSaturatedInto, DispatchError};
 
 use codec::{Decode, Encode};
 use sp_core::{H160, H256, U256};
@@ -578,13 +580,9 @@ impl_runtime_apis! {
 			U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce))
 		}
 
-		fn call(from: H160, target: H160, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) -> pallet_contracts_primitives::ContractExecResult<Balance>{
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) -> Result<(u64, ExecReturnValue), DispatchError> {
 
-			// TODO: can contract call this endpoint?
-			let origin = EvmCompat::to_mapped_account(from);
-			let dest = EvmCompat::account_from_contract_addr(target);
-
-			Contracts::bare_call(origin, dest, value, gas_limit, storage_deposit_limit, input, CONTRACTS_DEBUG_OUTPUT)
+			EvmCompat::call_or_create(from, target, value, input, gas_limit, storage_deposit_limit)
 		}
 	}
 

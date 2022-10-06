@@ -15,6 +15,7 @@ use frame_support::{
 use hex::FromHex;
 use orml_traits::arithmetic::Zero;
 use primitives::IdentifyAccount;
+use rlp::Encodable;
 use sp_core::{
 	bytes::from_hex, ecdsa, hexdisplay::AsBytesRef, keccak_256, Bytes, Pair, H160, H256, U256,
 };
@@ -171,7 +172,7 @@ fn test_create() {
 		.balances(vec![(dev_acc, 2 << 64)])
 		.build()
 		.execute_with(|| {
-			let chain_id = 1000;
+			let chain_id = ChainId::get();
 
 			let blob = std::fs::read(
 				"../../runtime/integration-tests/contracts-data/ink/basic/dist/basic.wasm",
@@ -288,4 +289,44 @@ fn test_proxy_self_contained() {
 
 			assert_eq!(EvmCompat::has_proxy(dev_addr), Some(ALICE));
 		});
+}
+
+fn jsonfy(
+	LegacyTransactionMessage {
+    nonce,
+    gas_price,
+    gas_limit,
+    action,
+    value,
+    input,
+    chain_id,
+}: LegacyTransactionMessage,
+) -> serde_json::Value {
+	serde_json::json!({
+		"nonce": format!("{:#X}", nonce),
+		"gasPrice": format!("{:#X}", gas_price).to_uppercase(),
+		"gasLimit": format!("{:#X}", gas_limit).to_uppercase(),
+		"value": format!("{:#X}", value),
+		"input": format!("0X{}", hex::encode(input)),
+		"chainId": format!("{:#X}", chain_id.unwrap()),
+	})
+}
+
+#[test]
+fn dummy_dump() {
+	let chain_id = ChainId::get();
+
+	let blob =
+		std::fs::read("../../runtime/integration-tests/contracts-data/ink/basic/dist/basic.wasm")
+			.unwrap();
+
+	let selector = Bytes::from_str("0xed4b9d1b").unwrap();
+
+	let eth_raw_call = dummy_contract_create(chain_id, blob.clone(), selector.to_vec());
+
+	serde_json::to_writer_pretty(
+		std::fs::File::create("../../payload.json").unwrap(),
+		&jsonfy(eth_raw_call),
+	)
+	.unwrap();
 }

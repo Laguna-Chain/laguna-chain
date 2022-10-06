@@ -211,7 +211,7 @@ impl Config for Runtime {
 
 	type ContractAddressMapping = PlainContractAddressMapping;
 
-	type ChainId = ConstU64<100>;
+	type ChainId = ChainId;
 }
 
 pub struct PlainContractAddressMapping;
@@ -317,7 +317,7 @@ pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 
 parameter_types! {
-	pub const ChainId: u64 = 42;
+	pub const ChainId: u64 = 1000;
 }
 
 type Extra = ();

@@ -34,15 +34,17 @@ use frame_system::pallet_prelude::*;
 use orml_traits::arithmetic::Zero;
 use scale_info::prelude::format;
 
+use codec::Decode;
+use pallet_contracts_primitives::{Code, ContractResult};
 use pallet_evm::AddressMapping;
 
-use codec::Decode;
 use frame_support::{sp_runtime::traits::StaticLookup, traits::tokens::ExistenceRequirement};
 use hex::FromHex;
 pub use pallet::*;
-use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
+use sp_core::{crypto::UncheckedFrom, ecdsa, Bytes, H160, H256, U256};
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
 type CurrencyOf<T> = <T as pallet_contracts::Config>::Currency;
+use pallet_contracts_primitives::ExecReturnValue;
 
 #[cfg(test)]
 mod mock;
@@ -85,8 +87,6 @@ impl<O: Into<Result<RawOrigin, O>> + From<RawOrigin>> EnsureOrigin<O>
 
 #[frame_support::pallet]
 mod pallet {
-
-	use orml_traits::BasicCurrency;
 
 	use super::*;
 
@@ -321,6 +321,7 @@ impl<T: Config> Pallet<T> {
 // NOTICE: this is mostly copy from pallet-ethereum
 impl<T: Config> Pallet<T>
 where
+	BalanceOf<T>: TryFrom<U256> + Into<U256>,
 	OriginFor<T>: Into<Result<RawOrigin, OriginFor<T>>>,
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
 	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
@@ -398,6 +399,57 @@ where
 		.ok()
 		.flatten()
 		.map(|v| <Keccak256 as HashT>::hash(&v[..]))
+	}
+
+	pub fn call_or_create(
+		from: Option<H160>,
+		target: Option<H160>,
+		value: BalanceOf<T>,
+		input: Vec<u8>,
+		gas_limit: u64,
+		storage_deposit_limit: Option<BalanceOf<T>>,
+	) -> Result<(u64, ExecReturnValue), DispatchError> {
+		let origin = Self::to_mapped_account(from.unwrap_or_default());
+		if let Some(to) = target {
+			let dest = Self::account_from_contract_addr(to);
+			let call_result = pallet_contracts::Pallet::<T>::bare_call(
+				origin,
+				dest,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				input,
+				true,
+			);
+
+			let return_value = call_result.result?;
+
+			Ok((call_result.gas_consumed, return_value))
+		} else {
+			let (code, data, salt) =
+				<(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut &input[..]).unwrap();
+
+			let uploaded_code = pallet_contracts::Pallet::<T>::bare_upload_code(
+				origin.clone(),
+				code,
+				storage_deposit_limit,
+			)?;
+
+			let create_result = pallet_contracts::Pallet::<T>::bare_instantiate(
+				origin,
+				value,
+				gas_limit,
+				storage_deposit_limit,
+				Code::Existing(uploaded_code.code_hash),
+				data,
+				salt,
+				true,
+			);
+
+			let return_value = create_result.result?.result;
+
+			Ok((create_result.gas_consumed, return_value))
+		}
 	}
 }
 

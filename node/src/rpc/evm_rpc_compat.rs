@@ -28,7 +28,10 @@ use sp_runtime::{
 };
 
 pub mod block_mapper;
+pub mod execute;
+pub mod fee;
 pub mod pending_api;
+pub mod transaction;
 use block_mapper::BlockMapper;
 
 pub mod deferrable_runtime_api;
@@ -361,41 +364,7 @@ where
 
 	/// Call contract, returning the output data.
 	fn call(&self, request: CallRequest, number: Option<BlockNumber>) -> Result<Bytes> {
-		let mapper = BlockMapper::from_client(self.client.clone());
-
-		let id = mapper.map_block(number);
-		let deferred_api = self.deferrable_runtime_api(id.is_none())?;
-
-		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
-
-		Self::run_with_api(deferred_api, |api| {
-			let CallRequest { from, to, value, ref data, gas_price, .. } = request;
-			let get_args = || -> Option<(H160, H160, Balance, Vec<u8>, u64)> {
-				Some((
-					from?,
-					to?,
-					value.map(|v| v.unique_saturated_into())?,
-					data.clone().map(|v| v.0.to_vec())?,
-					gas_price.map(|v| v.unique_saturated_into())?,
-				))
-			};
-			get_args().ok_or_else(|| internal_err("missing args when call")).and_then(
-				|(from, to, value, data, gas_price)| {
-					api.call(&id, from, to, value, data, gas_price, None)
-						.map_err(|err| {
-							internal_err(format!("fetch runtime call failed: {:?}", err))
-						})
-						.and_then(|v| {
-							v.result
-								.map(|o| o.data)
-								.map_err(|err| {
-									internal_err(format!("fetch runtime call failed: {:?}", err))
-								})
-								.map(|v| v.to_vec().into())
-						})
-				},
-			)
-		})
+		self.try_call(request, number).map(|out| out.1)
 	}
 
 	/// Estimate gas needed for execution of given contract.
@@ -404,7 +373,7 @@ where
 		request: CallRequest,
 		number: Option<BlockNumber>,
 	) -> Result<U256> {
-		Err(internal_err("estimate_gas not supported"))
+		self.try_call(request, number).map(|out| out.0)
 	}
 
 	// ########################################################################
