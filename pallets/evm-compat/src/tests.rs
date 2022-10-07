@@ -11,6 +11,7 @@ use frame_support::{
 	assert_ok,
 	crypto::ecdsa::ECDSAExt,
 	sp_runtime::{traits::Hash, MultiSigner},
+	weights::{IdentityFee, WeightToFee},
 };
 use hex::FromHex;
 use orml_traits::arithmetic::Zero;
@@ -83,12 +84,12 @@ fn dummy_contract_create(
 ) -> LegacyTransactionMessage {
 	let mut input_buf = vec![];
 
-	(selector, blob).encode_to(&mut input_buf);
+	(selector, blob, Vec::<u8>::new()).encode_to(&mut input_buf);
 
 	LegacyTransactionMessage {
 		nonce: Default::default(),
-		gas_price: Default::default(),
-		gas_limit: U256::from_dec_str("200000000000").unwrap(),
+		gas_price: 1_u8.into(),
+		gas_limit: U256::from_dec_str("20000000000000").unwrap(),
 		action: ethereum::TransactionAction::Create,
 		value: Default::default(),
 		chain_id: Some(chain_id),
@@ -99,8 +100,8 @@ fn dummy_contract_create(
 fn dummy_contract_call(target: H160, input: Vec<u8>, chain_id: u64) -> LegacyTransactionMessage {
 	LegacyTransactionMessage {
 		nonce: Default::default(),
-		gas_price: Default::default(),
-		gas_limit: U256::from_dec_str("200000000000").unwrap(),
+		gas_price: 1_u8.into(),
+		gas_limit: U256::from_dec_str("20000000000000").unwrap(),
 		action: ethereum::TransactionAction::Call(target),
 		value: Default::default(),
 		chain_id: Some(chain_id),
@@ -314,12 +315,13 @@ fn test_try_call() {
 			let input = (blob, selector.to_vec(), Vec::<u8>::new()).encode();
 
 			// test create
-			let upload_result =
-				EvmCompat::try_call_or_create(Some(dev_addr), None, 0, 20000000000000, None, input);
-			assert_ok!(&upload_result);
-
-			let (gas_used, rv) = upload_result.unwrap();
-
-			assert_eq!(Balances::free_balance(&dev_acc), 2 << 64);
+			assert_ok!(EvmCompat::try_call_or_create(
+				Some(dev_addr),
+				None,
+				0,
+				20000000000000,
+				None,
+				input,
+			));
 		});
 }

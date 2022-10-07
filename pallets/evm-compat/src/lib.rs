@@ -119,6 +119,7 @@ mod pallet {
 	pub enum Error<T> {
 		TargetAlreadyProxying,
 		NoProxyFound,
+		InputBufferUndecodable,
 	}
 
 	#[pallet::call]
@@ -155,16 +156,17 @@ mod pallet {
 				// has target, mutate the existing proxy
 				// cannot mutate the proxy if the target is already backing someone else
 				ensure!(
-					Pallet::<T>::acc_is_backing(&target).is_some(),
+					Pallet::<T>::acc_is_backing(&target).is_none(),
 					Error::<T>::TargetAlreadyProxying
 				);
 				Pallet::<T>::allow_proxy(source, target)
 			} else {
-				// cannot remove if it has not proxy
-				let backing = Pallet::<T>::has_proxy(source);
-				ensure!(backing.is_some(), Error::<T>::NoProxyFound);
-
-				Pallet::<T>::remove_proxy(source, backing.unwrap())
+				// cannot remove if it has no proxy
+				if let Some(backing) = Pallet::<T>::has_proxy(source) {
+					Pallet::<T>::remove_proxy(source, backing)
+				} else {
+					Err(Error::<T>::NoProxyFound.into())
+				}
 			}
 		}
 
@@ -257,7 +259,8 @@ where
 		let mut input_buf = &self.inner.input[..];
 
 		// scale-codec can split vec's on the fly
-		let (sel, code, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut input_buf).unwrap();
+		let (sel, code, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut input_buf)
+			.or(Err(Error::<T>::InputBufferUndecodable))?;
 
 		// this origin cannot be controled from outside
 		let elevated_origin = Pallet::<T>::to_mapped_origin(source);

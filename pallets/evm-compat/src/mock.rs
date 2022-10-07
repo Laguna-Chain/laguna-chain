@@ -128,9 +128,9 @@ impl pallet_transaction_payment::Config for Runtime {
 
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 
-pub const UNIT: u128 = 100_000_000_000_000_000;
+pub const UNIT: u128 = 100_000_000_000_000;
 const fn deposit(items: u32, bytes: u32) -> Balance {
-	(items as Balance * UNIT + (bytes as Balance) * (5 * UNIT / 10000 / 100)) / 10
+	(items as Balance * UNIT + (bytes as Balance) * (5 * UNIT / 10000 / 100)) / 1000000
 }
 
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
