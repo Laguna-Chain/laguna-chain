@@ -35,15 +35,17 @@ use orml_traits::arithmetic::Zero;
 use scale_info::prelude::format;
 
 use codec::Decode;
-use pallet_contracts_primitives::{Code, ContractResult};
+use pallet_contracts_primitives::Code;
 use pallet_evm::AddressMapping;
 
 use frame_support::{sp_runtime::traits::StaticLookup, traits::tokens::ExistenceRequirement};
 use hex::FromHex;
 pub use pallet::*;
-use sp_core::{crypto::UncheckedFrom, ecdsa, Bytes, H160, H256, U256};
+use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
 type CurrencyOf<T> = <T as pallet_contracts::Config>::Currency;
+use fp_ethereum::TransactionData;
+use frame_support::weights::WeightToFee;
 use pallet_contracts_primitives::ExecReturnValue;
 
 #[cfg(test)]
@@ -98,6 +100,8 @@ mod pallet {
 
 		type ContractAddressMapping: AddressMapping<AccountIdOf<Self>>;
 
+		type WeightToFee: WeightToFee<Balance = BalanceOf<Self>>;
+
 		type ChainId: Get<u64>;
 	}
 
@@ -110,6 +114,12 @@ mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn has_proxy)]
 	pub type ProxyAccount<T: Config> = StorageMap<_, Blake2_128Concat, H160, AccountIdOf<T>>;
+
+	#[pallet::error]
+	pub enum Error<T> {
+		TargetAlreadyProxying,
+		NoProxyFound,
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
@@ -135,16 +145,27 @@ mod pallet {
 		#[pallet::weight(200_000_000)]
 		pub fn set_proxy(
 			origin: OriginFor<T>,
-			who: AccountIdOf<T>,
+			who: Option<AccountIdOf<T>>,
 			nonce: U256,
 			sig: Vec<u8>,
 		) -> DispatchResult {
-			// FIXME: should we let the backed proxy be configurable?
 			let source = ensure_ethereum_transaction(origin)?;
 
-			if Pallet::<T>::has_proxy(source).is_some() {}
+			if let Some(target) = who {
+				// has target, mutate the existing proxy
+				// cannot mutate the proxy if the target is already backing someone else
+				ensure!(
+					Pallet::<T>::acc_is_backing(&target).is_some(),
+					Error::<T>::TargetAlreadyProxying
+				);
+				Pallet::<T>::allow_proxy(source, target)
+			} else {
+				// cannot remove if it has not proxy
+				let backing = Pallet::<T>::has_proxy(source);
+				ensure!(backing.is_some(), Error::<T>::NoProxyFound);
 
-			Pallet::<T>::allow_proxy(source, who)
+				Pallet::<T>::remove_proxy(source, backing.unwrap())
+			}
 		}
 
 		#[pallet::weight(200_000_000)]
@@ -157,10 +178,34 @@ mod pallet {
 	}
 }
 
-use fp_ethereum::TransactionData;
+fn fee_details<T: Config>(t: &Transaction) -> (U256, U256)
+where
+	BalanceOf<T>: TryFrom<U256> + Into<U256>,
+{
+	match t {
+		Transaction::Legacy(t) => {
+			let max_allowed = t.gas_limit * t.gas_price;
+			(max_allowed, Default::default())
+		},
+		Transaction::EIP2930(t) => {
+			let max_allowed = t.gas_limit * t.gas_price;
+			(max_allowed, Default::default())
+		},
+		Transaction::EIP1559(t) => {
+			let max_allowed = t.gas_limit * t.max_priority_fee_per_gas;
+			let tip = t.max_fee_per_gas * t.max_priority_fee_per_gas;
+			(max_allowed, tip)
+		},
+	}
+}
 
 // once we have the TransactionData we can start mapping it to pallet_contract call args
-struct ContractTransactionAdapter<T>((TransactionData, PhantomData<T>));
+struct ContractTransactionAdapter<T> {
+	inner: TransactionData,
+	max_allowed: U256,
+	tips: U256,
+	_marker: PhantomData<T>,
+}
 
 impl<T: Config> ContractTransactionAdapter<T>
 where
@@ -168,19 +213,20 @@ where
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
 	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
 {
-	fn inner(&self) -> &TransactionData {
-		&self.0 .0
-	}
 	fn from_tx(tx: &Transaction) -> Self {
-		Self((TransactionData::from(tx), Default::default()))
+		let (max_allowed, tips) = fee_details::<T>(tx);
+
+		Self { inner: TransactionData::from(tx), max_allowed, tips, _marker: Default::default() }
 	}
 
 	fn call_or_create(&self, source: H160) -> DispatchResultWithPostInfo {
-		match self.inner().action {
+		match self.inner.action {
 			TransactionAction::Call(target) => self.execute_call_request(source, target),
 			TransactionAction::Create => self.execute_create_request(source),
 		}
 	}
+
+	/// the actual substrate weight allowed for from a eth transaction
 
 	fn execute_call_request(&self, source: H160, target: H160) -> DispatchResultWithPostInfo {
 		let contract_addr = Pallet::<T>::account_from_contract_addr(target);
@@ -191,37 +237,43 @@ where
 		// mapped origin has no known key pair
 		let elevated_origin = Pallet::<T>::to_mapped_origin(source);
 
-		// FIXME: make storage_deposit configurable
+		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(self.max_allowed)
+			.ok()
+			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
+
 		pallet_contracts::Pallet::<T>::call(
 			elevated_origin,
 			contract_addr_source,
-			self.inner().value.try_into().unwrap_or_default(),
-			self.inner().gas_limit.as_u64(),
-			None,
-			self.inner().input.clone(),
+			self.inner.value.try_into().unwrap_or_default(),
+			self.max_allowed.as_u64(),
+			storage_deposit_limit,
+			self.inner.input.clone(),
 		)
 	}
 
 	fn execute_create_request(&self, source: H160) -> DispatchResultWithPostInfo {
 		// FIXME: etherem use same input field to contain both code and data, we need a way to
 		// communicate with tool about our choice of this.
-		let mut input_buf = &self.inner().input[..];
+		let mut input_buf = &self.inner.input[..];
 
 		// scale-codec can split vec's on the fly
-		let (sel, code) = <(Vec<u8>, Vec<u8>)>::decode(&mut input_buf).unwrap();
+		let (sel, code, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut input_buf).unwrap();
 
 		// this origin cannot be controled from outside
 		let elevated_origin = Pallet::<T>::to_mapped_origin(source);
 
-		// FIXME: make storage_deposit configurable, make salt configurable
+		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(self.max_allowed)
+			.ok()
+			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
+
 		pallet_contracts::Pallet::<T>::instantiate_with_code(
 			elevated_origin,
-			self.inner().value.try_into().unwrap_or_default(),
-			self.inner().gas_limit.as_u64(),
-			None,
+			self.inner.value.try_into().unwrap_or_default(),
+			self.max_allowed.as_u64(),
+			storage_deposit_limit,
 			code,
 			sel,
-			Default::default(),
+			salt,
 		)
 	}
 }
@@ -251,8 +303,8 @@ impl<T: Config> Pallet<T> {
 			Default::default(),
 			Default::default(),
 		);
-
-		ProxyAccount::<T>::insert(source, target);
+		//  update the backing account to the new target
+		ProxyAccount::<T>::set(source, Some(target));
 
 		rs
 	}
@@ -293,17 +345,31 @@ impl<T: Config> Pallet<T> {
 		keccak_256!(domain_seperator_msg)
 	}
 
-	fn evm_proxy_payload(who: &T::AccountId, nonce: &U256) -> [u8; 32] {
+	fn evm_proxy_set_payload(who: &T::AccountId, nonce: &U256) -> [u8; 32] {
 		let tx_type_hash = keccak_256(b"Transaction(bytes proxyAccount, uint256 nonce)");
 		let mut tx_msg = tx_type_hash.to_vec();
+
 		tx_msg.extend_from_slice(&keccak_256(&who.encode()));
 		tx_msg.extend_from_slice(&Into::<[u8; 32]>::into(*nonce));
 		keccak_256(tx_msg.as_slice())
 	}
 
-	fn eip712_payload(proxy_account: &AccountIdOf<T>, nonce: &U256) -> Vec<u8> {
+	fn evm_proxy_remove_payload(nonce: &U256) -> [u8; 32] {
+		let tx_type_hash = keccak_256(b"Transaction(uint256 nonce)");
+		let mut tx_msg = tx_type_hash.to_vec();
+
+		tx_msg.extend_from_slice(&Into::<[u8; 32]>::into(*nonce));
+		keccak_256(tx_msg.as_slice())
+	}
+
+	fn eip712_payload(proxy_account: &Option<AccountIdOf<T>>, nonce: &U256) -> Vec<u8> {
 		let domain_separator = Self::evm_domain_separator();
-		let payload_hash = Self::evm_proxy_payload(proxy_account, nonce);
+
+		let payload_hash = if let Some(acc) = proxy_account {
+			Self::evm_proxy_set_payload(acc, nonce)
+		} else {
+			Self::evm_proxy_remove_payload(nonce)
+		};
 
 		let mut msg = b"\x19\x01".to_vec();
 		msg.extend_from_slice(&domain_separator);
@@ -315,6 +381,19 @@ impl<T: Config> Pallet<T> {
 		// string padded to [u8 ;32]
 		let key_str = format!("{:032X}", index.into());
 		<[u8; 32]>::from_hex(key_str).ok().map(|v| v.to_vec())
+	}
+
+	// check whether this account is backing any h160 account
+	pub fn acc_is_backing(account: &AccountIdOf<T>) -> Option<H160> {
+		ProxyAccount::<T>::iter().find_map(
+			|(backed, backer)| {
+				if backer == *account {
+					Some(backed)
+				} else {
+					None
+				}
+			},
+		)
 	}
 }
 
@@ -382,9 +461,12 @@ where
 		(msg, sig)
 	}
 
-	fn verify_proxy_request(who: &AccountIdOf<T>, nonce: &U256, sig: &[u8]) -> Option<H160> {
+	fn verify_proxy_request(
+		who: &Option<AccountIdOf<T>>,
+		nonce: &U256,
+		sig: &[u8],
+	) -> Option<H160> {
 		let msg = keccak_256(&Self::eip712_payload(who, nonce)[..]);
-
 		Self::recover_signer(&msg, sig).and_then(|pk| pk.to_eth_address().ok().map(H160))
 	}
 
@@ -401,17 +483,18 @@ where
 		.map(|v| <Keccak256 as HashT>::hash(&v[..]))
 	}
 
-	pub fn call_or_create(
+	pub fn try_call_or_create(
 		from: Option<H160>,
 		target: Option<H160>,
 		value: BalanceOf<T>,
-		input: Vec<u8>,
 		gas_limit: u64,
 		storage_deposit_limit: Option<BalanceOf<T>>,
+		input: Vec<u8>,
 	) -> Result<(u64, ExecReturnValue), DispatchError> {
 		let origin = Self::to_mapped_account(from.unwrap_or_default());
 		if let Some(to) = target {
 			let dest = Self::account_from_contract_addr(to);
+
 			let call_result = pallet_contracts::Pallet::<T>::bare_call(
 				origin,
 				dest,
@@ -484,9 +567,7 @@ where
 			Call::transact { t } => {
 				let rs = Pallet::<T>::recover_tx_signer(t)
 					.map(|s| {
-						let o = <<T as Config>::AddressMapping as AddressMapping<AccountIdOf<T>>>::into_account_id(
-							s,
-						);
+						let o = Pallet::<T>::to_mapped_account(s);
 						let extra = self.expose_extra();
 						(s, o, extra)
 					})
@@ -502,9 +583,7 @@ where
 			Call::set_proxy { who, nonce, sig } => {
 				let rs = Pallet::<T>::verify_proxy_request(who, nonce, sig)
 					.map(|s| {
-						let o = <<T as Config>::AddressMapping as AddressMapping<AccountIdOf<T>>>::into_account_id(
-						s,
-					);
+						let o = Pallet::<T>::to_mapped_account(s);
 						let extra = self.expose_extra();
 						(s, o, extra)
 					})
@@ -524,9 +603,9 @@ where
 	fn expose_extra(&self) -> (U256, U256) {
 		match self {
 			Call::transact { t } => {
-				let TransactionData { nonce, max_priority_fee_per_gas, .. } =
-					TransactionData::from(t);
-				(nonce, max_priority_fee_per_gas.unwrap_or_default())
+				let nonce = TransactionData::from(t).nonce;
+				let (_, tips) = fee_details::<T>(t);
+				(nonce, tips)
 			},
 			Call::set_proxy { who, nonce, sig } => (*nonce, Default::default()),
 			_ => Default::default(),

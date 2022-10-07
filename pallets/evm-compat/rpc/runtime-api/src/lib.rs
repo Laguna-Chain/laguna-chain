@@ -6,6 +6,8 @@ use sp_core::{H160, H256, U256};
 use sp_runtime::DispatchError;
 use sp_std::vec::Vec;
 
+pub type ConesensusDigest = ([u8; 4], Vec<u8>);
+
 sp_api::decl_runtime_apis! {
 	pub trait EvmCompatApi<AccountId, Balance>
 	where
@@ -30,5 +32,7 @@ sp_api::decl_runtime_apis! {
 		fn account_nonce(addrss: H160) -> U256;
 
 		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) ->  Result<(u64, ExecReturnValue), DispatchError>;
+
+		fn author(digest: Vec<ConesensusDigest>) -> Option<H160>;
 	}
 }

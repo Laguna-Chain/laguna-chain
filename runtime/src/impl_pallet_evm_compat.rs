@@ -15,6 +15,8 @@ impl pallet_evm_compat::Config for Runtime {
 	type ContractAddressMapping = PlainContractAddressMapping;
 
 	type ChainId = ConstU64<1000>;
+
+	type WeightToFee = <Runtime as pallet_transaction_payment::Config>::WeightToFee;
 }
 
 pub const ETH_ACC_PREFIX: &[u8; 4] = b"evm:";

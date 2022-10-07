@@ -212,6 +212,8 @@ impl Config for Runtime {
 	type ContractAddressMapping = PlainContractAddressMapping;
 
 	type ChainId = ChainId;
+
+	type WeightToFee = IdentityFee<Balance>;
 }
 
 pub struct PlainContractAddressMapping;

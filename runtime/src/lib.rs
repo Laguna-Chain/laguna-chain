@@ -22,7 +22,7 @@ use frame_support::{
 		transaction_validity::{TransactionSource, TransactionValidity},
 		ApplyExtrinsicResult, KeyTypeId, SaturatedConversion,
 	},
-	traits::Get,
+	traits::{FindAuthor, Get},
 };
 use pallet_contracts_primitives::ExecReturnValue;
 
@@ -51,6 +51,8 @@ use primitives::{
 	AccountId, Address, Balance, BlockNumber, CurrencyId, Hash, Header, Index, Signature,
 };
 
+use pallet_evm_compat_rpc_runtime_api::ConesensusDigest;
+
 // include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
 pub mod impl_frame_system;
@@ -75,6 +77,7 @@ pub mod impl_pallet_system_contract_deployer;
 pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
 
+use impl_pallet_authorship::AuraAccountAdapter;
 use impl_pallet_evm_compat::{ETH_ACC_PREFIX, ETH_CONTRACT_PREFIX};
 
 pub mod constants;
@@ -581,8 +584,21 @@ impl_runtime_apis! {
 		}
 
 		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) -> Result<(u64, ExecReturnValue), DispatchError> {
+			EvmCompat::try_call_or_create(from, target, value,  gas_limit, storage_deposit_limit, input)
+		}
 
-			EvmCompat::call_or_create(from, target, value, input, gas_limit, storage_deposit_limit)
+		fn author(digests: Vec<ConesensusDigest>) -> Option<H160>{
+
+			// find author using all consensus digests
+			AuraAccountAdapter::find_author(digests.iter().map(|(a, b)| {
+				(*a, &b[..])
+			})).and_then(|author| {
+				// find the h160 address that the author account is backing
+				EvmCompat::acc_is_backing(&author)
+			});
+
+
+			todo!()
 		}
 	}
 

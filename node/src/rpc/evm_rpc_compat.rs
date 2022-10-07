@@ -27,6 +27,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, Block as BlockT, UniqueSaturatedInto},
 };
 
+pub mod block;
 pub mod block_mapper;
 pub mod execute;
 pub mod fee;
@@ -179,7 +180,13 @@ where
 
 	/// Returns block author.
 	fn author(&self) -> Result<H160> {
-		Err(internal_err("author not supported"))
+		self.find_author(None).and_then(|v| {
+			v.ok_or_else(|| {
+				internal_err(
+					"fetch runtime author failed, unable to get backed address from digest",
+				)
+			})
+		})
 	}
 
 	/// Returns accounts list.

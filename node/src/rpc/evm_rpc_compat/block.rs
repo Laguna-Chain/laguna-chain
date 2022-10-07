@@ -14,12 +14,15 @@ use sc_client_api::{Backend, HeaderBackend, StateBackend, StorageProvider};
 use sc_network::ExHashT;
 use sc_transaction_pool::ChainApi;
 use sc_transaction_pool_api::TransactionPool;
-use sp_api::ProvideRuntimeApi;
+use sp_api::{HeaderT, ProvideRuntimeApi};
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
-use sp_core::{H256, U256};
-use sp_runtime::traits::{BlakeTwo256, Block as BlockT};
+use sp_core::{H160, H256, U256};
+use sp_runtime::{
+	generic::{BlockId, Digest, DigestItem},
+	traits::{BlakeTwo256, Block as BlockT},
+};
 
-use super::{pending_api::pending_runtime_api, EthApi};
+use super::{pending_api::pending_runtime_api, BlockMapper, EthApi};
 
 impl<B, C, H: ExHashT, CT, BE, P, A> EthApi<B, C, H, CT, BE, P, A>
 where
@@ -35,7 +38,36 @@ where
 	P: TransactionPool<Block = B> + Send + Sync + 'static,
 	A: ChainApi<Block = B> + 'static,
 {
-	pub(crate) fn gas_price(&self) -> Result<U256> {
-		Ok(U256::zero())
+	pub fn find_digest(&self, at: &BlockId<B>) -> Result<Vec<([u8; 4], Vec<u8>)>> {
+		let header = self.client.header(*at).map_err(|err| {
+			internal_err(format!("fetch runtime header digest failed: {:?}", err))
+		})?;
+
+		header
+			.ok_or_else(|| internal_err("fetch runtime header digest failed"))
+			.map(|v| extract_digest(v.digest()))
 	}
+
+	pub fn find_author(&self, number: Option<BlockNumber>) -> Result<Option<H160>> {
+		let mapper = BlockMapper::from_client(self.client.clone());
+
+		let id = mapper
+			.map_block(number)
+			.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+
+		let latest_digests = self.find_digest(&id)?;
+
+		self.client
+			.runtime_api()
+			.author(&id, latest_digests)
+			.map_err(|err| internal_err(format!("fetch runtime author failed: {:?}", err)))
+	}
+}
+
+fn extract_digest(digest: &Digest) -> Vec<([u8; 4], Vec<u8>)> {
+	digest
+		.logs()
+		.iter()
+		.filter_map(|v| v.as_consensus().map(|(a, b)| (a, b.to_vec())))
+		.collect::<Vec<_>>()
 }

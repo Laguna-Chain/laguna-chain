@@ -276,17 +276,50 @@ fn test_proxy_self_contained() {
 		.balances(vec![(dev_acc, 2 << 64), (ALICE, 2 << 64)])
 		.build()
 		.execute_with(|| {
-			let payload = EvmCompat::eip712_payload(&ALICE, &Default::default());
+			let payload = EvmCompat::eip712_payload(&Some(ALICE), &Default::default());
 			let payload_hash = keccak_256(&payload[..]);
 
 			let sig = pair.sign_prehashed(&payload_hash).0.to_vec();
 
-			let call =
-				crate::Call::<Runtime>::set_proxy { nonce: Default::default(), who: ALICE, sig };
+			let call = crate::Call::<Runtime>::set_proxy {
+				nonce: Default::default(),
+				who: Some(ALICE),
+				sig,
+			};
 			let info = call.check_self_contained().unwrap().unwrap();
 
 			assert_ok!(Call::EvmCompat(call).apply_self_contained(info).unwrap());
 
 			assert_eq!(EvmCompat::has_proxy(dev_addr), Some(ALICE));
+		});
+}
+
+#[test]
+fn test_try_call() {
+	let pair = ecdsa::Pair::from_seed_slice(&RAWSEED).unwrap();
+	let dev_addr = H160(pair.public().to_eth_address().unwrap());
+	let dev_acc = EvmCompat::to_mapped_account(dev_addr);
+
+	ExtBuilder::default()
+		.balances(vec![(dev_acc.clone(), 2 << 64), (ALICE, 2 << 64)])
+		.build()
+		.execute_with(|| {
+			let blob = std::fs::read(
+				"../../runtime/integration-tests/contracts-data/ink/basic/dist/basic.wasm",
+			)
+			.unwrap();
+
+			let selector = Bytes::from_str("0xed4b9d1b").unwrap();
+
+			let input = (blob, selector.to_vec(), Vec::<u8>::new()).encode();
+
+			// test create
+			let upload_result =
+				EvmCompat::try_call_or_create(Some(dev_addr), None, 0, 20000000000000, None, input);
+			assert_ok!(&upload_result);
+
+			let (gas_used, rv) = upload_result.unwrap();
+
+			assert_eq!(Balances::free_balance(&dev_acc), 2 << 64);
 		});
 }
