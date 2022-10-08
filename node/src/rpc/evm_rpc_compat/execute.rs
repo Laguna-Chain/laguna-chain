@@ -12,7 +12,7 @@ use pallet_contracts_primitives::ContractExecResult;
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
 use pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi;
 use primitives::{AccountId, Balance};
-use sc_client_api::{Backend, HeaderBackend, StateBackend, StorageProvider};
+use sc_client_api::{Backend, BlockBackend, HeaderBackend, StateBackend, StorageProvider};
 use sc_network::ExHashT;
 use sc_transaction_pool::ChainApi;
 use sc_transaction_pool_api::TransactionPool;
@@ -29,7 +29,7 @@ use super::{pending_api::pending_runtime_api, BlockMapper, EthApi};
 impl<B, C, H: ExHashT, CT, BE, P, A> EthApi<B, C, H, CT, BE, P, A>
 where
 	B: BlockT<Hash = H256> + Send + Sync + 'static,
-	C: ProvideRuntimeApi<B> + StorageProvider<B, BE>,
+	C: ProvideRuntimeApi<B> + StorageProvider<B, BE> + BlockBackend<B>,
 	BE: Backend<B> + 'static,
 	BE::State: StateBackend<BlakeTwo256>,
 	C::Api: ConvertTransactionRuntimeApi<B>,
@@ -57,7 +57,7 @@ where
 			let CallRequest { from, to, value, ref data, gas_price, .. } = request;
 
 			// return gas_used and return value from either create or call
-			let (g, rv) = api
+			let (f, rv) = api
 				.call(
 					&id,
 					from,
@@ -72,7 +72,7 @@ where
 				})
 				.map_err(|err| internal_err(format!("fetch runtime call failed: {:?}", err)))??;
 
-			Ok((g.into(), Bytes::from(rv.data.to_vec())))
+			Ok((f.into(), Bytes::from(rv.data.to_vec())))
 		})
 	}
 }

@@ -40,6 +40,7 @@ where
 	// Manually initialize the overlay.
 	if let Ok(Some(header)) = client.header(best) {
 		let parent_hash = BlockId::Hash(*header.parent_hash());
+
 		api.initialize_block(&parent_hash, &header)
 			.map_err(|e| internal_err(format!("Runtime api access error: {:?}", e)))?;
 		// Apply the ready queue to the best block's state.

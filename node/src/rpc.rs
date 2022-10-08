@@ -12,7 +12,10 @@ use pallet_evm_compat_rpc::{EvmCompatApiRuntimeApi, EvmCompatApiServer, EvmCompa
 use pallet_transaction_payment_rpc::{
 	TransactionPayment, TransactionPaymentApiServer, TransactionPaymentRuntimeApi,
 };
-use sc_client_api::backend::{Backend, StorageProvider};
+use sc_client_api::{
+	backend::{Backend, StorageProvider},
+	BlockBackend,
+};
 use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool::{ChainApi, Pool};
 use sc_transaction_pool_api::TransactionPool;
@@ -43,6 +46,7 @@ pub fn create_full<Client, Pool, BE, A>(deps: FullDeps<Client, Pool, A>) -> RpcE
 where
 	BE: Backend<Block> + 'static,
 	Client: StorageProvider<Block, BE>,
+	Client: BlockBackend<Block>,
 	Client: ProvideRuntimeApi<Block>, // should be able to provide runtime-api
 	Client: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static, /* should be able to handle block header and metadata */
 	Client: Send + Sync + 'static,

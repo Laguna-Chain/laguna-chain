@@ -1,13 +1,12 @@
-use fc_rpc_core::types::BlockNumber;
-use sc_client_api::HeaderBackend;
-use sp_api::ProvideRuntimeApi;
-use sp_core::H256;
+use fc_rpc_core::types::{Block, BlockNumber, BlockTransactions, Header, Rich, RichBlock};
+use sc_client_api::{BlockBackend, HeaderBackend};
+use sp_api::{HeaderT, ProvideRuntimeApi};
+use sp_core::{keccak_256, H256, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
 };
-use std::{marker::PhantomData, sync::Arc};
-
+use std::{collections::BTreeMap, marker::PhantomData, sync::Arc};
 /// ethereum request block time to a greater extend, we can ansower some of them locally, lets try!
 pub struct BlockMapper<B, C> {
 	client: Arc<C>,
@@ -17,7 +16,7 @@ pub struct BlockMapper<B, C> {
 impl<B, C> BlockMapper<B, C>
 where
 	B: BlockT<Hash = H256> + Send + Sync + 'static,
-	C: HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
+	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
 {
 	pub fn from_client(client: Arc<C>) -> BlockMapper<B, C> {
 		BlockMapper { client, _marker: PhantomData }

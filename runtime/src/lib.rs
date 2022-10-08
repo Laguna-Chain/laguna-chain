@@ -16,7 +16,7 @@ use frame_support::{
 		app_crypto::sp_core::OpaqueMetadata,
 		create_runtime_str, generic, impl_opaque_keys,
 		traits::{
-			BlakeTwo256, Block as BlockT, DispatchInfoOf, Extrinsic, NumberFor, PostDispatchInfoOf,
+			BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf,
 			SignedExtension,
 		},
 		transaction_validity::{TransactionSource, TransactionValidity},
@@ -583,7 +583,7 @@ impl_runtime_apis! {
 			U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce))
 		}
 
-		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) -> Result<(u64, ExecReturnValue), DispatchError> {
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) -> Result<(Balance, ExecReturnValue), DispatchError> {
 			EvmCompat::try_call_or_create(from, target, value,  gas_limit, storage_deposit_limit, input)
 		}
 
@@ -595,10 +595,7 @@ impl_runtime_apis! {
 			})).and_then(|author| {
 				// find the h160 address that the author account is backing
 				EvmCompat::acc_is_backing(&author)
-			});
-
-
-			todo!()
+			})
 		}
 	}
 

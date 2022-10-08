@@ -12,9 +12,10 @@ use codec::Encode;
 use fc_rpc_core::types::SyncInfo;
 use fp_rpc::ConvertTransactionRuntimeApi;
 use jsonrpsee::core::{async_trait, RpcResult as Result};
+use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
 use primitives::{AccountId, Balance};
-use sc_client_api::{HeaderBackend, StateBackend, StorageProvider};
+use sc_client_api::{BlockBackend, HeaderBackend, StateBackend, StorageProvider};
 use sc_network::{ExHashT, NetworkService};
 use sc_service::InPoolTransaction;
 use sc_transaction_pool::{ChainApi, Pool};
@@ -136,14 +137,14 @@ impl<B: BlockT, C, H: ExHashT, CT, BE, P, A: ChainApi> EthApi<B, C, H, CT, BE, P
 #[async_trait]
 impl<B, C, H: ExHashT, CT, BE, P, A> EthApiServer for EthApi<B, C, H, CT, BE, P, A>
 where
-	B: BlockT<Hash = H256> + Send + Sync + 'static,
+	B: BlockT<Hash = H256, Extrinsic = UncheckedExtrinsic, Header = Header> + Send + Sync + 'static,
 	C: ProvideRuntimeApi<B> + StorageProvider<B, BE>,
 	BE: Backend<B> + 'static,
 	BE::State: StateBackend<BlakeTwo256>,
 	C::Api: ConvertTransactionRuntimeApi<B>,
 	C::Api: EvmCompatRuntimeApi<B, AccountId, Balance>,
 	C::Api: BlockBuilderApi<B>,
-	C: HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
+	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
 	CT: fp_rpc::ConvertTransaction<<B as BlockT>::Extrinsic> + Send + Sync + 'static,
 	P: TransactionPool<Block = B> + Send + Sync + 'static,
 	A: ChainApi<Block = B> + 'static,
@@ -220,22 +221,23 @@ where
 
 	/// Returns block with given hash.
 	async fn block_by_hash(&self, hash: H256, full: bool) -> Result<Option<RichBlock>> {
-		Err(internal_err("block_by_hash not supported"))
+		let id = BlockNumber::Hash { hash, require_canonical: false };
+		self.to_rich_block(Some(id), full).map(Some)
 	}
 
 	/// Returns block with given number.
 	async fn block_by_number(&self, number: BlockNumber, full: bool) -> Result<Option<RichBlock>> {
-		Err(internal_err("block_by_number not supported"))
+		self.to_rich_block(Some(number), full).map(Some)
 	}
 
 	/// Returns the number of transactions in a block with given hash.
 	fn block_transaction_count_by_hash(&self, hash: H256) -> Result<Option<U256>> {
-		Err(internal_err("block_transaction_count_by_hash not supported"))
+		self.transaction_count_by_hash(hash)
 	}
 
 	/// Returns the number of transactions in a block with given block number.
 	fn block_transaction_count_by_number(&self, number: BlockNumber) -> Result<Option<U256>> {
-		Err(internal_err("block_transaction_count_by_number not supported"))
+		self.transaction_count_by_number(number)
 	}
 
 	/// Returns the number of uncles in a block with given hash.
@@ -268,7 +270,12 @@ where
 
 	/// Get transaction by its hash.
 	async fn transaction_by_hash(&self, hash: H256) -> Result<Option<Transaction>> {
-		Err(internal_err("transaction_by_hash not supported"))
+		let from_pool = self.get_transaction_from_pool(hash)?;
+
+		match from_pool {
+			Some(_) => Ok(from_pool),
+			_ => self.get_transaction_from_blocks(hash),
+		}
 	}
 
 	/// Returns transaction at given block hash and index.
@@ -277,7 +284,7 @@ where
 		hash: H256,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		Err(internal_err("transaction_by_block_hash_and_index not supported"))
+		self.get_transaction_by_block_hash_and_index(hash, index).await
 	}
 
 	/// Returns transaction by given block number and index.
@@ -286,12 +293,20 @@ where
 		number: BlockNumber,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		Err(internal_err("transaction_by_block_number_and_index not supported"))
+		self.get_transaction_by_block_number_and_index(number, index).await
 	}
 
 	/// Returns transaction receipt by transaction hash.
 	async fn transaction_receipt(&self, hash: H256) -> Result<Option<Receipt>> {
-		Err(internal_err("transaction_receipt not supported"))
+		let from_pool = self.get_transaction_from_pool(hash)?;
+
+		match from_pool {
+			Some(_) => Ok(from_pool.map(|v| self.trasnaction_recepit(v))),
+			_ => self
+				.get_transaction_from_blocks(hash)?
+				.map(|o| Some(self.trasnaction_recepit(o)))
+				.ok_or_else(|| internal_err("transaction_receipt not supported")),
+		}
 	}
 
 	// ########################################################################

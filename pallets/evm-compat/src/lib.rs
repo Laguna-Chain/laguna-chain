@@ -493,7 +493,7 @@ where
 		gas_limit: u64,
 		storage_deposit_limit: Option<BalanceOf<T>>,
 		input: Vec<u8>,
-	) -> Result<(u64, ExecReturnValue), DispatchError> {
+	) -> Result<(BalanceOf<T>, ExecReturnValue), DispatchError> {
 		let origin = Self::to_mapped_account(from.unwrap_or_default());
 		if let Some(to) = target {
 			let dest = Self::account_from_contract_addr(to);
@@ -510,7 +510,11 @@ where
 
 			let return_value = call_result.result?;
 
-			Ok((call_result.gas_consumed, return_value))
+			let fee_consumed = <<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(
+				&call_result.gas_consumed,
+			);
+
+			Ok((fee_consumed, return_value))
 		} else {
 			let (code, data, salt) =
 				<(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut &input[..]).unwrap();
@@ -533,8 +537,11 @@ where
 			);
 
 			let return_value = create_result.result?.result;
+			let fee_consumed = <<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(
+				&create_result.gas_consumed,
+			);
 
-			Ok((create_result.gas_consumed, return_value))
+			Ok((fee_consumed, return_value))
 		}
 	}
 }
