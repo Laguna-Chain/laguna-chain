@@ -1,16 +1,11 @@
-//! deferrable helper
+//! transaction helper
 //!
-//! ethereum request will often into either pending tx's or past blocks that might not be there for
-//! a non-indexer node, this helper allows the runtime-api to apply tx's in the tx-pool manually and
-//! answer the question
+//! helper functions for transaction details
 
-use crate::rpc::evm_rpc_compat::internal_err;
 use codec::{Decode, Encode};
-use fc_rpc_core::types::{
-	BlockNumber, BlockTransactions, Bytes, CallRequest, Index, Receipt, Transaction,
-};
+use fc_rpc_core::types::{BlockNumber, BlockTransactions, Index, Receipt, Transaction};
 use fp_rpc::ConvertTransactionRuntimeApi;
-use jsonrpsee::core::{async_trait, RpcResult as Result};
+use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
 use primitives::{AccountId, Balance};
@@ -19,7 +14,7 @@ use sc_network::ExHashT;
 use sc_service::InPoolTransaction;
 use sc_transaction_pool::ChainApi;
 use sc_transaction_pool_api::TransactionPool;
-use sp_api::{ApiRef, ProvideRuntimeApi};
+use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::H256;
 use sp_runtime::{
@@ -27,7 +22,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, Block as BlockT},
 };
 
-use super::{pending_api::pending_runtime_api, EthApi};
+use super::EthApi;
 
 impl<B, C, H: ExHashT, CT, BE, P, A> EthApi<B, C, H, CT, BE, P, A>
 where

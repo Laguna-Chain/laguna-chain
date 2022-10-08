@@ -1,16 +1,12 @@
-//! deferrable helper
+//! exectuion helper
 //!
-//! ethereum request will often into either pending tx's or past blocks that might not be there for
-//! a non-indexer node, this helper allows the runtime-api to apply tx's in the tx-pool manually and
-//! answer the question
+//! try call or create
 
 use crate::rpc::evm_rpc_compat::internal_err;
-use fc_rpc_core::types::{BlockNumber, Bytes, CallRequest, FeeHistory};
+use fc_rpc_core::types::{BlockNumber, Bytes, CallRequest};
 use fp_rpc::ConvertTransactionRuntimeApi;
-use jsonrpsee::core::{async_trait, RpcResult as Result};
-use pallet_contracts_primitives::ContractExecResult;
+use jsonrpsee::core::RpcResult as Result;
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
-use pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{Backend, BlockBackend, HeaderBackend, StateBackend, StorageProvider};
 use sc_network::ExHashT;
@@ -24,7 +20,7 @@ use sp_runtime::{
 	traits::{BlakeTwo256, Block as BlockT, UniqueSaturatedInto},
 };
 
-use super::{pending_api::pending_runtime_api, BlockMapper, EthApi};
+use super::{BlockMapper, EthApi};
 
 impl<B, C, H: ExHashT, CT, BE, P, A> EthApi<B, C, H, CT, BE, P, A>
 where
@@ -74,5 +70,10 @@ where
 
 			Ok((f.into(), Bytes::from(rv.data.to_vec())))
 		})
+	}
+
+	pub fn get_code_at(&self, address: H160, number: Option<BlockNumber>) -> Result<Bytes> {
+		// self.client.state();
+		todo!()
 	}
 }

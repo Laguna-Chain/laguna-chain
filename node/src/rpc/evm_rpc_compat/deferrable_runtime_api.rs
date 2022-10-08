@@ -4,10 +4,8 @@
 //! a non-indexer node, this helper allows the runtime-api to apply tx's in the tx-pool manually and
 //! answer the question
 
-use crate::rpc::evm_rpc_compat::internal_err;
-use fc_rpc_core::types::{BlockNumber, Bytes, CallRequest};
 use fp_rpc::ConvertTransactionRuntimeApi;
-use jsonrpsee::core::{async_trait, RpcResult as Result};
+use jsonrpsee::core::RpcResult as Result;
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{Backend, HeaderBackend, StateBackend, StorageProvider};

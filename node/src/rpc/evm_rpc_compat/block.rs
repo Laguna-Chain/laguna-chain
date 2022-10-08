@@ -1,17 +1,13 @@
-//! deferrable helper
+//! block helper
 //!
-//! ethereum request will often into either pending tx's or past blocks that might not be there for
-//! a non-indexer node, this helper allows the runtime-api to apply tx's in the tx-pool manually and
-//! answer the question
+//! helper functions to respond to queries expecting eth_style richblock
 
 use crate::rpc::evm_rpc_compat::internal_err;
 use codec::{Decode, Encode};
 use ethereum::{TransactionAction, TransactionV2};
 use fc_rpc_core::types::{
-	Block, BlockNumber, BlockTransactions, Bytes, CallRequest, FeeHistory, Header as EthHeader,
-	Rich, RichBlock, Transaction,
+	Block, BlockNumber, BlockTransactions, Bytes, Header as EthHeader, Rich, RichBlock, Transaction,
 };
-use fp_ethereum::TransactionData;
 use fp_rpc::ConvertTransactionRuntimeApi;
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
@@ -23,7 +19,7 @@ use sc_transaction_pool::ChainApi;
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::{HeaderT, ProvideRuntimeApi};
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
-use sp_core::{crypto::UncheckedInto, keccak_256, H160, H256, U256};
+use sp_core::{H160, H256, U256};
 use sp_runtime::{
 	generic::{BlockId, Digest},
 	traits::{BlakeTwo256, Block as BlockT},
@@ -31,7 +27,7 @@ use sp_runtime::{
 
 use std::collections::BTreeMap;
 
-use super::{pending_api::pending_runtime_api, BlockMapper, EthApi};
+use super::{BlockMapper, EthApi};
 
 impl<B, C, H: ExHashT, CT, BE, P, A> EthApi<B, C, H, CT, BE, P, A>
 where

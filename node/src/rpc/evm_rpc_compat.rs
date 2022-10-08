@@ -17,6 +17,7 @@ use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend, StateBackend, StorageProvider};
 use sc_network::{ExHashT, NetworkService};
+
 use sc_service::InPoolTransaction;
 use sc_transaction_pool::{ChainApi, Pool};
 use sc_transaction_pool_api::{TransactionPool, TransactionSource};
@@ -31,7 +32,6 @@ use sp_runtime::{
 pub mod block;
 pub mod block_mapper;
 pub mod execute;
-pub mod fee;
 pub mod pending_api;
 pub mod transaction;
 use block_mapper::BlockMapper;
@@ -305,7 +305,7 @@ where
 			_ => self
 				.get_transaction_from_blocks(hash)?
 				.map(|o| Some(self.trasnaction_recepit(o)))
-				.ok_or_else(|| internal_err("transaction_receipt not supported")),
+				.ok_or_else(|| internal_err("fetch runtime transaction_receipt failed")),
 		}
 	}
 
