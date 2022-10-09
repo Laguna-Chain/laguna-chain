@@ -2,91 +2,41 @@
 //!
 //! helper functions to respond to queries expecting eth_style richblock
 
+use super::BlockMapper;
 use crate::rpc::evm_rpc_compat::internal_err;
 use codec::{Decode, Encode};
 use ethereum::{TransactionAction, TransactionV2};
 use fc_rpc_core::types::{
 	Block, BlockNumber, BlockTransactions, Bytes, Header as EthHeader, Rich, RichBlock, Transaction,
 };
-use fp_rpc::ConvertTransactionRuntimeApi;
 use jsonrpsee::core::RpcResult as Result;
-use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
-use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
+use laguna_runtime::opaque::Header;
+use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
-use sc_client_api::{Backend, BlockBackend, HeaderBackend, StateBackend, StorageProvider};
-use sc_network::ExHashT;
-use sc_transaction_pool::ChainApi;
-use sc_transaction_pool_api::TransactionPool;
+use sc_client_api::{BlockBackend, HeaderBackend};
+use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::{HeaderT, ProvideRuntimeApi};
-use sp_block_builder::BlockBuilder as BlockBuilderApi;
-use sp_core::{H160, H256, U256};
-use sp_runtime::{
-	generic::{BlockId, Digest},
-	traits::{BlakeTwo256, Block as BlockT},
-};
+use sp_core::{H256, U256};
+use sp_runtime::{generic::BlockId, traits::Block as BlockT};
+use std::{collections::BTreeMap, marker::PhantomData, sync::Arc};
 
-use std::collections::BTreeMap;
+pub struct BlockBuilder<B, C, A: ChainApi> {
+	client: Arc<C>,
+	graph: Arc<Pool<A>>,
+	_marker: PhantomData<(B, A)>,
+}
 
-use super::{BlockMapper, EthApi};
-
-impl<B, C, H: ExHashT, CT, BE, P, A> EthApi<B, C, H, CT, BE, P, A>
+impl<B, C, A> BlockBuilder<B, C, A>
 where
-	B: BlockT<Hash = H256, Extrinsic = UncheckedExtrinsic, Header = Header> + Send + Sync + 'static,
-	C: ProvideRuntimeApi<B> + StorageProvider<B, BE>,
-	BE: Backend<B> + 'static,
-	BE::State: StateBackend<BlakeTwo256>,
-	C::Api: ConvertTransactionRuntimeApi<B>,
-	C::Api: EvmCompatRuntimeApi<B, AccountId, Balance>,
-	C::Api: BlockBuilderApi<B>,
-	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
-	CT: fp_rpc::ConvertTransaction<<B as BlockT>::Extrinsic> + Send + Sync + 'static,
-	P: TransactionPool<Block = B> + Send + Sync + 'static,
-	A: ChainApi<Block = B> + 'static,
+	B: BlockT<Header = Header>,
+	A: ChainApi,
+	B: BlockT<Hash = H256>,
+	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
+	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
+	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,
 {
-	pub fn find_digest(&self, at: &BlockId<B>) -> Result<Vec<([u8; 4], Vec<u8>)>> {
-		let header = self.client.header(*at).map_err(|err| {
-			internal_err(format!("fetch runtime header digest failed: {:?}", err))
-		})?;
-
-		header
-			.ok_or_else(|| internal_err("fetch runtime header digest failed"))
-			.map(|v| extract_digest(v.digest()))
-	}
-
-	pub fn find_author(&self, number: Option<BlockNumber>) -> Result<Option<H160>> {
-		let mapper = BlockMapper::from_client(self.client.clone());
-
-		let id = mapper
-			.map_block(number)
-			.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
-
-		let latest_digests = self.find_digest(&id)?;
-
-		self.client
-			.runtime_api()
-			.author(&id, latest_digests)
-			.map_err(|err| internal_err(format!("fetch runtime author failed: {:?}", err)))
-	}
-
-	pub fn transaction_count_by_hash(&self, hash: H256) -> Result<Option<U256>> {
-		let number = BlockNumber::Hash { hash, require_canonical: false };
-		self.transaction_count_by_number(number)
-	}
-
-	pub fn transaction_count_by_number(&self, number: BlockNumber) -> Result<Option<U256>> {
-		let mapper = BlockMapper::from_client(self.client.clone());
-
-		if let Some(id) = mapper.map_block(Some(number)) {
-			// Get all transactions from the target block.
-			self.client
-				.block_body(&id)
-				.map(|v| v.map(|o| U256::from(o.len())))
-				.map_err(|err| internal_err(format!("fetch runtime block body failed: {:?}", err)))
-		} else {
-			// Get all transactions in the ready queue.
-			let len = self.graph.validated_pool().ready().count();
-			Ok(Some(U256::from(len)))
-		}
+	pub fn from_client(client: Arc<C>, graph: Arc<Pool<A>>) -> Self {
+		Self { client, graph, _marker: Default::default() }
 	}
 
 	pub(crate) fn build_eth_header(&self, header: <B as BlockT>::Header) -> EthHeader {
@@ -97,8 +47,8 @@ where
 			uncles_hash: H256::default(),
 			author: Default::default(),
 			miner: Default::default(),
-			state_root: header.state_root,
-			transactions_root: header.extrinsics_root,
+			state_root: *header.state_root(),
+			transactions_root: *header.extrinsics_root(),
 			receipts_root: Default::default(),
 			number: Some(U256::from(*header.number())),
 			gas_used: Default::default(),
@@ -146,7 +96,7 @@ where
 
 		let eth_txs = body
 			.iter()
-			.filter_map(|raw_tx: &UncheckedExtrinsic| {
+			.filter_map(|raw_tx| {
 				laguna_runtime::UncheckedExtrinsic::decode(&mut &raw_tx.encode()[..]).ok()
 			})
 			.filter_map(|xt| {
@@ -186,7 +136,7 @@ where
 		number: Option<BlockNumber>,
 		full: bool,
 	) -> Result<RichBlock> {
-		let mapper = BlockMapper::from_client(self.client.clone());
+		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
 
 		let id = mapper
 			.map_block(number)
@@ -217,12 +167,4 @@ where
 			_ => Err(internal_err("unable to gather required information to build rich_block")),
 		}
 	}
-}
-
-fn extract_digest(digest: &Digest) -> Vec<([u8; 4], Vec<u8>)> {
-	digest
-		.logs()
-		.iter()
-		.filter_map(|v| v.as_consensus().map(|(a, b)| (a, b.to_vec())))
-		.collect::<Vec<_>>()
 }

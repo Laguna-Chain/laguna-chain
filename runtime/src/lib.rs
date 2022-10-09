@@ -7,10 +7,11 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+use codec::{Decode, Encode};
 use constants::LAGUNA_NATIVE_CURRENCY;
 use frame_support::{
 	self, construct_runtime,
-	dispatch::Dispatchable,
+	dispatch::{Dispatchable, GetDispatchInfo},
 	pallet_prelude::TransactionValidityError,
 	sp_runtime::{
 		app_crypto::sp_core::OpaqueMetadata,
@@ -24,15 +25,14 @@ use frame_support::{
 	},
 	traits::{FindAuthor, Get},
 };
-use pallet_contracts_primitives::ExecReturnValue;
-
 use impl_frame_system::BlockHashCount;
+use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
+use sp_core::{Bytes, H160, H256, U256};
 use sp_runtime::{traits::UniqueSaturatedInto, DispatchError};
 
-use codec::{Decode, Encode};
-use sp_core::{H160, H256, U256};
+use scale_info::prelude::format;
 
 use frame_support::sp_std::prelude::*;
 
@@ -583,8 +583,28 @@ impl_runtime_apis! {
 			U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce))
 		}
 
-		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64, storage_deposit_limit: Option<Balance>) -> Result<(Balance, ExecReturnValue), DispatchError> {
-			EvmCompat::try_call_or_create(from, target, value,  gas_limit, storage_deposit_limit, input)
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64) -> Result<(Balance, ExecReturnValue), DispatchError> {
+
+			if (target.is_some() && input.starts_with(b"evm")) | target.is_none()  {
+				EvmCompat::try_call_or_create(from, target, value,  gas_limit, input)
+			} else if input.is_empty() {
+
+				let to = EvmCompat::to_mapped_account(target.unwrap_or_default());
+				let call = pallet_currencies::Call::<Runtime>::transfer{to, currency_id: LAGUNA_NATIVE_CURRENCY, balance: value};
+				let info = call.get_dispatch_info();
+				let len = call.encode().len();
+				let final_fee = TransactionPayment::compute_fee(len as _, &info, 0);
+
+				let rv = ExecReturnValue {
+					data: Bytes::from(vec![]),
+					flags: ReturnFlags::empty(),
+				};
+
+				Ok((final_fee, rv))
+
+			} else {
+				Err(DispatchError::Other("illegal input"))
+			}
 		}
 
 		fn author(digests: Vec<ConesensusDigest>) -> Option<H160>{

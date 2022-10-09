@@ -4,41 +4,40 @@
 
 use codec::{Decode, Encode};
 use fc_rpc_core::types::{BlockNumber, BlockTransactions, Index, Receipt, Transaction};
-use fp_rpc::ConvertTransactionRuntimeApi;
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
-use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
 use primitives::{AccountId, Balance};
-use sc_client_api::{Backend, BlockBackend, HeaderBackend, StateBackend, StorageProvider};
-use sc_network::ExHashT;
+use sc_client_api::{BlockBackend, HeaderBackend};
 use sc_service::InPoolTransaction;
-use sc_transaction_pool::ChainApi;
-use sc_transaction_pool_api::TransactionPool;
+use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::H256;
-use sp_runtime::{
-	generic::BlockId,
-	traits::{BlakeTwo256, Block as BlockT},
-};
+use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 
-use super::EthApi;
+use super::block_builder;
+use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
+use std::{marker::PhantomData, sync::Arc};
 
-impl<B, C, H: ExHashT, CT, BE, P, A> EthApi<B, C, H, CT, BE, P, A>
+pub struct TransactionApi<B, C, A: ChainApi> {
+	client: Arc<C>,
+	graph: Arc<Pool<A>>,
+	_marker: PhantomData<(B, A)>,
+}
+
+impl<B, C, A> TransactionApi<B, C, A>
 where
-	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic> + Send + Sync + 'static,
-	C: ProvideRuntimeApi<B> + StorageProvider<B, BE>,
-	BE: Backend<B> + 'static,
-	BE::State: StateBackend<BlakeTwo256>,
-	C::Api: ConvertTransactionRuntimeApi<B>,
-	C::Api: EvmCompatRuntimeApi<B, AccountId, Balance>,
+	A: ChainApi<Block = B>,
+	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic>,
+	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
+	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
+	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,
 	C::Api: BlockBuilderApi<B>,
-	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
-	CT: fp_rpc::ConvertTransaction<<B as BlockT>::Extrinsic> + Send + Sync + 'static,
-	P: TransactionPool<Block = B> + Send + Sync + 'static,
-	A: ChainApi<Block = B> + 'static,
 {
-	pub fn trasnaction_recepit(&self, tx: Transaction) -> Receipt {
+	pub fn from_client(client: Arc<C>, graph: Arc<Pool<A>>) -> TransactionApi<B, C, A> {
+		TransactionApi { client, graph, _marker: PhantomData }
+	}
+	pub fn get_transaction_receipt(&self, tx: Transaction) -> Receipt {
 		Receipt {
 			transaction_hash: Some(tx.hash),
 			transaction_index: tx.transaction_index,
@@ -63,7 +62,9 @@ where
 		number: BlockNumber,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		let rich_block = self.to_rich_block(Some(number), true)?;
+		let builder =
+			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+		let rich_block = builder.to_rich_block(Some(number), true)?;
 
 		if let BlockTransactions::Full(txs) = &rich_block.transactions {
 			Ok(txs.iter().find(|v| v.transaction_index == Some(index.value().into())).cloned())
@@ -77,8 +78,10 @@ where
 		hash: H256,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		let rich_block =
-			self.to_rich_block(Some(BlockNumber::Hash { hash, require_canonical: false }), true)?;
+		let builder =
+			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+		let rich_block = builder
+			.to_rich_block(Some(BlockNumber::Hash { hash, require_canonical: false }), true)?;
 
 		if let BlockTransactions::Full(txs) = &rich_block.transactions {
 			Ok(txs.iter().find(|v| v.transaction_index == Some(index.value().into())).cloned())
@@ -91,7 +94,9 @@ where
 		&self,
 		number: Option<BlockNumber>,
 	) -> Result<Option<Vec<Transaction>>> {
-		let rich_block = self.to_rich_block(number, true)?;
+		let builder =
+			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+		let rich_block = builder.to_rich_block(number, true)?;
 
 		if let BlockTransactions::Full(txs) = &rich_block.transactions {
 			Ok(Some(txs.clone()))
@@ -119,7 +124,13 @@ where
 				}
 			})
 			.find(|tx| tx.hash() == hash)
-			.map(|v| self.expand_eth_transaction(v)))
+			.map(|v| {
+				let builder = block_builder::BlockBuilder::from_client(
+					self.client.clone(),
+					self.graph.clone(),
+				);
+				builder.expand_eth_transaction(v)
+			}))
 	}
 
 	pub fn get_transaction_from_blocks(&self, hash: H256) -> Result<Option<Transaction>> {

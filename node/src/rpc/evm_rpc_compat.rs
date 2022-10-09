@@ -2,10 +2,10 @@ use ethereum_types::{H64, U64};
 use fc_rpc::format;
 use fc_rpc_core::{
 	types::{
-		BlockNumber, Bytes, CallRequest, FeeHistory, Index, PeerCount, Receipt, RichBlock,
-		SyncStatus, Transaction, TransactionRequest, Work,
+		BlockNumber, Bytes, CallRequest, FeeHistory, Index, Receipt, RichBlock, SyncStatus,
+		Transaction, TransactionRequest, Work,
 	},
-	EthApiServer, NetApiServer,
+	EthApiServer,
 };
 
 use codec::Encode;
@@ -29,10 +29,12 @@ use sp_runtime::{
 	traits::{BlakeTwo256, Block as BlockT, UniqueSaturatedInto},
 };
 
-pub mod block;
+pub mod block_builder;
 pub mod block_mapper;
-pub mod execute;
+pub mod executor;
+pub mod net_api;
 pub mod pending_api;
+pub mod pubsub;
 pub mod transaction;
 use block_mapper::BlockMapper;
 
@@ -40,22 +42,6 @@ pub mod deferrable_runtime_api;
 
 use sc_client_api::Backend;
 use std::{marker::PhantomData, sync::Arc};
-
-pub struct Net<B: BlockT, C, H: ExHashT> {
-	client: Arc<C>,
-	network: Arc<NetworkService<B, H>>,
-	peer_count_as_hex: bool,
-}
-
-impl<B: BlockT, C, H: ExHashT> Net<B, C, H> {
-	pub fn new(
-		client: Arc<C>,
-		network: Arc<NetworkService<B, H>>,
-		peer_count_as_hex: bool,
-	) -> Self {
-		Self { client, network, peer_count_as_hex }
-	}
-}
 
 pub fn err<T: ToString>(code: i32, message: T, data: Option<&[u8]>) -> jsonrpsee::core::Error {
 	jsonrpsee::core::Error::Call(jsonrpsee::types::error::CallError::Custom(
@@ -74,35 +60,6 @@ pub fn internal_err<T: ToString>(message: T) -> jsonrpsee::core::Error {
 	err(jsonrpsee::types::error::INTERNAL_ERROR_CODE, message, None)
 }
 
-impl<B, C, H: ExHashT> NetApiServer for Net<B, C, H>
-where
-	B: BlockT<Hash = H256> + Send + Sync + 'static,
-	C: HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
-	C::Api: EvmCompatRuntimeApi<B, AccountId, Balance>,
-{
-	fn version(&self) -> Result<String> {
-		let hash = self.client.info().best_hash;
-		Ok(self
-			.client
-			.runtime_api()
-			.chain_id(&BlockId::Hash(hash))
-			.map_err(|_| internal_err("fetch runtime version failed"))?
-			.to_string())
-	}
-
-	fn peer_count(&self) -> Result<PeerCount> {
-		let peer_count = self.network.num_connected();
-		Ok(match self.peer_count_as_hex {
-			true => PeerCount::String(format!("0x{:x}", peer_count)),
-			false => PeerCount::U32(peer_count as u32),
-		})
-	}
-
-	fn is_listening(&self) -> Result<bool> {
-		Ok(true)
-	}
-}
-
 pub struct EthApi<B: BlockT, C, H: ExHashT, CT, BE, P, A: ChainApi> {
 	client: Arc<C>,
 	network: Arc<NetworkService<B, H>>,
@@ -113,7 +70,10 @@ pub struct EthApi<B: BlockT, C, H: ExHashT, CT, BE, P, A: ChainApi> {
 	_marker: PhantomData<BE>,
 }
 
-impl<B: BlockT, C, H: ExHashT, CT, BE, P, A: ChainApi> EthApi<B, C, H, CT, BE, P, A> {
+impl<B: BlockT, C, H: ExHashT, CT, BE, P, A: ChainApi> EthApi<B, C, H, CT, BE, P, A>
+where
+	C: HeaderBackend<B> + Send + Sync + 'static,
+{
 	pub fn new(
 		client: Arc<C>,
 		pool: Arc<P>,
@@ -181,13 +141,15 @@ where
 
 	/// Returns block author.
 	fn author(&self) -> Result<H160> {
-		self.find_author(None).and_then(|v| {
-			v.ok_or_else(|| {
-				internal_err(
-					"fetch runtime author failed, unable to get backed address from digest",
-				)
+		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
+			.find_author(None)
+			.and_then(|v| {
+				v.ok_or_else(|| {
+					internal_err(
+						"fetch runtime author failed, unable to get backed address from digest",
+					)
+				})
 			})
-		})
 	}
 
 	/// Returns accounts list.
@@ -222,22 +184,28 @@ where
 	/// Returns block with given hash.
 	async fn block_by_hash(&self, hash: H256, full: bool) -> Result<Option<RichBlock>> {
 		let id = BlockNumber::Hash { hash, require_canonical: false };
-		self.to_rich_block(Some(id), full).map(Some)
+		block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone())
+			.to_rich_block(Some(id), full)
+			.map(Some)
 	}
 
 	/// Returns block with given number.
 	async fn block_by_number(&self, number: BlockNumber, full: bool) -> Result<Option<RichBlock>> {
-		self.to_rich_block(Some(number), full).map(Some)
+		block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone())
+			.to_rich_block(Some(number), full)
+			.map(Some)
 	}
 
 	/// Returns the number of transactions in a block with given hash.
 	fn block_transaction_count_by_hash(&self, hash: H256) -> Result<Option<U256>> {
-		self.transaction_count_by_hash(hash)
+		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
+			.transaction_count_by_hash(hash)
 	}
 
 	/// Returns the number of transactions in a block with given block number.
 	fn block_transaction_count_by_number(&self, number: BlockNumber) -> Result<Option<U256>> {
-		self.transaction_count_by_number(number)
+		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
+			.transaction_count_by_number(number)
 	}
 
 	/// Returns the number of uncles in a block with given hash.
@@ -270,11 +238,13 @@ where
 
 	/// Get transaction by its hash.
 	async fn transaction_by_hash(&self, hash: H256) -> Result<Option<Transaction>> {
-		let from_pool = self.get_transaction_from_pool(hash)?;
+		let tx_api =
+			transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone());
+		let from_pool = tx_api.get_transaction_from_pool(hash)?;
 
 		match from_pool {
 			Some(_) => Ok(from_pool),
-			_ => self.get_transaction_from_blocks(hash),
+			_ => tx_api.get_transaction_from_blocks(hash),
 		}
 	}
 
@@ -284,7 +254,9 @@ where
 		hash: H256,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		self.get_transaction_by_block_hash_and_index(hash, index).await
+		transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone())
+			.get_transaction_by_block_hash_and_index(hash, index)
+			.await
 	}
 
 	/// Returns transaction by given block number and index.
@@ -293,18 +265,22 @@ where
 		number: BlockNumber,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		self.get_transaction_by_block_number_and_index(number, index).await
+		transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone())
+			.get_transaction_by_block_number_and_index(number, index)
+			.await
 	}
 
 	/// Returns transaction receipt by transaction hash.
 	async fn transaction_receipt(&self, hash: H256) -> Result<Option<Receipt>> {
-		let from_pool = self.get_transaction_from_pool(hash)?;
+		let tx_api =
+			transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone());
+		let from_pool = tx_api.get_transaction_from_pool(hash)?;
 
 		match from_pool {
-			Some(_) => Ok(from_pool.map(|v| self.trasnaction_recepit(v))),
-			_ => self
+			Some(_) => Ok(from_pool.map(|v| tx_api.get_transaction_receipt(v))),
+			_ => tx_api
 				.get_transaction_from_blocks(hash)?
-				.map(|o| Some(self.trasnaction_recepit(o)))
+				.map(|o| Some(tx_api.get_transaction_receipt(o)))
 				.ok_or_else(|| internal_err("fetch runtime transaction_receipt failed")),
 		}
 	}
@@ -315,14 +291,19 @@ where
 
 	/// Returns balance of the given account.
 	fn balance(&self, address: H160, number: Option<BlockNumber>) -> Result<U256> {
-		let mapper = BlockMapper::from_client(self.client.clone());
+		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+
+		let deferrable = deferrable_runtime_api::DeferrableApi::from_client(
+			self.client.clone(),
+			self.graph.clone(),
+		);
 
 		let id = mapper.map_block(number);
-		let deferred_api = self.deferrable_runtime_api(id.is_none())?;
+		let deferred_api = deferrable.deferrable_runtime_api(id.is_none())?;
 
 		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
 
-		Self::run_with_api(deferred_api, |api| {
+		deferrable_runtime_api::DeferrableApi::<B, C, A>::run_with_api(deferred_api, |api| {
 			api.balances(&id, address)
 				.map_err(|err| internal_err(format!("fetch runtime balance failed: {:?}", err)))
 		})
@@ -330,14 +311,19 @@ where
 
 	/// Returns content of the storage at given address.
 	fn storage_at(&self, address: H160, index: U256, number: Option<BlockNumber>) -> Result<H256> {
-		let mapper = BlockMapper::from_client(self.client.clone());
+		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+
+		let deferrable = deferrable_runtime_api::DeferrableApi::from_client(
+			self.client.clone(),
+			self.graph.clone(),
+		);
 
 		let id = mapper.map_block(number);
-		let deferred_api = self.deferrable_runtime_api(id.is_none())?;
+		let deferred_api = deferrable.deferrable_runtime_api(id.is_none())?;
 
 		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
 
-		Self::run_with_api(deferred_api, |api| {
+		deferrable_runtime_api::DeferrableApi::<B, C, A>::run_with_api(deferred_api, |api| {
 			api.storage_at(&id, address, index)
 				.map_err(|err| internal_err(format!("fetch runtime storage_at failed: {:?}", err)))
 		})
@@ -345,7 +331,7 @@ where
 
 	/// Returns the number of transactions sent from given address at given time (block number).
 	fn transaction_count(&self, address: H160, number: Option<BlockNumber>) -> Result<U256> {
-		let mapper = BlockMapper::from_client(self.client.clone());
+		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
 
 		if let Some(id) = mapper.map_block(number) {
 			let api = self.client.runtime_api();
@@ -386,7 +372,9 @@ where
 
 	/// Call contract, returning the output data.
 	fn call(&self, request: CallRequest, number: Option<BlockNumber>) -> Result<Bytes> {
-		self.try_call(request, number).map(|out| out.1)
+		executor::Execute::from_client(self.client.clone(), self.graph.clone())
+			.try_call(request, number)
+			.map(|out| out.1)
 	}
 
 	/// Estimate gas needed for execution of given contract.
@@ -395,7 +383,9 @@ where
 		request: CallRequest,
 		number: Option<BlockNumber>,
 	) -> Result<U256> {
-		self.try_call(request, number).map(|out| out.0)
+		executor::Execute::from_client(self.client.clone(), self.graph.clone())
+			.try_call(request, number)
+			.map(|out| out.0)
 	}
 
 	// ########################################################################
@@ -404,7 +394,7 @@ where
 
 	/// Returns current gas_price.
 	fn gas_price(&self) -> Result<U256> {
-		Ok(Default::default())
+		Ok(1_u32.into())
 	}
 
 	/// Introduced in EIP-1159 for getting information on the appropriate priority fee to use.
@@ -429,7 +419,6 @@ where
 
 	/// Returns true if client is actively mining new blocks.
 	fn is_mining(&self) -> Result<bool> {
-		// unimplemented!()
 		Ok(self.is_authority)
 	}
 

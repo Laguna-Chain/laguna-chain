@@ -113,7 +113,6 @@ fn test_ink_multilayer_erc20() {
 				);
 
                 let erc20_contract_addr = deploy_system_contract(blob, sel_constructor);
-				dbg!(&erc20_contract_addr);
 
 				// 2. Test name()
 				let sel_name = Bytes::from_str("0x06fdde03")

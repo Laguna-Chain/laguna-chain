@@ -120,6 +120,7 @@ mod pallet {
 		TargetAlreadyProxying,
 		NoProxyFound,
 		InputBufferUndecodable,
+		ConvertionFailed,
 	}
 
 	#[pallet::call]
@@ -223,13 +224,40 @@ where
 
 	fn call_or_create(&self, source: H160) -> DispatchResultWithPostInfo {
 		match self.inner.action {
-			TransactionAction::Call(target) => self.execute_call_request(source, target),
+			TransactionAction::Call(target) =>
+				if self.inner.input.starts_with(b"evm") {
+					// all input prefixed with b"evm" will considered contract call
+					self.execute_call_request(source, target)
+				} else if self.inner.input.is_empty() {
+					// otherwise we recognize it as normal transfer
+					self.execute_transfer_request(source, target)
+				} else {
+					// we do not proceed with request not in the prior two forms
+					Err(Error::<T>::InputBufferUndecodable.into())
+				},
 			TransactionAction::Create => self.execute_create_request(source),
 		}
 	}
 
-	/// the actual substrate weight allowed for from a eth transaction
+	fn execute_transfer_request(&self, source: H160, target: H160) -> DispatchResultWithPostInfo {
+		let from = Pallet::<T>::to_mapped_account(source);
 
+		// assume receiver has mapped address
+		let to = Pallet::<T>::to_mapped_account(target);
+		let value =
+			BalanceOf::<T>::try_from(self.inner.value).map_err(|_| Error::<T>::ConvertionFailed)?;
+
+		<<T as pallet_contracts::Config>::Currency as Currency<AccountIdOf<T>>>::transfer(
+			&from,
+			&to,
+			value,
+			ExistenceRequirement::KeepAlive,
+		)?;
+
+		Ok(().into())
+	}
+
+	/// the actual substrate weight allowed for from a eth transaction
 	fn execute_call_request(&self, source: H160, target: H160) -> DispatchResultWithPostInfo {
 		let contract_addr = Pallet::<T>::account_from_contract_addr(target);
 
@@ -243,13 +271,16 @@ where
 			.ok()
 			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
 
+		// since we assume all input slices are prefixed with evm, we removed them accordingly
+		let input = self.inner.input.strip_prefix(b"evm").ok_or(Error::<T>::ConvertionFailed)?;
+
 		pallet_contracts::Pallet::<T>::call(
 			elevated_origin,
 			contract_addr_source,
 			self.inner.value.try_into().unwrap_or_default(),
 			self.max_allowed.as_u64(),
 			storage_deposit_limit,
-			self.inner.input.clone(),
+			input.to_vec(),
 		)
 	}
 
@@ -429,7 +460,7 @@ where
 
 	pub(crate) fn unpack_transaction(transaction: &Transaction) -> ([u8; 32], [u8; 65]) {
 		// in addition to typical ECDSA signature, eth tx use chain_id in it's signature to avoid
-		// replay attack
+		// replay attack0
 
 		let mut sig = [0u8; 65];
 		let mut msg = [0u8; 32];
@@ -486,24 +517,29 @@ where
 		.map(|v| <Keccak256 as HashT>::hash(&v[..]))
 	}
 
+	/// return try_call result and total fee consumed within this call, excludes base fee and length
+	/// fee
 	pub fn try_call_or_create(
 		from: Option<H160>,
 		target: Option<H160>,
 		value: BalanceOf<T>,
 		gas_limit: u64,
-		storage_deposit_limit: Option<BalanceOf<T>>,
 		input: Vec<u8>,
 	) -> Result<(BalanceOf<T>, ExecReturnValue), DispatchError> {
 		let origin = Self::to_mapped_account(from.unwrap_or_default());
+
 		if let Some(to) = target {
 			let dest = Self::account_from_contract_addr(to);
+
+			let allowed_max =
+				<<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(&gas_limit);
 
 			let call_result = pallet_contracts::Pallet::<T>::bare_call(
 				origin,
 				dest,
 				value,
 				gas_limit,
-				storage_deposit_limit,
+				Some(allowed_max),
 				input,
 				true,
 			);
@@ -516,20 +552,25 @@ where
 
 			Ok((fee_consumed, return_value))
 		} else {
-			let (code, data, salt) =
-				<(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut &input[..]).unwrap();
+			let (code, data, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut &input[..])
+				.map_err(|_| Error::<T>::InputBufferUndecodable)?;
+
+			let allowed_max =
+				<<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(&gas_limit);
 
 			let uploaded_code = pallet_contracts::Pallet::<T>::bare_upload_code(
 				origin.clone(),
 				code,
-				storage_deposit_limit,
+				Some(allowed_max),
 			)?;
+
+			let reserved = uploaded_code.deposit;
 
 			let create_result = pallet_contracts::Pallet::<T>::bare_instantiate(
 				origin,
 				value,
 				gas_limit,
-				storage_deposit_limit,
+				Some(allowed_max),
 				Code::Existing(uploaded_code.code_hash),
 				data,
 				salt,
@@ -541,7 +582,8 @@ where
 				&create_result.gas_consumed,
 			);
 
-			Ok((fee_consumed, return_value))
+			// the reserved is also required to make this call successful
+			Ok((fee_consumed + reserved, return_value))
 		}
 	}
 }

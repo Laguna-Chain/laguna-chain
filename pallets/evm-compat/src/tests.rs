@@ -77,6 +77,18 @@ fn dummy_call(target: H160, chain_id: u64) -> LegacyTransactionMessage {
 	}
 }
 
+fn dummy_transfer(target: H160, chain_id: u64, value: U256) -> LegacyTransactionMessage {
+	LegacyTransactionMessage {
+		nonce: Default::default(),
+		gas_price: Default::default(),
+		gas_limit: U256::MAX,
+		action: ethereum::TransactionAction::Call(target),
+		value,
+		chain_id: Some(chain_id),
+		input: vec![],
+	}
+}
+
 fn dummy_contract_create(
 	chain_id: u64,
 	blob: Vec<u8>,
@@ -220,7 +232,9 @@ fn test_create() {
 
 			assert!(!Balances::reserved_balance(addr).is_zero());
 
-			let input = Bytes::from_str("0x633aa551").unwrap();
+			let mut input = b"evm".to_vec();
+
+			input.extend(Bytes::from_str("0x633aa551").unwrap().iter());
 
 			let eth_raw_call = dummy_contract_call(H160(contract_addr), input.to_vec(), chain_id);
 			let eth_signed =
@@ -235,6 +249,51 @@ fn test_create() {
 			assert_eq!(*source, eth_addr);
 
 			assert_ok!(Call::EvmCompat(call).apply_self_contained(info.clone()).unwrap());
+		});
+}
+
+#[test]
+fn test_transfer() {
+	let pair = ecdsa::Pair::from_seed_slice(&RAWSEED).unwrap();
+
+	let signer = MultiSigner::Ecdsa(pair.public());
+
+	// this is generated from blake2_256 hashed value of the original pub-key in compressed form
+	let acc = <MultiSigner as IdentifyAccount>::into_account(signer);
+
+	let dev_acc = EvmCompat::to_mapped_account(H160(pair.public().to_eth_address().unwrap()));
+
+	ExtBuilder::default()
+		.balances(vec![(dev_acc.clone(), 2 << 64)])
+		.build()
+		.execute_with(|| {
+			let chain_id = ChainId::get();
+
+			let target = H160([0x11; 20]);
+
+			let eth_raw_call = dummy_transfer(target, chain_id, (2_u128 << 20).into());
+
+			let eth_signed =
+				LegacyTxMsg(eth_raw_call).sign_with_chain_id(&pair.seed().into(), chain_id);
+
+			// we expect the signature to come from eth signed payload, signing it on the substrate
+			// side will not work
+			assert!(EvmCompat::transact(Origin::signed(acc), eth_signed.clone()).is_err());
+
+			let call = crate::Call::<Runtime>::transact { t: eth_signed };
+			let info = call.check_self_contained().unwrap().unwrap();
+
+			let (source, origin, _) = &info;
+
+			let eth_addr = pair.public().to_eth_address().map(H160).unwrap();
+			assert_eq!(*source, eth_addr);
+
+			assert_ok!(Call::EvmCompat(call).apply_self_contained(info.clone()).unwrap());
+
+			let mapped_account = EvmCompat::to_mapped_account(target);
+
+			assert_eq!(Balances::free_balance(dev_acc), (2 << 64) - (2 << 20));
+			assert_eq!(Balances::free_balance(mapped_account), 2 << 20);
 		});
 }
 
@@ -320,7 +379,6 @@ fn test_try_call() {
 				None,
 				0,
 				20000000000000,
-				None,
 				input,
 			));
 		});

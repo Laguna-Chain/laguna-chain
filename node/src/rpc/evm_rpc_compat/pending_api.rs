@@ -1,31 +1,24 @@
 use fc_rpc::internal_err;
 use jsonrpsee::core::RpcResult as Result;
-use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi as EvmCompatRuntimeApi;
-use primitives::{AccountId, Balance};
-use sc_client_api::{Backend, HeaderBackend, StateBackend, StorageProvider};
+use sc_client_api::HeaderBackend;
 use sc_service::InPoolTransaction;
 use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::{Core, HeaderT, ProvideRuntimeApi};
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::H256;
-use sp_runtime::{
-	generic::BlockId,
-	traits::{BlakeTwo256, Block as BlockT},
-};
+use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 
 // NOTICE: derived from frontier
 ///  this extends the runtime api to consier pending tx's
-pub fn pending_runtime_api<'a, B: BlockT, C, BE, A: ChainApi>(
+pub fn pending_runtime_api<'a, B: BlockT, C, A: ChainApi>(
 	client: &'a C,
 	graph: &'a Pool<A>,
 ) -> Result<sp_api::ApiRef<'a, C::Api>>
 where
 	B: BlockT<Hash = H256> + Send + Sync + 'static,
-	C: ProvideRuntimeApi<B> + StorageProvider<B, BE>,
+	C: ProvideRuntimeApi<B>,
 	C: HeaderBackend<B> + Send + Sync + 'static,
-	C::Api: BlockBuilderApi<B> + EvmCompatRuntimeApi<B, AccountId, Balance>,
-	BE: Backend<B> + 'static,
-	BE::State: StateBackend<BlakeTwo256>,
+	C::Api: BlockBuilderApi<B>,
 	A: ChainApi<Block = B> + 'static,
 {
 	// In case of Pending, we need an overlayed state to query over.

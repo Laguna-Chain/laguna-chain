@@ -3,6 +3,7 @@
 use fp_rpc::ConvertTransactionRuntimeApi;
 use laguna_runtime::opaque::Block;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Index};
+use sp_core::traits::SpawnNamed;
 use std::sync::Arc;
 
 use pallet_contracts_rpc::{Contracts, ContractsApiServer, ContractsRuntimeApi};
@@ -35,13 +36,18 @@ pub struct FullDeps<Client, P, A: ChainApi> {
 	pub network: Arc<NetworkService<Block, Hash>>,
 	pub is_authority: bool,
 }
+use fc_rpc::EthPubSubApiServer;
 use jsonrpsee::RpcModule;
+use sc_rpc::SubscriptionTaskExecutor;
 
 type RpcExtension = Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>;
 
 /// construct and mount all interface to io_handler
 /// runtime need meet the requirement by impl the constraint from impl_runtime_apis! macro
-pub fn create_full<Client, Pool, BE, A>(deps: FullDeps<Client, Pool, A>) -> RpcExtension
+pub fn create_full<Client, Pool, BE, A>(
+	deps: FullDeps<Client, Pool, A>,
+	subscription_task_executor: SubscriptionTaskExecutor,
+) -> RpcExtension
 // TODO: provide additional rpc interface by adding Client: SomeConstraint
 where
 	BE: Backend<Block> + 'static,
@@ -82,7 +88,20 @@ where
 
 	module.merge(EvmCompatRpc::new(client.clone()).into_rpc())?;
 
-	module.merge(evm_rpc_compat::Net::new(client.clone(), network.clone(), true).into_rpc())?;
+	module.merge(
+		evm_rpc_compat::net_api::Net::new(client.clone(), network.clone(), true).into_rpc(),
+	)?;
+
+	module.merge(
+		evm_rpc_compat::pubsub::PubSub::new(
+			client.clone(),
+			network.clone(),
+			subscription_task_executor,
+			graph.clone(),
+		)
+		.into_rpc(),
+	)?;
+
 	module.merge(
 		evm_rpc_compat::EthApi::new(
 			client.clone(),
