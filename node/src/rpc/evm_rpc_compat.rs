@@ -277,10 +277,10 @@ where
 		let from_pool = tx_api.get_transaction_from_pool(hash)?;
 
 		match from_pool {
-			Some(_) => Ok(from_pool.map(|v| tx_api.get_transaction_receipt(v))),
+			Some(_) => Ok(from_pool.map(|v| transaction::get_transaction_receipt(v))),
 			_ => tx_api
 				.get_transaction_from_blocks(hash)?
-				.map(|o| Some(tx_api.get_transaction_receipt(o)))
+				.map(|o| Some(transaction::get_transaction_receipt(o)))
 				.ok_or_else(|| internal_err("fetch runtime transaction_receipt failed")),
 		}
 	}

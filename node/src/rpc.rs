@@ -9,13 +9,12 @@ use std::sync::Arc;
 use pallet_contracts_rpc::{Contracts, ContractsApiServer, ContractsRuntimeApi};
 use pallet_currencies_rpc::{CurrenciesApiServer, CurrenciesRpc, CurrenciesRuntimeApi};
 use pallet_evm_compat_rpc::{EvmCompatApiRuntimeApi, EvmCompatApiServer, EvmCompatRpc};
-
 use pallet_transaction_payment_rpc::{
 	TransactionPayment, TransactionPaymentApiServer, TransactionPaymentRuntimeApi,
 };
 use sc_client_api::{
 	backend::{Backend, StorageProvider},
-	BlockBackend,
+	BlockBackend, BlockchainEvents,
 };
 use sc_rpc_api::DenyUnsafe;
 use sc_transaction_pool::{ChainApi, Pool};
@@ -55,6 +54,7 @@ where
 	Client: BlockBackend<Block>,
 	Client: ProvideRuntimeApi<Block>, // should be able to provide runtime-api
 	Client: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static, /* should be able to handle block header and metadata */
+	Client: BlockchainEvents<Block>,
 	Client: Send + Sync + 'static,
 	Client::Api: AccountNonceApi<Block, AccountId, Index>, /* client be able to distinquish tx
 	                                                        * index */
@@ -65,6 +65,7 @@ where
 	Client::Api: ConvertTransactionRuntimeApi<Block>,
 	Client::Api: EvmCompatApiRuntimeApi<Block, AccountId, Balance>,
 	Client::Api: BlockBuilder<Block>, // should be able to produce block
+
 	Pool: TransactionPool<Block = Block> + 'static, // can submit tx into tx-pool
 	A: ChainApi<Block = Block> + 'static,
 {
@@ -96,6 +97,7 @@ where
 		evm_rpc_compat::pubsub::PubSub::new(
 			client.clone(),
 			network.clone(),
+			pool.clone(),
 			subscription_task_executor,
 			graph.clone(),
 		)

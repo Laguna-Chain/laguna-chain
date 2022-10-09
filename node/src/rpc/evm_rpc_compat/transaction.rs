@@ -37,25 +37,6 @@ where
 	pub fn from_client(client: Arc<C>, graph: Arc<Pool<A>>) -> TransactionApi<B, C, A> {
 		TransactionApi { client, graph, _marker: PhantomData }
 	}
-	pub fn get_transaction_receipt(&self, tx: Transaction) -> Receipt {
-		Receipt {
-			transaction_hash: Some(tx.hash),
-			transaction_index: tx.transaction_index,
-			block_hash: tx.block_hash,
-			from: Some(tx.from),
-			to: tx.to,
-			block_number: tx.block_number,
-			cumulative_gas_used: Default::default(),
-			gas_used: Default::default(),
-			contract_address: None,
-			logs: vec![],
-			state_root: None,
-			logs_bloom: Default::default(),
-			status_code: None,
-			effective_gas_price: Default::default(),
-			transaction_type: tx.transaction_type.unwrap_or_default(),
-		}
-	}
 
 	pub async fn get_transaction_by_block_number_and_index(
 		&self,
@@ -150,5 +131,25 @@ where
 		}
 
 		Ok(None)
+	}
+}
+
+pub fn get_transaction_receipt(tx: Transaction) -> Receipt {
+	Receipt {
+		transaction_hash: Some(tx.hash),
+		transaction_index: tx.transaction_index,
+		block_hash: tx.block_hash,
+		from: Some(tx.from),
+		to: tx.to,
+		block_number: tx.block_number,
+		cumulative_gas_used: Default::default(),
+		gas_used: Default::default(),
+		contract_address: None,
+		logs: vec![],
+		state_root: None,
+		logs_bloom: Default::default(),
+		status_code: None,
+		effective_gas_price: Default::default(),
+		transaction_type: tx.transaction_type.unwrap_or_default(),
 	}
 }

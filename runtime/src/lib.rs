@@ -32,9 +32,9 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{Bytes, H160, H256, U256};
 use sp_runtime::{traits::UniqueSaturatedInto, DispatchError};
 
-use scale_info::prelude::format;
-
+use ethereum::TransactionV2;
 use frame_support::sp_std::prelude::*;
+use scale_info::prelude::format;
 
 pub mod contract_extensions;
 
@@ -616,6 +616,19 @@ impl_runtime_apis! {
 				// find the h160 address that the author account is backing
 				EvmCompat::acc_is_backing(&author)
 			})
+		}
+
+		fn extrinsic_filter(
+			xts: Vec<<Block as BlockT>::Extrinsic>,
+		) -> Vec<TransactionV2>{
+
+			xts.into_iter().filter_map(|xt|{
+				if let Call::EvmCompat(pallet_evm_compat::Call::transact {t}) = xt.0.function { Some(t)} else {
+					None
+				}
+			}).collect()
+
+
 		}
 	}
 
