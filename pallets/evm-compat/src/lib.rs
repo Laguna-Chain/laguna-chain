@@ -7,8 +7,6 @@
 //! 1. prove that incoming eth signed requeset is self_contained
 //! 2. lookup from H160 to AccountId is possible
 //!
-//!
-//!
 //! ### account and origin mapping
 //!
 //! considered the following scenario:
@@ -225,15 +223,11 @@ where
 	fn call_or_create(&self, source: H160) -> DispatchResultWithPostInfo {
 		match self.inner.action {
 			TransactionAction::Call(target) =>
-				if self.inner.input.starts_with(b"evm") {
-					// all input prefixed with b"evm" will considered contract call
-					self.execute_call_request(source, target)
-				} else if self.inner.input.is_empty() {
+				if self.inner.input.is_empty() {
 					// otherwise we recognize it as normal transfer
 					self.execute_transfer_request(source, target)
 				} else {
-					// we do not proceed with request not in the prior two forms
-					Err(Error::<T>::InputBufferUndecodable.into())
+					self.execute_call_request(source, target)
 				},
 			TransactionAction::Create => self.execute_create_request(source),
 		}
@@ -271,8 +265,8 @@ where
 			.ok()
 			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
 
-		// since we assume all input slices are prefixed with evm, we removed them accordingly
-		let input = self.inner.input.strip_prefix(b"evm").ok_or(Error::<T>::ConvertionFailed)?;
+		let input = <Vec<u8>>::decode(&mut &self.inner.input[..])
+			.map_err(|_| Error::<T>::InputBufferUndecodable)?;
 
 		pallet_contracts::Pallet::<T>::call(
 			elevated_origin,
@@ -280,7 +274,7 @@ where
 			self.inner.value.try_into().unwrap_or_default(),
 			self.max_allowed.as_u64(),
 			storage_deposit_limit,
-			input.to_vec(),
+			input,
 		)
 	}
 
@@ -290,7 +284,7 @@ where
 		let mut input_buf = &self.inner.input[..];
 
 		// scale-codec can split vec's on the fly
-		let (sel, code, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut input_buf)
+		let (code, data, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut input_buf)
 			.or(Err(Error::<T>::InputBufferUndecodable))?;
 
 		// this origin cannot be controled from outside
@@ -306,7 +300,7 @@ where
 			self.max_allowed.as_u64(),
 			storage_deposit_limit,
 			code,
-			sel,
+			data,
 			salt,
 		)
 	}
@@ -534,6 +528,9 @@ where
 			let allowed_max =
 				<<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(&gas_limit);
 
+			let input = <Vec<u8>>::decode(&mut &input[..])
+				.map_err(|_| Error::<T>::InputBufferUndecodable)?;
+
 			let call_result = pallet_contracts::Pallet::<T>::bare_call(
 				origin,
 				dest,
@@ -552,7 +549,7 @@ where
 
 			Ok((fee_consumed, return_value))
 		} else {
-			let (code, data, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut &input[..])
+			let (code, selector, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut &input[..])
 				.map_err(|_| Error::<T>::InputBufferUndecodable)?;
 
 			let allowed_max =
@@ -572,7 +569,7 @@ where
 				gas_limit,
 				Some(allowed_max),
 				Code::Existing(uploaded_code.code_hash),
-				data,
+				selector,
 				salt,
 				true,
 			);

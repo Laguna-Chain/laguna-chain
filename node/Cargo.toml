@@ -86,6 +86,7 @@ sc-network = {git = 'https://github.com/paritytech/substrate.git', branch = "pol
 hex = "0.4.3"
 ethereum-types = "0.13.1"
 futures = "0.3.24"
+serde_json = "1.0.86"
 
 [features]
 default = []

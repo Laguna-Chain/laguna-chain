@@ -96,7 +96,7 @@ fn dummy_contract_create(
 ) -> LegacyTransactionMessage {
 	let mut input_buf = vec![];
 
-	(selector, blob, Vec::<u8>::new()).encode_to(&mut input_buf);
+	(blob, selector, Vec::<u8>::new()).encode_to(&mut input_buf);
 
 	LegacyTransactionMessage {
 		nonce: Default::default(),
@@ -232,11 +232,11 @@ fn test_create() {
 
 			assert!(!Balances::reserved_balance(addr).is_zero());
 
-			let mut input = b"evm".to_vec();
+			let mut input = Vec::<u8>::new();
 
 			input.extend(Bytes::from_str("0x633aa551").unwrap().iter());
 
-			let eth_raw_call = dummy_contract_call(H160(contract_addr), input.to_vec(), chain_id);
+			let eth_raw_call = dummy_contract_call(H160(contract_addr), input.encode(), chain_id);
 			let eth_signed =
 				LegacyTxMsg(eth_raw_call).sign_with_chain_id(&pair.seed().into(), chain_id);
 

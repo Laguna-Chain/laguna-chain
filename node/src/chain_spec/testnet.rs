@@ -1,7 +1,5 @@
 // chain-wise primitives and modules
 
-use std::str::FromStr;
-
 use primitives::{AccountId, CurrencyId, TokenId};
 
 use laguna_runtime::{
@@ -14,7 +12,9 @@ use laguna_runtime::{
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 
-use super::util::{authority_keys_from_seed, get_account_id_from_seed};
+use super::util::{
+	authority_keys_from_seed, get_account_id_from_seed, laguna_chain_spec_properties,
+};
 use sc_service::ChainType;
 use sp_core::{sr25519, H160};
 use sp_runtime::traits::AccountIdConversion;
@@ -71,7 +71,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		None,
 		// Extensions
-		None,
+		Some(laguna_chain_spec_properties()),
 		None,
 	))
 }
@@ -125,7 +125,7 @@ pub fn devnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		None,
 		// Extensions
-		None,
+		Some(laguna_chain_spec_properties()),
 		None,
 	))
 }

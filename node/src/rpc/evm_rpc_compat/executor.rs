@@ -54,7 +54,7 @@ where
 		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
 
 		DeferrableApi::<B, C, A>::run_with_api(deferred_api, |api| {
-			let CallRequest { from, to, value, ref data, gas_price, .. } = request;
+			let CallRequest { from, to, value, ref data, gas, gas_price, .. } = request;
 
 			// return gas_used and return value from either create or call
 			let (f, rv) = api
@@ -64,7 +64,10 @@ where
 					to,
 					value.map(|v| v.unique_saturated_into()).unwrap_or_default(),
 					data.clone().map(|v| v.0.to_vec()).unwrap_or_default(),
-					gas_price.map(|v| v.unique_saturated_into()).unwrap_or_default(),
+					gas.map(|v| {
+						(gas_price.unwrap_or_else(|| 1_u32.into()) * v).unique_saturated_into()
+					})
+					.unwrap_or_default(),
 				)
 				.map(|o| {
 					o.map_err(|err| internal_err(format!("fetch runtime call failed: {:?}", err)))

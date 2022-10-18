@@ -260,7 +260,6 @@ fn convert_block(block: RichBlock) -> EthereumBlock {
 		nonce,
 		uncles_hash,
 		author,
-		hash,
 		..
 	} = block.header.clone();
 
@@ -391,7 +390,7 @@ impl SubscriptionResult {
 				ethereum::ReceiptV3::EIP1559(d) => d.logs,
 			};
 			let mut transaction_log_index: u32 = 0;
-			let transaction_hash: Option<H256> = if receipt_logs.len() > 0 {
+			let transaction_hash: Option<H256> = if receipt_logs.is_empty() {
 				Some(block.transactions[receipt_index as usize].hash())
 			} else {
 				None
