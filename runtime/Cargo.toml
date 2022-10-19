@@ -81,10 +81,8 @@ pallet-currencies-rpc-runtime-api = {version = "0.1.0", path = "../pallets/curre
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
 
 # build dependency for the wasm runtime
-[build-dependencies.substrate-wasm-builder]
-branch = "polkadot-v0.9.27"
-git = 'https://github.com/paritytech/substrate.git'
-version = '5.0.0-dev'
+[build-dependencies]
+substrate-wasm-builder = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 
 [features]
 default = ["std"]
@@ -126,6 +124,7 @@ std = [
   'pallet-currencies-rpc-runtime-api/std',
   'pallet-transaction-payment/std',
   'pallet-evm-compat/std',
+  'pallet-evm-compat-rpc-runtime-api/std',
   'pallet-evm/std',
   'ethereum/std',
   'pallet-transaction-payment-rpc-runtime-api/std',

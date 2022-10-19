@@ -78,7 +78,7 @@ pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
 
 use impl_pallet_authorship::AuraAccountAdapter;
-use impl_pallet_evm_compat::{ETH_ACC_PREFIX, ETH_CONTRACT_PREFIX};
+use impl_pallet_evm_compat::ETH_CONTRACT_PREFIX;
 
 pub mod constants;
 
@@ -267,8 +267,8 @@ impl fp_self_contained::SelfContainedCall for Call {
 		dispatch_info: &DispatchInfoOf<Call>,
 		len: usize,
 	) -> Option<TransactionValidity> {
-		if let Call::EvmCompat(call) = self {
-			let (source, origin, extra) = info;
+		if let Call::EvmCompat(_) = self {
+			let (_, origin, extra) = info;
 			return Some(extra.validate(origin, self, dispatch_info, len))
 		}
 
@@ -281,8 +281,8 @@ impl fp_self_contained::SelfContainedCall for Call {
 		dispatch_info: &DispatchInfoOf<Call>,
 		len: usize,
 	) -> Option<Result<(), TransactionValidityError>> {
-		if let Call::EvmCompat(call) = self {
-			let (source, origin, extra) = info;
+		if let Call::EvmCompat(_) = self {
+			let (_, origin, extra) = info;
 			return Some(extra.clone().pre_dispatch(origin, self, dispatch_info, len).map(|_| ()))
 		}
 
@@ -609,9 +609,10 @@ impl_runtime_apis! {
 			// find author using all consensus digests
 			AuraAccountAdapter::find_author(digests.iter().map(|(a, b)| {
 				(*a, &b[..])
-			})).and_then(|author| {
-				// find the h160 address that the author account is backing
-				EvmCompat::acc_is_backing(&author)
+			})).map(|author| {
+				// return the first 20 bytes as h160
+				let buf: &[u8; 32] = author.as_ref();
+				H160::from_slice(&buf[0..20])
 			})
 		}
 

@@ -15,7 +15,7 @@ parameter_types! {
 pub struct DummyPriceProvider;
 
 impl PriceProvider<CurrencyId, Price> for DummyPriceProvider {
-	fn get_price(base: CurrencyId, quote: CurrencyId) -> Option<Price> {
+	fn get_price(_base: CurrencyId, _quote: CurrencyId) -> Option<Price> {
 		None
 	}
 }

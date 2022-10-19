@@ -8,15 +8,18 @@ use pallet_system_contract_deployer::CustomAddressGenerator;
 use primitives::{AccountId, Balance};
 use sp_core::{H160, U256};
 
-use crate::Runtime;
+use crate::{Event, Runtime};
 
 impl pallet_evm_compat::Config for Runtime {
 	type AddressMapping = HashedAddressMapping<Keccak256>;
+
 	type ContractAddressMapping = PlainContractAddressMapping;
 
 	type ChainId = ConstU64<1000>;
 
 	type WeightToFee = <Runtime as pallet_transaction_payment::Config>::WeightToFee;
+
+	type Event = Event;
 }
 
 pub const ETH_ACC_PREFIX: &[u8; 4] = b"evm:";

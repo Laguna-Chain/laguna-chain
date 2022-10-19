@@ -1,14 +1,16 @@
 use super::*;
 
 use frame_support::{
-	construct_runtime, parameter_types,
+	construct_runtime,
+	dispatch::Dispatchable,
+	parameter_types,
 	sp_runtime::{
 		self,
 		traits::{
 			BlakeTwo256, DispatchInfoOf, IdentityLookup, PostDispatchInfoOf, SignedExtension,
 		},
 	},
-	traits::{ConstU64, Everything},
+	traits::Everything,
 	weights::IdentityFee,
 };
 
@@ -18,7 +20,7 @@ use pallet_contracts::{
 };
 use pallet_evm::HashedAddressMapping;
 use pallet_transaction_payment::CurrencyAdapter;
-use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, Header, Index};
+use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
 use sp_core::{keccak_256, KeccakHasher, H256};
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
@@ -207,6 +209,7 @@ impl pallet_proxy::Config for Runtime {
 }
 
 impl Config for Runtime {
+	type Event = Event;
 	type AddressMapping = HashedAddressMapping<KeccakHasher>;
 
 	type ContractAddressMapping = PlainContractAddressMapping;

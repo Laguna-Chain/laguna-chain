@@ -1,7 +1,7 @@
 use frame_support::{parameter_types, sp_runtime::traits::BlakeTwo256, traits::ConstU32};
 use orml_tokens::CurrencyAdapter;
 
-use crate::{impl_pallet_currencies::NativeCurrencyId, Call, Currencies, Event, Runtime, Tokens};
+use crate::{impl_pallet_currencies::NativeCurrencyId, Call, Event, Runtime};
 
 parameter_types! {
 	pub const ProxyDepositBase: u64 = 1;

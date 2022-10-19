@@ -71,10 +71,9 @@ laguna-runtime = {path = "../"}
 rand = "0.8.5"
 
 # build dependency for the wasm runtime
-[build-dependencies.substrate-wasm-builder]
-branch = "polkadot-v0.9.27"
-git = 'https://github.com/paritytech/substrate.git'
-version = '5.0.0-dev'
+[build-dependencies]
+substrate-wasm-builder = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+
 
 [features]
 default = ["std"]

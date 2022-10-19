@@ -33,8 +33,8 @@ impl Eligibility for DefaultImpl {
 	type AssetId = CurrencyId;
 
 	fn eligible(
-		who: &Self::AccountId,
-		asset_id: &Self::AssetId,
+		_who: &Self::AccountId,
+		_asset_id: &Self::AssetId,
 	) -> Result<(), traits::fee::EligibilityError> {
 		Ok(())
 	}

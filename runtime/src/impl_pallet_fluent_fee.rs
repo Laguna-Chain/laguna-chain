@@ -150,7 +150,7 @@ impl FeeDispatch for StaticImpl {
 		account: &<Runtime as frame_system::Config>::AccountId,
 		id: &Self::AssetId,
 		balance: &Self::Balance,
-		reason: &frame_support::traits::WithdrawReasons,
+		_reason: &frame_support::traits::WithdrawReasons,
 	) -> Result<(), traits::fee::InvalidFeeDispatch> {
 		match id {
 			CurrencyId::NativeToken(_) =>

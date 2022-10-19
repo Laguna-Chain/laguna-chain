@@ -1,15 +1,15 @@
-use crate::{constants::MICRO_LAGUNAS, Event, Runtime};
+use crate::{Event, Runtime};
 use frame_support::{
 	parameter_types,
 	sp_runtime::traits::Zero,
 	traits::{ConstU32, Contains},
 };
-use primitives::{AccountId, Amount, Balance, CurrencyId, TokenId};
+use primitives::{AccountId, Amount, Balance, CurrencyId};
 
 pub struct DustRemovalWhitelist;
 
 impl Contains<AccountId> for DustRemovalWhitelist {
-	fn contains(t: &AccountId) -> bool {
+	fn contains(_: &AccountId) -> bool {
 		// TODO: all account are possible to be dust-removed now
 		false
 	}
@@ -23,7 +23,7 @@ orml_traits::parameter_type_with_key! {
 	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
 
 		match currency_id {
-			&CurrencyId::NativeToken(token) => Zero::zero(),
+			&CurrencyId::NativeToken(_) => Zero::zero(),
 			_ => Balance::max_value() // unreachable ED value for unverified currency type
 		}
 	};

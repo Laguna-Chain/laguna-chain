@@ -16,17 +16,15 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::HasCompact;
-use ethereum::{TransactionAction, TransactionV2 as Transaction};
+use ethereum::TransactionV2 as Transaction;
 use frame_support::{
 	crypto::ecdsa::ECDSAExt,
-	dispatch::Dispatchable,
 	pallet_prelude::*,
 	sp_core_hashing_proc_macro::keccak_256,
 	sp_io,
 	sp_runtime::traits::{Hash as HashT, Keccak256},
 	sp_std::{fmt::Debug, prelude::*},
 	traits::Currency,
-	weights::{DispatchInfo, PostDispatchInfo},
 };
 use frame_system::pallet_prelude::*;
 use orml_traits::arithmetic::Zero;
@@ -36,15 +34,19 @@ use codec::Decode;
 use pallet_contracts_primitives::Code;
 use pallet_evm::AddressMapping;
 
-use frame_support::{sp_runtime::traits::StaticLookup, traits::tokens::ExistenceRequirement};
+use frame_support::traits::tokens::ExistenceRequirement;
 use hex::FromHex;
 pub use pallet::*;
 use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
 type CurrencyOf<T> = <T as pallet_contracts::Config>::Currency;
-use fp_ethereum::TransactionData;
 use frame_support::weights::WeightToFee;
 use pallet_contracts_primitives::ExecReturnValue;
+
+pub(crate) mod self_contained;
+pub(crate) mod tx_adapter;
+
+use tx_adapter::ContractTransactionAdapter;
 
 #[cfg(test)]
 mod mock;
@@ -94,10 +96,13 @@ mod pallet {
 	pub trait Config:
 		frame_system::Config + pallet_contracts::Config + pallet_proxy::Config
 	{
+		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+
 		type AddressMapping: AddressMapping<AccountIdOf<Self>>;
 
 		type ContractAddressMapping: AddressMapping<AccountIdOf<Self>>;
 
+		/// used communicate between gas <-> weight
 		type WeightToFee: WeightToFee<Balance = BalanceOf<Self>>;
 
 		type ChainId: Get<u64>;
@@ -112,6 +117,12 @@ mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn has_proxy)]
 	pub type ProxyAccount<T: Config> = StorageMap<_, Blake2_128Concat, H160, AccountIdOf<T>>;
+
+	#[pallet::event]
+	#[pallet::generate_deposit(pub fn deposit_event)]
+	pub enum Event<T: Config> {
+		PayloadInfo { address: H160, max_fee_allowed: BalanceOf<T>, tip: BalanceOf<T> },
+	}
 
 	#[pallet::error]
 	pub enum Error<T> {
@@ -136,6 +147,14 @@ mod pallet {
 			// only allow origin obtained from self_contained_call
 			let source = ensure_ethereum_transaction(origin)?;
 
+			let (max_allowed, tip) = fee_details::<T>(&t);
+
+			Self::deposit_event(Event::<T>::PayloadInfo {
+				address: source,
+				max_fee_allowed: max_allowed.try_into().unwrap_or_default(),
+				tip: tip.try_into().unwrap_or_default(),
+			});
+
 			// convert it to pallet_contract instructions
 			let runner = ContractTransactionAdapter::<T>::from_tx(&t);
 
@@ -146,8 +165,8 @@ mod pallet {
 		pub fn set_proxy(
 			origin: OriginFor<T>,
 			who: Option<AccountIdOf<T>>,
-			nonce: U256,
-			sig: Vec<u8>,
+			_nonce: U256,
+			_sig: Vec<u8>,
 		) -> DispatchResult {
 			let source = ensure_ethereum_transaction(origin)?;
 
@@ -169,6 +188,8 @@ mod pallet {
 			}
 		}
 
+		/// helper function that could be used by substrate users to prefund the destinated eth
+		/// address
 		#[pallet::weight(200_000_000)]
 		pub fn transfer(origin: OriginFor<T>, target: H160, value: BalanceOf<T>) -> DispatchResult {
 			let who = ensure_signed(origin)?;
@@ -197,112 +218,6 @@ where
 			let tip = t.max_fee_per_gas * t.max_priority_fee_per_gas;
 			(max_allowed, tip)
 		},
-	}
-}
-
-// once we have the TransactionData we can start mapping it to pallet_contract call args
-struct ContractTransactionAdapter<T> {
-	inner: TransactionData,
-	max_allowed: U256,
-	tips: U256,
-	_marker: PhantomData<T>,
-}
-
-impl<T: Config> ContractTransactionAdapter<T>
-where
-	BalanceOf<T>: TryFrom<U256> + Into<U256>,
-	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
-	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
-{
-	fn from_tx(tx: &Transaction) -> Self {
-		let (max_allowed, tips) = fee_details::<T>(tx);
-
-		Self { inner: TransactionData::from(tx), max_allowed, tips, _marker: Default::default() }
-	}
-
-	fn call_or_create(&self, source: H160) -> DispatchResultWithPostInfo {
-		match self.inner.action {
-			TransactionAction::Call(target) =>
-				if self.inner.input.is_empty() {
-					// otherwise we recognize it as normal transfer
-					self.execute_transfer_request(source, target)
-				} else {
-					self.execute_call_request(source, target)
-				},
-			TransactionAction::Create => self.execute_create_request(source),
-		}
-	}
-
-	fn execute_transfer_request(&self, source: H160, target: H160) -> DispatchResultWithPostInfo {
-		let from = Pallet::<T>::to_mapped_account(source);
-
-		// assume receiver has mapped address
-		let to = Pallet::<T>::to_mapped_account(target);
-		let value =
-			BalanceOf::<T>::try_from(self.inner.value).map_err(|_| Error::<T>::ConvertionFailed)?;
-
-		<<T as pallet_contracts::Config>::Currency as Currency<AccountIdOf<T>>>::transfer(
-			&from,
-			&to,
-			value,
-			ExistenceRequirement::KeepAlive,
-		)?;
-
-		Ok(().into())
-	}
-
-	/// the actual substrate weight allowed for from a eth transaction
-	fn execute_call_request(&self, source: H160, target: H160) -> DispatchResultWithPostInfo {
-		let contract_addr = Pallet::<T>::account_from_contract_addr(target);
-
-		let contract_addr_source =
-			<<T as frame_system::Config>::Lookup as StaticLookup>::unlookup(contract_addr);
-
-		// mapped origin has no known key pair
-		let elevated_origin = Pallet::<T>::to_mapped_origin(source);
-
-		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(self.max_allowed)
-			.ok()
-			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
-
-		let input = <Vec<u8>>::decode(&mut &self.inner.input[..])
-			.map_err(|_| Error::<T>::InputBufferUndecodable)?;
-
-		pallet_contracts::Pallet::<T>::call(
-			elevated_origin,
-			contract_addr_source,
-			self.inner.value.try_into().unwrap_or_default(),
-			self.max_allowed.as_u64(),
-			storage_deposit_limit,
-			input,
-		)
-	}
-
-	fn execute_create_request(&self, source: H160) -> DispatchResultWithPostInfo {
-		// FIXME: etherem use same input field to contain both code and data, we need a way to
-		// communicate with tool about our choice of this.
-		let mut input_buf = &self.inner.input[..];
-
-		// scale-codec can split vec's on the fly
-		let (code, data, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut input_buf)
-			.or(Err(Error::<T>::InputBufferUndecodable))?;
-
-		// this origin cannot be controled from outside
-		let elevated_origin = Pallet::<T>::to_mapped_origin(source);
-
-		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(self.max_allowed)
-			.ok()
-			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
-
-		pallet_contracts::Pallet::<T>::instantiate_with_code(
-			elevated_origin,
-			self.inner.value.try_into().unwrap_or_default(),
-			self.max_allowed.as_u64(),
-			storage_deposit_limit,
-			code,
-			data,
-			salt,
-		)
 	}
 }
 
@@ -407,7 +322,7 @@ impl<T: Config> Pallet<T> {
 
 	pub fn storage_key(index: impl Into<u32>) -> Option<Vec<u8>> {
 		// string padded to [u8 ;32]
-		let key_str = format!("{:032X}", index.into());
+		let key_str = format!("{:064X}", index.into());
 		<[u8; 32]>::from_hex(key_str).ok().map(|v| v.to_vec())
 	}
 
@@ -581,83 +496,6 @@ where
 
 			// the reserved is also required to make this call successful
 			Ok((fee_consumed + reserved, return_value))
-		}
-	}
-}
-
-#[repr(u8)]
-enum TransactionValidationError {
-	#[allow(dead_code)]
-	UnknownError,
-	InvalidChainId,
-	InvalidSignature,
-	InvalidGasLimit,
-	MaxFeePerGasTooLow,
-}
-
-type CheckedInfo<T> = (H160, AccountIdOf<T>, (U256, U256));
-
-impl<T> Call<T>
-where
-	OriginFor<T>: Into<Result<RawOrigin, OriginFor<T>>>,
-	T: Send + Sync + Config,
-	<T as frame_system::Config>::Call:
-		Dispatchable<Info = DispatchInfo, PostInfo = PostDispatchInfo>,
-	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
-	BalanceOf<T>: TryFrom<U256> + Into<U256>,
-	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
-{
-	pub fn is_self_contained(&self) -> bool {
-		matches!(self, Call::transact { .. })
-	}
-
-	pub fn check_self_contained(&self) -> Option<Result<CheckedInfo<T>, TransactionValidityError>> {
-		match self {
-			Call::transact { t } => {
-				let rs = Pallet::<T>::recover_tx_signer(t)
-					.map(|s| {
-						let o = Pallet::<T>::to_mapped_account(s);
-						let extra = self.expose_extra();
-						(s, o, extra)
-					})
-					.ok_or_else(|| {
-						InvalidTransaction::Custom(
-							TransactionValidationError::InvalidSignature as u8,
-						)
-						.into()
-					});
-
-				Some(rs)
-			},
-			Call::set_proxy { who, nonce, sig } => {
-				let rs = Pallet::<T>::verify_proxy_request(who, nonce, sig)
-					.map(|s| {
-						let o = Pallet::<T>::to_mapped_account(s);
-						let extra = self.expose_extra();
-						(s, o, extra)
-					})
-					.ok_or_else(|| {
-						InvalidTransaction::Custom(
-							TransactionValidationError::InvalidSignature as u8,
-						)
-						.into()
-					});
-
-				Some(rs)
-			},
-			_ => None,
-		}
-	}
-
-	fn expose_extra(&self) -> (U256, U256) {
-		match self {
-			Call::transact { t } => {
-				let nonce = TransactionData::from(t).nonce;
-				let (_, tips) = fee_details::<T>(t);
-				(nonce, tips)
-			},
-			Call::set_proxy { who, nonce, sig } => (*nonce, Default::default()),
-			_ => Default::default(),
 		}
 	}
 }

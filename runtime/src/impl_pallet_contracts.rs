@@ -1,16 +1,13 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use crate::{
-	constants::{LAGUNAS, MICRO_LAGUNAS, MILLI_LAGUNAS},
-	impl_frame_system::BlockWeights,
-	impl_pallet_currencies::NativeCurrencyId,
-	impl_pallet_evm_compat::{EvmCompatAdderssGenerator, PlainContractAddressMapping},
+	constants::MICRO_LAGUNAS, impl_frame_system::BlockWeights,
+	impl_pallet_currencies::NativeCurrencyId, impl_pallet_evm_compat::EvmCompatAdderssGenerator,
 	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight,
 };
 use frame_support::{parameter_types, traits::ConstU32};
 use orml_tokens::CurrencyAdapter;
 use pallet_contracts::DefaultContractAccessWeight;
-use pallet_system_contract_deployer::CustomAddressGenerator;
 
 mod chain_extensions;
 use chain_extensions::DemoExtension;
