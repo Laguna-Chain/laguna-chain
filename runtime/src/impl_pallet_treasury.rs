@@ -1,8 +1,7 @@
-use frame_support::{parameter_types, traits::ConstU32, PalletId};
+use frame_support::{parameter_types, sp_runtime::Permill, traits::ConstU32, PalletId};
 use frame_system::EnsureRoot;
 use orml_tokens::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber};
-use sp_runtime::Permill;
 
 use crate::{constants::HOURS, impl_pallet_currencies::NativeCurrencyId, Event, Runtime};
 

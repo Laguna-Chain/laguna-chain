@@ -23,6 +23,7 @@ primitives = {path = "../primitives"}
 # laguna chain runtime
 laguna-runtime = {path = "../runtime"}
 
+codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}
 sc-basic-authorship = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sc-cli = {features = ['wasmtime'], git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sc-client-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
@@ -59,7 +60,7 @@ frame-support = {git = 'https://github.com/paritytech/substrate.git', branch = "
 pallet-contracts-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 
 pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-system-contract-deployer = {path = "../pallets/system-contract-deployer", default-features = false}
+pallet-system-contract-deployer = {path = "../pallets/system-contract-deployer"}
 
 # requird for benchmark cli-parsing and conduct runtime-benchmark
 frame-benchmarking = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
@@ -69,6 +70,23 @@ clap = {version = "3.1.6", features = ["derive"]}
 hex-literal = "0.3.4"
 jsonrpsee = {version = "0.14.0", features = ["server"]}
 pallet-currencies-rpc = {version = "0.1.0", path = "../pallets/currencies/rpc"}
+pallet-evm-compat-rpc = {version = "0.1.0", path = "../pallets/evm-compat/rpc"}
+pallet-evm-compat = {version = "0.1.0", path = "../pallets/evm-compat"}
+
+fc-rpc-core = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" }
+fp-ethereum = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" }
+fp-rpc = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" }
+fc-rpc = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" }
+pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27" }
+ethereum = { version = "0.12.0", features = ["with-codec"] }
+rlp = "0.5"
+
+
+sc-network = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27" }
+hex = "0.4.3"
+ethereum-types = "0.13.1"
+futures = "0.3.24"
+serde_json = "1.0.86"
 
 [features]
 default = []

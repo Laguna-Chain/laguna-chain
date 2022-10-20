@@ -802,11 +802,12 @@ where
 		amount: Self::Balance,
 	) -> frame_support::traits::tokens::WithdrawConsequence<Self::Balance> {
 		match asset {
-			CurrencyId::Erc20(_) =>
+			CurrencyId::Erc20(_) => {
 				match <Self as MultiCurrency<_>>::ensure_can_withdraw(asset, who, amount) {
 					Ok(()) => WithdrawConsequence::Success,
 					_ => WithdrawConsequence::NoFunds,
-				},
+				}
+			},
 
 			_ => <T::MultiCurrency as fungibles::Inspect<_>>::can_withdraw(asset, who, amount),
 		}

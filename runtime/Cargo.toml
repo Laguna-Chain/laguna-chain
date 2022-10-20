@@ -16,12 +16,17 @@ pallet-grandpa = {default-features = false, git = 'https://github.com/paritytech
 pallet-scheduler = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-sudo = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-timestamp = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-proxy = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+
 
 # smart contracts
 pallet-contracts = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-contracts-primitives = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-evm-compat = {path = "../pallets/evm-compat", default-features = false}
+pallet-evm-compat-rpc-runtime-api = {path = "../pallets/evm-compat/rpc/runtime-api", default-features = false}
+
 
 # monetary system
 orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', version = "0.4.1-dev", default-features = false, branch = "polkadot-v0.9.27"}
@@ -59,27 +64,25 @@ sp-consensus-aura = {default-features = false, git = 'https://github.com/parityt
 sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-inherents = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-offchain = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sp-runtime = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-session = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 
 sp-transaction-pool = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-version = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+fp-self-contained = {default-features = false, git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
+fp-rpc = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" , default-features = false}
+pallet-evm = {default-features = false, git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
+ethereum = { version = "0.12.0", default-features = false, features = ["with-codec"] }
+
 
 # parity SCALE codec
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}
 hex-literal = {version = '0.3.1'}
-pallet-currencies-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
+pallet-currencies-rpc-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
 
-# workaround for https://github.com/paritytech/substrate/issues/11706
-syn = {version = "1.0.99"}
-
 # build dependency for the wasm runtime
-[build-dependencies.substrate-wasm-builder]
-branch = "polkadot-v0.9.27"
-git = 'https://github.com/paritytech/substrate.git'
-version = '5.0.0-dev'
+[build-dependencies]
+substrate-wasm-builder = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 
 [features]
 default = ["std"]
@@ -89,7 +92,6 @@ runtime-benchmarks = [
   'frame-system-benchmarking',
   'frame-system/runtime-benchmarks',
   'pallet-timestamp/runtime-benchmarks',
-  'sp-runtime/runtime-benchmarks',
 ]
 std = [
   "orml-tokens/std",
@@ -101,9 +103,7 @@ std = [
   "frame-executive/std",
   "frame-system-rpc-runtime-api/std",
   "sp-version/std",
-  "sp-runtime/std",
   "sp-api/std",
-  "sp-std/std",
   "sp-core/std",
   "sp-inherents/std",
   "sp-block-builder/std",
@@ -121,8 +121,12 @@ std = [
   'pallet-scheduler/std',
   'pallet-treasury/std',
   'pallet-currencies/std',
-  'pallet-currencies-runtime-api/std',
+  'pallet-currencies-rpc-runtime-api/std',
   'pallet-transaction-payment/std',
+  'pallet-evm-compat/std',
+  'pallet-evm-compat-rpc-runtime-api/std',
+  'pallet-evm/std',
+  'ethereum/std',
   'pallet-transaction-payment-rpc-runtime-api/std',
   "pallet-fluent-fee/std",
   'pallet-contracts/std',
@@ -131,7 +135,11 @@ std = [
   'pallet-randomness-collective-flip/std',
   'pallet-fee-enablement/std',
   'pallet-fee-measurement/std',
+  'pallet-proxy/std',
+  'fp-self-contained/std',
+  "fp-rpc/std",
   'traits/std',
   'pallet-contract-asset-registry/std',
   'pallet-system-contract-deployer/std',
+  
 ]

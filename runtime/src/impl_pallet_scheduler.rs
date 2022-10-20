@@ -1,8 +1,7 @@
 use crate::{impl_frame_system::BlockWeights, Call, Event, Origin, OriginCaller, Runtime, Weight};
-use frame_support::{parameter_types, traits::EqualPrivilegeOnly};
+use frame_support::{parameter_types, sp_runtime::Perbill, traits::EqualPrivilegeOnly};
 use frame_system::EnsureRoot;
 use primitives::{AccountId, BlockNumber};
-use sp_runtime::Perbill;
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *

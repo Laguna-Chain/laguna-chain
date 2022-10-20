@@ -16,6 +16,8 @@ pallet-balances = {git = 'https://github.com/paritytech/substrate.git', branch =
 pallet-currencies = {path = "../../pallets/currencies", default-features = false}
 pallet-fee-enablement = {path = "../../pallets/fee-enablement", default-features = false}
 pallet-fluent-fee = {path = "../../pallets/fluent-fee", default-features = false}
+pallet-evm-compat = {path = "../../pallets/evm-compat", default-features = false}
+
 
 pallet-grandpa = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-scheduler = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
@@ -43,6 +45,7 @@ frame-support = {git = 'https://github.com/paritytech/substrate.git', branch = "
 frame-system = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 frame-system-benchmarking = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27", optional = true}
 frame-system-rpc-runtime-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+fp-self-contained = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
 
 # sp stands for substrate-primitives, used across node and runtime
 sp-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
@@ -53,9 +56,7 @@ sp-consensus-aura = {git = 'https://github.com/paritytech/substrate.git', branch
 sp-core = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-inherents = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-offchain = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sp-runtime = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-session = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sp-std = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 
 sp-transaction-pool = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 sp-version = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
@@ -70,10 +71,9 @@ laguna-runtime = {path = "../"}
 rand = "0.8.5"
 
 # build dependency for the wasm runtime
-[build-dependencies.substrate-wasm-builder]
-branch = "polkadot-v0.9.27"
-git = 'https://github.com/paritytech/substrate.git'
-version = '5.0.0-dev'
+[build-dependencies]
+substrate-wasm-builder = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+
 
 [features]
 default = ["std"]

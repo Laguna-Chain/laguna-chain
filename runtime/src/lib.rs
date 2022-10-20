@@ -7,19 +7,34 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-use frame_support::{self, construct_runtime};
-
+use codec::{Decode, Encode};
+use constants::LAGUNA_NATIVE_CURRENCY;
+use frame_support::{
+	self, construct_runtime,
+	dispatch::{Dispatchable, GetDispatchInfo},
+	pallet_prelude::TransactionValidityError,
+	sp_runtime::{
+		app_crypto::sp_core::OpaqueMetadata,
+		create_runtime_str, generic, impl_opaque_keys,
+		traits::{
+			BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf,
+			SignedExtension,
+		},
+		transaction_validity::{TransactionSource, TransactionValidity},
+		ApplyExtrinsicResult, KeyTypeId, SaturatedConversion,
+	},
+	traits::{FindAuthor, Get},
+};
+use impl_frame_system::BlockHashCount;
+use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_runtime::{
-	app_crypto::sp_core::OpaqueMetadata,
-	create_runtime_str, generic, impl_opaque_keys,
-	traits::{BlakeTwo256, Block as BlockT, NumberFor},
-	transaction_validity::{TransactionSource, TransactionValidity},
-	ApplyExtrinsicResult, KeyTypeId,
-};
+use sp_core::{Bytes, H160, H256, U256};
+use sp_runtime::{traits::UniqueSaturatedInto, DispatchError};
 
-use sp_std::prelude::*;
+use ethereum::TransactionV2;
+use frame_support::sp_std::prelude::*;
+use scale_info::prelude::format;
 
 pub mod contract_extensions;
 
@@ -36,6 +51,8 @@ use primitives::{
 	AccountId, Address, Balance, BlockNumber, CurrencyId, Hash, Header, Index, Signature,
 };
 
+use pallet_evm_compat_rpc_runtime_api::ConesensusDigest;
+
 // include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
 pub mod impl_frame_system;
@@ -48,17 +65,20 @@ pub mod impl_pallet_treasury;
 
 pub mod impl_pallet_authorship;
 pub mod impl_pallet_currencies;
+pub mod impl_pallet_evm_compat;
 pub mod impl_pallet_fee_enablement;
 pub mod impl_pallet_fluent_fee;
 pub mod impl_pallet_granda;
 pub mod impl_pallet_prepaid;
+pub mod impl_pallet_proxy;
 pub mod impl_pallet_scheduler;
 pub mod impl_pallet_sudo;
 pub mod impl_pallet_system_contract_deployer;
 pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
 
-impl pallet_randomness_collective_flip::Config for Runtime {}
+use impl_pallet_authorship::AuraAccountAdapter;
+use impl_pallet_evm_compat::ETH_CONTRACT_PREFIX;
 
 pub mod constants;
 
@@ -70,7 +90,7 @@ mod weights;
 pub mod opaque {
 	use super::*;
 
-	pub use sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
+	pub use frame_support::sp_runtime::OpaqueExtrinsic as UncheckedExtrinsic;
 
 	/// Opaque block header type.
 	pub type Header = generic::Header<BlockNumber, BlakeTwo256>;
@@ -104,6 +124,8 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 pub fn native_version() -> NativeVersion {
 	NativeVersion { runtime_version: VERSION, can_author_with: Default::default() }
 }
+
+use frame_support::sp_runtime;
 
 // runtime as enum, can cross reference enum variants as pallet impl type associates
 // this macro also mixed type to all pallets so that they can adapt through a shared type
@@ -148,14 +170,21 @@ construct_runtime!(
 			Contracts: pallet_contracts,
 			SystemContractDeployer: pallet_system_contract_deployer,
 			RandomnessCollectiveFlip: pallet_randomness_collective_flip,
-
+			EvmCompat: pallet_evm_compat,
+			Proxy: pallet_proxy,
 		}
 );
 
 // The following types are copied from substrate-node-template to boostrap development
 
 /// Unchecked extrinsic type as expected by this runtime.
-pub type UncheckedExtrinsic = generic::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
+pub type UncheckedExtrinsic =
+	fp_self_contained::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
+
+// pub type CheckedExtrinsic = <UncheckedExtrinsic as Checkable>::Checked;
+pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, Call, SignedExtra, H160>;
+
+pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 
 /// Block type as expected by this runtime.
 pub type Block = generic::Block<Header, UncheckedExtrinsic>;
@@ -183,6 +212,115 @@ pub type Executive = frame_executive::Executive<
 	Runtime,
 	AllPalletsWithSystem,
 >;
+
+/// create default extra for tx request coming from eth rpc
+fn new_extra(nonce: Index, tip: Balance) -> SignedExtra {
+	// TODO: allow eth-client to contain custom Era
+	let period =
+		BlockHashCount::get().checked_next_power_of_two().map(|c| c / 2).unwrap_or(2) as u64;
+
+	let current_block = System::block_number()
+		.saturated_into::<u64>()
+		// The `System::block_number` is initialized with `n+1`,
+		// so the actual block number is `n`.
+		.saturating_sub(1);
+
+	(
+		frame_system::CheckNonZeroSender::<Runtime>::new(),
+		frame_system::CheckSpecVersion::<Runtime>::new(),
+		frame_system::CheckTxVersion::<Runtime>::new(),
+		frame_system::CheckGenesis::<Runtime>::new(),
+		frame_system::CheckEra::<Runtime>::from(generic::Era::mortal(period, current_block)),
+		frame_system::CheckNonce::<Runtime>::from(nonce),
+		frame_system::CheckWeight::<Runtime>::new(),
+		// fee and tipping related
+		// TODO: justify whether we need to include if "feeless" transaction is included
+		pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+	)
+}
+
+impl fp_self_contained::SelfContainedCall for Call {
+	type SignedInfo = (H160, AccountId, SignedExtra);
+
+	fn is_self_contained(&self) -> bool {
+		match self {
+			Call::EvmCompat(call) => call.is_self_contained(),
+			_ => false,
+		}
+	}
+
+	fn check_self_contained(&self) -> Option<Result<Self::SignedInfo, TransactionValidityError>> {
+		if let Call::EvmCompat(call) = self {
+			if let Some(Ok((source, origin, (nonce, tip)))) = call.check_self_contained() {
+				let extra = new_extra(nonce.as_u32(), tip.as_u128());
+
+				return Some(Ok((source, origin, extra)))
+			}
+		}
+
+		None
+	}
+
+	fn validate_self_contained(
+		&self,
+		info: &Self::SignedInfo,
+		dispatch_info: &DispatchInfoOf<Call>,
+		len: usize,
+	) -> Option<TransactionValidity> {
+		if let Call::EvmCompat(_) = self {
+			let (_, origin, extra) = info;
+			return Some(extra.validate(origin, self, dispatch_info, len))
+		}
+
+		None
+	}
+
+	fn pre_dispatch_self_contained(
+		&self,
+		info: &Self::SignedInfo,
+		dispatch_info: &DispatchInfoOf<Call>,
+		len: usize,
+	) -> Option<Result<(), TransactionValidityError>> {
+		if let Call::EvmCompat(_) = self {
+			let (_, origin, extra) = info;
+			return Some(extra.clone().pre_dispatch(origin, self, dispatch_info, len).map(|_| ()))
+		}
+
+		None
+	}
+
+	fn apply_self_contained(
+		self,
+		info: Self::SignedInfo,
+	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
+		match self {
+			call @ Call::EvmCompat(pallet_evm_compat::Call::transact { .. }) =>
+				Some(call.dispatch(Origin::from(
+					pallet_evm_compat::RawOrigin::EthereumTransaction(info.0),
+				))),
+			_ => None,
+		}
+	}
+}
+
+pub struct TransactionConverter;
+
+impl fp_rpc::ConvertTransaction<UncheckedExtrinsic> for TransactionConverter {
+	fn convert_transaction(&self, t: ethereum::TransactionV2) -> UncheckedExtrinsic {
+		UncheckedExtrinsic::new_unsigned(pallet_evm_compat::Call::<Runtime>::transact { t }.into())
+	}
+}
+
+impl fp_rpc::ConvertTransaction<opaque::UncheckedExtrinsic> for TransactionConverter {
+	fn convert_transaction(&self, t: ethereum::TransactionV2) -> opaque::UncheckedExtrinsic {
+		let extrinsic = UncheckedExtrinsic::new_unsigned(
+			pallet_evm_compat::Call::<Runtime>::transact { t }.into(),
+		);
+		let encoded = extrinsic.encode();
+		opaque::UncheckedExtrinsic::decode(&mut &encoded[..])
+			.expect("Encoded extrinsic is always valid")
+	}
+}
 
 // expose runtime apis, required by node services
 // this allow software outside of the wasm blob to access internal functionalities
@@ -235,7 +373,6 @@ impl_runtime_apis! {
 			data.check_extrinsics(&block)
 		}
 	}
-
 
 	impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
 		fn validate_transaction(
@@ -375,7 +512,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl pallet_currencies_runtime_api::CurrenciesApi<Block, AccountId, Balance> for Runtime {
+	impl pallet_currencies_rpc_runtime_api::CurrenciesApi<Block, AccountId, Balance> for Runtime {
 		fn list_assets() -> Vec<CurrencyId> {
 			ContractAssetsRegistry::enabled_assets().iter().map(|v| CurrencyId::Erc20(*v.as_ref())).collect::<_>()
 		}
@@ -386,6 +523,110 @@ impl_runtime_apis! {
 
 		fn total_balance(account: AccountId, asset: CurrencyId) -> Option<Balance> {
 			Some(Currencies::total_balance(account, asset))
+		}
+	}
+
+
+	impl fp_rpc::ConvertTransactionRuntimeApi<Block> for Runtime {
+
+		fn convert_transaction(t: ethereum::TransactionV2) -> <Block as BlockT>::Extrinsic {
+			UncheckedExtrinsic::new_unsigned(
+				pallet_evm_compat::Call::<Runtime>::transact { t }.into(),
+			)
+		}
+	}
+
+
+	impl pallet_evm_compat_rpc_runtime_api::EvmCompatApi<Block, AccountId, Balance> for Runtime {
+
+		fn source_to_mapped_address(source: H160) -> AccountId {
+			EvmCompat::to_mapped_account(source)
+		}
+
+		fn source_is_backed_by(source: H160) -> Option<AccountId>{
+			EvmCompat::has_proxy(source)
+		}
+
+		fn check_contract_is_evm_compat(contract_addr: AccountId) -> Option<H160>{
+			let addr_raw = <[u8; 32]>::from(contract_addr);
+			if addr_raw.starts_with(ETH_CONTRACT_PREFIX)
+			 {
+				let source = H160::from_slice(&addr_raw[12..]);
+				Some(source)
+
+			 } else {
+				None
+			 }
+		}
+
+		fn chain_id() -> u64 {
+			<Runtime as pallet_evm_compat::Config>::ChainId::get()
+		}
+
+		fn balances(address: H160) -> U256 {
+			let addr = EvmCompat::to_mapped_account(address);
+			Currencies::free_balance(addr, LAGUNA_NATIVE_CURRENCY).into()
+		}
+
+
+		fn block_hash(number: u32) -> H256 {
+			H256::from_slice(System::block_hash(number).as_ref())
+		}
+
+		fn storage_at(address: H160, index: U256) -> H256 {
+			EvmCompat::storage_at(&address, index.as_u32()).unwrap_or_default()
+		}
+
+		fn account_nonce(address: H160) -> U256 {
+			let addr = EvmCompat::to_mapped_account(address);
+			let nonce = System::account_nonce(&addr);
+			U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce))
+		}
+
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64) -> Result<(Balance, ExecReturnValue), DispatchError> {
+
+			if target.is_some() && input.is_empty() {
+				let to = EvmCompat::to_mapped_account(target.unwrap_or_default());
+				let call = pallet_currencies::Call::<Runtime>::transfer{to, currency_id: LAGUNA_NATIVE_CURRENCY, balance: value};
+				let info = call.get_dispatch_info();
+				let len = call.encode().len();
+				let final_fee = TransactionPayment::compute_fee(len as _, &info, 0);
+
+				let rv = ExecReturnValue {
+					data: Bytes::from(vec![]),
+					flags: ReturnFlags::empty(),
+				};
+
+				Ok((final_fee, rv))
+
+			} else {
+				EvmCompat::try_call_or_create(from, target, value,  gas_limit, input)
+			}
+		}
+
+		fn author(digests: Vec<ConesensusDigest>) -> Option<H160>{
+
+			// find author using all consensus digests
+			AuraAccountAdapter::find_author(digests.iter().map(|(a, b)| {
+				(*a, &b[..])
+			})).map(|author| {
+				// return the first 20 bytes as h160
+				let buf: &[u8; 32] = author.as_ref();
+				H160::from_slice(&buf[0..20])
+			})
+		}
+
+		fn extrinsic_filter(
+			xts: Vec<<Block as BlockT>::Extrinsic>,
+		) -> Vec<TransactionV2>{
+
+			xts.into_iter().filter_map(|xt|{
+				if let Call::EvmCompat(pallet_evm_compat::Call::transact {t}) = xt.0.function { Some(t)} else {
+					None
+				}
+			}).collect()
+
+
 		}
 	}
 
@@ -459,8 +700,6 @@ impl_runtime_apis! {
 			if batches.is_empty() {
 				return Err("no benchmark items found".into())
 			}
-
-
 			Ok(batches)
 		}
 	}

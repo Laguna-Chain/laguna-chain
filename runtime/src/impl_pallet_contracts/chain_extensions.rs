@@ -1,14 +1,16 @@
 use super::Runtime;
 use crate::Currencies;
 use codec::Encode;
-use frame_support::log::error;
+use frame_support::{
+	log::error,
+	sp_runtime::{traits::AccountIdConversion, DispatchError},
+};
 use frame_system::RawOrigin;
 use orml_traits::MultiCurrency;
 use pallet_contracts::chain_extension::{
 	ChainExtension, Environment, Ext, InitState, RetVal, SysConfig, UncheckedFrom,
 };
 use primitives::{AccountId, Balance, CurrencyId, TokenId, TokenMetadata};
-use sp_runtime::{traits::AccountIdConversion, DispatchError};
 
 #[derive(Default)]
 pub struct DemoExtension;
@@ -35,7 +37,7 @@ impl ChainExtension<Runtime> for DemoExtension {
 						.try_into_account()
 						.expect("Invalid PalletId");
 
-				let res = (caller == approved_deployer);
+				let res = caller == approved_deployer;
 				Ok(RetVal::Converging((!res).into()))
 			},
 			100 => {

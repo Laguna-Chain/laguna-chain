@@ -21,8 +21,8 @@ use laguna_runtime::{
 use pallet_transaction_payment::ChargeTransactionPayment;
 
 use crate::contracts::Contract;
+use frame_support::sp_runtime::{traits::AccountIdConversion, FixedPointNumber, FixedU128};
 use sp_core::{Bytes, U256};
-use sp_runtime::{traits::AccountIdConversion, FixedPointNumber, FixedU128};
 use traits::fee::FeeMeasure;
 
 fn balance_of(who: AccountId, asset_id: CurrencyId) -> Balance {

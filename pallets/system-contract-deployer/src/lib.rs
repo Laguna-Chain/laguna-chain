@@ -23,8 +23,12 @@ pub mod pallet {
 	use frame_system::{pallet_prelude::*, RawOrigin};
 	use pallet_contracts::weights::WeightInfo;
 	use sp_core::crypto::UncheckedFrom;
-	use sp_runtime::{traits::AccountIdConversion, AccountId32};
+	use sp_runtime::{
+		traits::{AccountIdConversion, Hash},
+		AccountId32,
+	};
 	use sp_std::{fmt::Debug, vec::Vec};
+	type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
 	type CodeHash<T> = <T as frame_system::Config>::Hash;
 	type BalanceOf<T> = <<T as pallet_contracts::Config>::Currency as Currency<
@@ -87,25 +91,29 @@ pub mod pallet {
 			let destined_address =
 				destined_address.unwrap_or_else(|| Self::get_next_available_bytes());
 
+			let deployer: AccountIdOf<T> =
+				T::PalletId::get().try_into_account().expect("Invalid PalletId");
+
 			let output = pallet_contracts::Pallet::<T>::instantiate_with_code(
-				RawOrigin::Signed(T::PalletId::get().try_into_account().expect("Invalid PalletId"))
-					.into(),
+				RawOrigin::Signed(deployer.clone()).into(),
 				value,
 				gas_limit,
 				storage_deposit_limit,
-				code,
+				code.clone(),
 				data,
 				destined_address.to_vec(),
 			);
 
+			let final_addr = pallet_contracts::Pallet::<T>::contract_address(
+				&deployer,
+				&<<T as frame_system::Config>::Hashing>::hash(&code[..]),
+				&destined_address,
+			);
+
 			// @dev: coupling or event extraction?
 			if output.is_ok() {
-				let contract_addr = AccountId32::from(destined_address);
-				let contract_addr = T::AccountId::decode(&mut contract_addr.as_ref())
-					.expect("Cannot create an AccountId from the given salt");
-
-				SystemContracts::<T>::insert(contract_addr.clone(), true);
-				Self::deposit_event(Event::<T>::Created(contract_addr));
+				SystemContracts::<T>::insert(final_addr.clone(), true);
+				Self::deposit_event(Event::<T>::Created(final_addr));
 			}
 
 			output

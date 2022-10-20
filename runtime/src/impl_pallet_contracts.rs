@@ -1,21 +1,19 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use crate::{
-	constants::{LAGUNAS, MICRO_LAGUNAS, MILLI_LAGUNAS},
-	impl_frame_system::BlockWeights,
-	impl_pallet_currencies::NativeCurrencyId,
+	constants::MICRO_LAGUNAS, impl_frame_system::BlockWeights,
+	impl_pallet_currencies::NativeCurrencyId, impl_pallet_evm_compat::EvmCompatAdderssGenerator,
 	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight,
 };
 use frame_support::{parameter_types, traits::ConstU32};
 use orml_tokens::CurrencyAdapter;
 use pallet_contracts::DefaultContractAccessWeight;
-use pallet_system_contract_deployer::CustomAddressGenerator;
 
 mod chain_extensions;
 use chain_extensions::DemoExtension;
+use frame_support::sp_runtime::Perbill;
 use pallet_contracts::weights::WeightInfo;
 use primitives::Balance;
-use sp_runtime::Perbill;
 
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 
@@ -35,6 +33,8 @@ parameter_types! {
 		)) / 5) as u32;
 	pub Schedule: pallet_contracts::Schedule<Runtime> = Default::default();
 }
+
+impl pallet_randomness_collective_flip::Config for Runtime {}
 
 impl pallet_contracts::Config for Runtime {
 	type Time = Timestamp;
@@ -61,7 +61,7 @@ impl pallet_contracts::Config for Runtime {
 
 	type DepositPerItem = DepositPerItem;
 
-	type AddressGenerator = CustomAddressGenerator;
+	type AddressGenerator = EvmCompatAdderssGenerator;
 
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 

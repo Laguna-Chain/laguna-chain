@@ -1,7 +1,7 @@
 use frame_support::parameter_types;
 
+use frame_support::sp_runtime::traits::{Convert, ConvertInto};
 use primitives::{AccountId, CurrencyId};
-use sp_runtime::traits::{Convert, ConvertInto};
 
 use crate::{constants::LAGUNA_NATIVE_CURRENCY, ContractAssetsRegistry, Runtime, Tokens};
 

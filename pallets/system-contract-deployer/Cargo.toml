@@ -33,4 +33,6 @@ std = [
   "frame-system/std",
   "sp-core/std",
   "pallet-contracts/std",
+  "pallet-contracts-primitives/std",
+  "hex/std",
 ]

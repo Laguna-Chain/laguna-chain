@@ -22,3 +22,13 @@ where
 pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
 }
+
+pub fn laguna_chain_spec_properties() -> serde_json::map::Map<String, serde_json::Value> {
+	serde_json::json!({
+		"tokenDecimals": 18,
+		"tokenSymbol": "LGNA"
+	})
+	.as_object()
+	.expect("Map given; qed")
+	.clone()
+}

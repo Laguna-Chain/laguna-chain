@@ -3,6 +3,7 @@ use laguna_runtime::{Runtime, System};
 use primitives::{AccountId, Balance, CurrencyId, TokenId};
 
 pub mod contracts;
+pub mod eth_sign;
 pub mod fees;
 pub mod native_token;
 

@@ -1,0 +1,32 @@
+[package]
+edition = "2021"
+name = "pallet-evm-compat-rpc-runtime-api"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+codec = {default-features = false, package = 'parity-scale-codec', version = '3.0.0', features = ["derive"]}
+primitives = {version = "0.1.0", path = "../../../../primitives", default-features = false}
+scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
+sp-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+sp-runtime = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+sp-std = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-contracts-primitives = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+ethereum = { version = "0.12.0", features = ["with-codec"] ,default-features = false}
+
+
+[features]
+default = ["std"]
+std = [
+  "sp-api/std",
+  "codec/std",
+  "scale-info/std",
+  "sp-std/std",
+  "sp-core/std",
+  "sp-runtime/std",
+  'primitives/std',
+  "ethereum/std",
+  "pallet-contracts-primitives/std"
+]

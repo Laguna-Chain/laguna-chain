@@ -1,0 +1,23 @@
+[package]
+edition = "2021"
+name = "pallet-evm-compat-rpc"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+codec = {version = "3.0.0", package = "parity-scale-codec"}
+serde = {version = "1.0.137", features = ["derive"]}
+
+pallet-evm-compat-rpc-runtime-api = {version = "0.1.0", path = "runtime-api"}
+primitives = {version = "0.1.0", path = "../../../primitives"}
+
+sp-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-contracts-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+
+sp-blockchain = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+sp-runtime = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+sp-std = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+
+jsonrpsee = {version = "0.14.0", features = ["server", "macros"]}

@@ -2,7 +2,7 @@
 
 use crate::{ExtBuilder, ALICE, BOB, EVA};
 use codec::{Decode, Encode};
-use frame_support::assert_ok;
+use frame_support::{assert_ok, sp_runtime::traits::AccountIdConversion};
 use laguna_runtime::{
 	constants::{LAGUNAS, LAGUNA_NATIVE_CURRENCY},
 	Block, Contracts, Currencies, Event, Origin, Runtime, System,
@@ -12,7 +12,6 @@ use pallet_contracts_primitives::ExecReturnValue;
 use pallet_contracts_rpc_runtime_api::runtime_decl_for_ContractsApi::ContractsApi;
 use primitives::{AccountId, Balance, BlockNumber, CurrencyId, Hash, TokenId, TokenMetadata};
 use sp_core::{hexdisplay::AsBytesRef, Bytes, U256};
-use sp_runtime::traits::AccountIdConversion;
 use std::str::FromStr;
 
 const LAGUNA_TOKEN: CurrencyId = CurrencyId::NativeToken(TokenId::Laguna);

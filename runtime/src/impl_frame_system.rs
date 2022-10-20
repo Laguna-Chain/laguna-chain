@@ -1,13 +1,13 @@
 use crate::{Call, Event, Origin, PalletInfo, Runtime, VERSION};
 use frame_support::{
 	parameter_types,
+	sp_runtime::{
+		generic,
+		traits::{AccountIdLookup, BlakeTwo256},
+		Perbill,
+	},
 	traits::ConstU32,
 	weights::constants::{RocksDbWeight, WEIGHT_PER_SECOND},
-};
-use sp_runtime::{
-	generic,
-	traits::{AccountIdLookup, BlakeTwo256},
-	Perbill,
 };
 use sp_version::RuntimeVersion;
 
