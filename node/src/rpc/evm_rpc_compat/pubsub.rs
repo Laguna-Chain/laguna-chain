@@ -115,7 +115,7 @@ where
 					{
 						let rs = txs
 							.iter()
-							.map(|tx| transaction::get_transaction_receipt(tx.clone()))
+							.map(|tx| transaction::get_transaction_receipt(tx.clone(), false))
 							.map(convert_receipt)
 							.collect::<Vec<_>>();
 						return futures::future::ready(Some((b, rs)))

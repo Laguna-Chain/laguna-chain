@@ -103,10 +103,11 @@ where
 		let builder =
 			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
 
-		let bn = Some(BlockNumber::Hash { hash, require_canonical: false });
+		// stargin from latest
 
 		// checking previous block until we can't find any block
 		while let Ok(Some(header)) = self.client.header(latest) {
+			let bn = Some(BlockNumber::Hash { hash: header.hash(), require_canonical: false });
 			// prepare the mapped rich_block
 			let rich_block = builder.to_rich_block(bn, true)?;
 
@@ -129,7 +130,8 @@ where
 	}
 }
 
-pub fn get_transaction_receipt(tx: Transaction) -> Receipt {
+pub fn get_transaction_receipt(tx: Transaction, pending: bool) -> Receipt {
+	let status_code = if pending { None } else { Some(1_u64.into()) };
 	Receipt {
 		transaction_hash: Some(tx.hash),
 		transaction_index: tx.transaction_index,
@@ -143,7 +145,7 @@ pub fn get_transaction_receipt(tx: Transaction) -> Receipt {
 		logs: vec![],
 		state_root: None,
 		logs_bloom: Default::default(),
-		status_code: None,
+		status_code,
 		effective_gas_price: Default::default(),
 		transaction_type: tx.transaction_type.unwrap_or_default(),
 	}

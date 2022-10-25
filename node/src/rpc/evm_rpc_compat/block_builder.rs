@@ -4,7 +4,7 @@
 use super::BlockMapper;
 use crate::rpc::evm_rpc_compat::internal_err;
 use codec::{Decode, Encode};
-use ethereum::{BlockV2 as EthereumBlock, PartialHeader, TransactionAction, TransactionV2};
+use ethereum::{BlockV2 as EthereumBlock, PartialHeader, TransactionV2};
 use fc_rpc::public_key;
 use fc_rpc_core::types::{
 	Block, BlockNumber, BlockTransactions, Bytes, Header as EthHeader, Rich, RichBlock, Transaction,
@@ -15,7 +15,6 @@ use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
-use sc_service::InPoolTransaction;
 use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::{HeaderT, ProvideRuntimeApi};
 use sp_core::{keccak_256, H160, H256, H512, U256};
@@ -54,7 +53,7 @@ where
 		status: Option<TransactionStatus>,
 		base_fee: Option<U256>,
 	) -> Transaction {
-		let mut transaction: Transaction = ethereum_transaction.clone().into();
+		let mut transaction: Transaction = Transaction::from(ethereum_transaction.clone());
 
 		if let TransactionV2::EIP1559(_) = ethereum_transaction {
 			if block.is_none() && status.is_none() {
@@ -127,11 +126,10 @@ where
 		body: Vec<<B as BlockT>::Extrinsic>,
 	) -> Vec<TransactionV2> {
 		// BlockTransactions;
-		let block_hash = header.hash();
 
 		self.client
 			.runtime_api()
-			.extrinsic_filter(&BlockId::Hash(block_hash), body)
+			.extrinsic_filter(&BlockId::Hash(header.hash()), body)
 			.unwrap_or_default()
 	}
 
@@ -169,19 +167,8 @@ where
 
 				Ok(eth_block)
 			},
-			_ => Err(internal_err("unable to gather required information to build rich_block")),
+			_ => Err(internal_err("unable to gather required information to build eth_block")),
 		}
-	}
-
-	pub fn empty_statuses(txs: &[TransactionV2]) -> Vec<TransactionStatus> {
-		txs.iter()
-			.enumerate()
-			.map(|(idx, tx)| TransactionStatus {
-				transaction_index: idx as _,
-				transaction_hash: tx.hash(),
-				..Default::default()
-			})
-			.collect()
 	}
 
 	pub fn build_eth_statuses(
@@ -206,8 +193,7 @@ where
 				let status = if full {
 					let expanded = txs
 						.iter()
-						.zip(Self::empty_statuses(&txs[..]))
-						.map(|(tx, s)| self.expand_eth_transaction(tx, Some(&block), Some(s), None))
+						.map(|tx| self.expand_eth_transaction(tx, Some(&block), None, None))
 						.collect::<Vec<_>>();
 					BlockTransactions::Full(expanded)
 				} else {
