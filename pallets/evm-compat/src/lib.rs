@@ -443,8 +443,7 @@ where
 			let allowed_max =
 				<<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(&gas_limit);
 
-			let input = <Vec<u8>>::decode(&mut &input[..])
-				.map_err(|_| Error::<T>::InputBufferUndecodable)?;
+			let input = <Vec<u8>>::decode(&mut &input[..]).unwrap_or(input);
 
 			let call_result = pallet_contracts::Pallet::<T>::bare_call(
 				origin,

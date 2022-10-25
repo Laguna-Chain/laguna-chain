@@ -6,6 +6,7 @@ use super::{deferrable_runtime_api::DeferrableApi, BlockMapper};
 use crate::rpc::evm_rpc_compat::internal_err;
 use fc_rpc_core::types::{BlockNumber, Bytes, CallRequest};
 use jsonrpsee::core::RpcResult as Result;
+use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
@@ -28,7 +29,7 @@ pub struct Execute<B, C, A: ChainApi> {
 impl<B, C, A> Execute<B, C, A>
 where
 	A: ChainApi<Block = B> + Sync + Send + 'static,
-	B: BlockT<Hash = H256> + Send + Sync + 'static,
+	B: BlockT<Hash = H256, Extrinsic = UncheckedExtrinsic, Header = Header> + Send + Sync + 'static,
 	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
 	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,

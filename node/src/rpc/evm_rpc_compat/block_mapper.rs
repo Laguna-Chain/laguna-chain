@@ -1,8 +1,10 @@
 use fc_rpc_core::types::BlockNumber;
 use jsonrpsee::core::RpcResult as Result;
+use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
+use sc_service::InPoolTransaction;
 use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::{HeaderT, ProvideRuntimeApi};
 use sp_core::{H160, H256, U256};
@@ -11,7 +13,7 @@ use sp_runtime::{
 	traits::{Block as BlockT, UniqueSaturatedInto},
 };
 
-use super::internal_err;
+use super::{block_builder::BlockBuilder, internal_err};
 use sp_runtime::Digest;
 use std::{marker::PhantomData, sync::Arc};
 /// ethereum request block time to a greater extend, we can ansower some of them locally, lets try!
@@ -23,8 +25,8 @@ pub struct BlockMapper<B, C, A: ChainApi> {
 
 impl<B, C, A> BlockMapper<B, C, A>
 where
-	A: ChainApi,
-	B: BlockT<Hash = H256> + Send + Sync + 'static,
+	A: ChainApi<Block = B>,
+	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic> + Send + Sync + 'static,
 	C: ProvideRuntimeApi<B>,
 	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
@@ -75,15 +77,52 @@ where
 
 	pub fn transaction_count_by_number(&self, number: BlockNumber) -> Result<Option<U256>> {
 		if let Some(id) = self.map_block(Some(number)) {
+			BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+
 			// Get all transactions from the target block.
-			self.client
-				.block_body(&id)
-				.map(|v| v.map(|o| U256::from(o.len())))
-				.map_err(|err| internal_err(format!("fetch runtime block body failed: {:?}", err)))
+			if let Some(txs) = self.client.block_body(&id).map_err(|err| {
+				internal_err(format!("fetch runtime block body failed: {:?}", err))
+			})? {
+				// only count eth-txs
+				Ok(Some(
+					self.client
+						.runtime_api()
+						.extrinsic_filter(&id, txs)
+						.map_err(|err| {
+							internal_err(format!(
+								"fetch eth-txs from runtime block body failed: {:?}",
+								err
+							))
+						})?
+						.len()
+						.into(),
+				))
+			} else {
+				Ok(None)
+			}
 		} else {
-			// Get all transactions in the ready queue.
-			let len = self.graph.validated_pool().ready().count();
-			Ok(Some(U256::from(len)))
+			let pending_txs = self
+				.graph
+				.validated_pool()
+				.ready()
+				.map(|t| t.data().clone())
+				.collect::<Vec<_>>();
+
+			let latest = BlockId::Hash(self.client.info().best_hash);
+
+			Ok(Some(
+				self.client
+					.runtime_api()
+					.extrinsic_filter(&latest, pending_txs)
+					.map_err(|err| {
+						internal_err(format!(
+							"fetch eth-txs from runtime ready queue failed: {:?}",
+							err
+						))
+					})?
+					.len()
+					.into(),
+			))
 		}
 	}
 }

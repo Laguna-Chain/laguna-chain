@@ -586,6 +586,7 @@ impl_runtime_apis! {
 		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64) -> Result<(Balance, ExecReturnValue), DispatchError> {
 
 			if target.is_some() && input.is_empty() {
+
 				let to = EvmCompat::to_mapped_account(target.unwrap_or_default());
 				let call = pallet_currencies::Call::<Runtime>::transfer{to, currency_id: LAGUNA_NATIVE_CURRENCY, balance: value};
 				let info = call.get_dispatch_info();

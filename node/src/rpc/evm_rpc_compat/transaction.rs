@@ -2,10 +2,13 @@
 //!
 //! helper functions for transaction details
 
+use super::block_builder;
 use codec::{Decode, Encode};
+use ethereum::TransactionV2;
 use fc_rpc_core::types::{BlockNumber, BlockTransactions, Index, Receipt, Transaction};
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
+use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
 use sc_service::InPoolTransaction;
@@ -14,9 +17,6 @@ use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::H256;
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
-
-use super::block_builder;
-use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use std::{marker::PhantomData, sync::Arc};
 
 pub struct TransactionApi<B, C, A: ChainApi> {
@@ -45,6 +45,7 @@ where
 	) -> Result<Option<Transaction>> {
 		let builder =
 			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+
 		let rich_block = builder.to_rich_block(Some(number), true)?;
 
 		if let BlockTransactions::Full(txs) = &rich_block.transactions {
@@ -71,61 +72,55 @@ where
 		}
 	}
 
-	pub fn get_transactions(
-		&self,
-		number: Option<BlockNumber>,
-	) -> Result<Option<Vec<Transaction>>> {
-		let builder =
-			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
-		let rich_block = builder.to_rich_block(number, true)?;
-
-		if let BlockTransactions::Full(txs) = &rich_block.transactions {
-			Ok(Some(txs.clone()))
-		} else {
-			Ok(None)
-		}
-	}
-
 	pub fn get_transaction_from_pool(&self, hash: H256) -> Result<Option<Transaction>> {
-		Ok(self
+		// collect all tx waiting to be included in the pending block
+		let pending_txs = self
 			.graph
 			.validated_pool()
 			.ready()
 			.map(|in_pool_tx| in_pool_tx.data().clone())
-			.filter_map(|raw_tx: UncheckedExtrinsic| {
-				laguna_runtime::UncheckedExtrinsic::decode(&mut &raw_tx.encode()[..]).ok()
-			})
-			.filter_map(|xt| {
-				if let laguna_runtime::Call::EvmCompat(pallet_evm_compat::Call::transact { t }) =
-					xt.0.function
-				{
-					Some(t)
-				} else {
-					None
-				}
-			})
-			.find(|tx| tx.hash() == hash)
-			.map(|v| {
-				let builder = block_builder::BlockBuilder::from_client(
-					self.client.clone(),
-					self.graph.clone(),
-				);
-				builder.expand_eth_transaction(v)
-			}))
+			.collect();
+
+		// we only care about eth-txs
+		let eth_txs = self
+			.client
+			.runtime_api()
+			.extrinsic_filter(&BlockId::Hash(self.client.info().best_hash), pending_txs)
+			.unwrap_or_default();
+
+		// return the one matching the queried hash
+		Ok(eth_txs.into_iter().find_map(|tx| {
+			if tx.hash() == hash {
+				Some(Transaction::from(tx))
+			} else {
+				None
+			}
+		}))
 	}
 
 	pub fn get_transaction_from_blocks(&self, hash: H256) -> Result<Option<Transaction>> {
 		let mut latest = BlockId::<B>::hash(self.client.info().best_hash);
+		let builder =
+			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
 
+		let bn = Some(BlockNumber::Hash { hash, require_canonical: false });
+
+		// checking previous block until we can't find any block
 		while let Ok(Some(header)) = self.client.header(latest) {
-			let txs_rs = self.get_transactions(Some(BlockNumber::Hash {
-				require_canonical: false,
-				hash: header.hash(),
-			}))?;
+			// prepare the mapped rich_block
+			let rich_block = builder.to_rich_block(bn, true)?;
 
-			if let Some(tx) = txs_rs.and_then(|txs| txs.into_iter().find(|tx| tx.hash == hash)) {
+			let txs = if let BlockTransactions::Full(txs) = &rich_block.transactions {
+				Some(txs.clone())
+			} else {
+				None
+			};
+
+			// find the tx with the same tx
+			if let Some(tx) = txs.and_then(|txs| txs.into_iter().find(|tx| tx.hash == hash)) {
 				return Ok(Some(tx))
 			} else {
+				// otherwise look into previous block
 				latest = BlockId::Hash(header.parent_hash);
 			}
 		}
@@ -143,7 +138,7 @@ pub fn get_transaction_receipt(tx: Transaction) -> Receipt {
 		to: tx.to,
 		block_number: tx.block_number,
 		cumulative_gas_used: Default::default(),
-		gas_used: Default::default(),
+		gas_used: None,
 		contract_address: None,
 		logs: vec![],
 		state_root: None,

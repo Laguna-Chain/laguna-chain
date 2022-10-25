@@ -3,14 +3,14 @@
 use super::{block_builder, transaction};
 use ethereum::{
 	BlockV2 as EthereumBlock, EIP1559Transaction, EIP2930Transaction, EIP658ReceiptData,
-	Header as EthereumHeader, LegacyTransaction, Log as EthLog, ReceiptV3, TransactionAction,
-	TransactionV2,
+	Header as EthereumHeader, LegacyTransaction, Log as EthLog, PartialHeader, ReceiptV3,
+	TransactionAction, TransactionV2,
 };
 use fc_rpc::EthPubSubApiServer;
 use futures::{FutureExt, StreamExt};
 use hex::FromHex;
 use jsonrpsee::SubscriptionSink;
-use laguna_runtime::opaque::Header;
+use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, BlockchainEvents, HeaderBackend};
@@ -47,7 +47,7 @@ pub struct PubSub<B: BlockT, C, A: ChainApi, H: ExHashT, P> {
 impl<B, C, A, H: ExHashT, P> PubSub<B, C, A, H, P>
 where
 	A: ChainApi<Block = B> + Sync + Send + 'static,
-	B: BlockT<Hash = H256, Header = Header> + Send + Sync + 'static,
+	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic> + Send + Sync + 'static,
 	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
 	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + BlockchainEvents<B>,
@@ -76,15 +76,11 @@ where
 						block_builder::BlockBuilder::from_client(client.clone(), graph.clone());
 
 					let b = builder
-						.to_rich_block(
-							Some(BlockNumber::Hash {
-								require_canonical: false,
-								hash: notification.hash,
-							}),
-							true,
-						)
-						.ok()
-						.map(convert_block);
+						.to_eth_block(Some(BlockNumber::Hash {
+							require_canonical: false,
+							hash: notification.hash,
+						}))
+						.ok();
 
 					futures::future::ready(b)
 				} else {
@@ -108,29 +104,24 @@ where
 					let builder =
 						block_builder::BlockBuilder::from_client(client.clone(), graph.clone());
 
-					let out = builder
-						.to_rich_block(
-							Some(BlockNumber::Hash {
-								require_canonical: false,
-								hash: notification.hash,
-							}),
-							true,
-						)
-						.ok()
-						.and_then(|v| {
-							if let BlockTransactions::Full(txs) = &v.transactions {
-								let rs = txs
-									.iter()
-									.map(|tx| transaction::get_transaction_receipt(tx.clone()))
-									.map(convert_receipt)
-									.collect::<Vec<_>>();
-								Some((convert_block(v), rs))
-							} else {
-								None
-							}
-						});
+					let bn = Some(BlockNumber::Hash {
+						require_canonical: false,
+						hash: notification.hash,
+					});
 
-					futures::future::ready(out)
+					if let Ok((b, BlockTransactions::Full(txs))) = builder
+						.to_eth_block(bn)
+						.and_then(|b| builder.build_eth_statuses(bn, true).map(|s| (b, s)))
+					{
+						let rs = txs
+							.iter()
+							.map(|tx| transaction::get_transaction_receipt(tx.clone()))
+							.map(convert_receipt)
+							.collect::<Vec<_>>();
+						return futures::future::ready(Some((b, rs)))
+					}
+
+					futures::future::ready(None)
 				} else {
 					futures::future::ready(None)
 				}
@@ -205,6 +196,7 @@ where
 					.ok()
 					.and_then(|res| res.best_seen_block)
 					.map(UniqueSaturatedInto::<u64>::unique_saturated_into);
+
 				// Best imported block.
 				let current_block =
 					UniqueSaturatedInto::<u64>::unique_saturated_into(client.info().best_number);
@@ -242,91 +234,6 @@ where
 			last_syncing_status = syncing_status;
 		}
 	}
-}
-
-fn convert_block(block: RichBlock) -> EthereumBlock {
-	let EthHeader {
-		parent_hash,
-		state_root,
-		transactions_root,
-		receipts_root,
-		logs_bloom,
-		difficulty,
-		number,
-		gas_limit,
-		gas_used,
-		timestamp,
-		extra_data,
-		nonce,
-		uncles_hash,
-		author,
-		..
-	} = block.header.clone();
-
-	let txs = if let BlockTransactions::Full(txs) = &block.transactions {
-		txs.clone()
-			.into_iter()
-			.map(|tx| {
-				let Transaction {
-					nonce,
-					to,
-					max_fee_per_gas,
-					max_priority_fee_per_gas,
-					value,
-					input,
-					chain_id,
-					access_list,
-					v,
-					r,
-					s,
-					..
-				} = tx;
-
-				let action = to.map(TransactionAction::Call).unwrap_or(TransactionAction::Create);
-
-				TransactionV2::EIP1559(EIP1559Transaction {
-					chain_id: chain_id.map(|o| o.as_u64()).unwrap_or_default(),
-					nonce,
-					max_priority_fee_per_gas: max_priority_fee_per_gas.unwrap_or_default(),
-					max_fee_per_gas: max_fee_per_gas.unwrap_or_default(),
-					gas_limit,
-					action,
-					value,
-					input: input.into_vec(),
-					access_list: access_list.unwrap_or_default(),
-					odd_y_parity: v == 1_u32.into(),
-					r: H256(<[u8; 32]>::from_hex(format!("{r:032x}")).unwrap_or_default()),
-					s: H256(<[u8; 32]>::from_hex(format!("{s:032x}")).unwrap_or_default()),
-				})
-			})
-			.collect()
-	} else {
-		vec![]
-	};
-
-	EthereumBlock {
-		header: EthereumHeader {
-			parent_hash,
-			ommers_hash: uncles_hash,
-			beneficiary: author,
-			state_root,
-			transactions_root,
-			receipts_root,
-			logs_bloom,
-			difficulty,
-			number: number.unwrap_or_default(),
-			gas_limit,
-			gas_used,
-			timestamp: timestamp.as_u64(),
-			extra_data: extra_data.into_vec(),
-			mix_hash: Default::default(),
-			nonce: nonce.unwrap_or_default(),
-		},
-		ommers: vec![],
-		transactions: txs,
-	};
-
-	todo!()
 }
 
 fn convert_receipt(receipt: Receipt) -> ReceiptV3 {
@@ -453,7 +360,7 @@ impl SubscriptionResult {
 impl<B, C, A, H: ExHashT, P> EthPubSubApiServer for PubSub<B, C, A, H, P>
 where
 	A: ChainApi<Block = B> + Sync + Send + 'static,
-	B: BlockT<Hash = H256, Header = Header> + Send + Sync + 'static,
+	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic> + Send + Sync + 'static,
 	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
 	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,

@@ -21,7 +21,7 @@ use sc_network::{ExHashT, NetworkService};
 use sc_service::InPoolTransaction;
 use sc_transaction_pool::{ChainApi, Pool};
 use sc_transaction_pool_api::{TransactionPool, TransactionSource};
-use sp_api::{ApiExt, ProvideRuntimeApi};
+use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::{H160, H256, U256};
 use sp_runtime::{
@@ -277,7 +277,7 @@ where
 		let from_pool = tx_api.get_transaction_from_pool(hash)?;
 
 		match from_pool {
-			Some(_) => Ok(from_pool.map(|v| transaction::get_transaction_receipt(v))),
+			Some(_) => Ok(from_pool.map(transaction::get_transaction_receipt)),
 			_ => tx_api
 				.get_transaction_from_blocks(hash)?
 				.map(|o| Some(transaction::get_transaction_receipt(o)))
@@ -482,47 +482,13 @@ where
 		let transaction_hash = transaction.hash();
 
 		let block_hash = BlockId::hash(self.client.info().best_hash);
-		let api_version = match self
-			.client
-			.runtime_api()
-			.api_version::<dyn ConvertTransactionRuntimeApi<B>>(&block_hash)
-		{
-			Ok(api_version) => api_version,
-			_ => return Err(internal_err("cannot access runtime api")),
-		};
 
-		let extrinsic = match api_version {
-			Some(2) =>
-				match self.client.runtime_api().convert_transaction(&block_hash, transaction) {
-					Ok(extrinsic) => extrinsic,
-					Err(_) => return Err(internal_err("cannot access runtime api")),
-				},
-			Some(1) => {
-				if let ethereum::TransactionV2::Legacy(legacy_transaction) = transaction {
-					// To be compatible with runtimes that do not support transactions v2
-					#[allow(deprecated)]
-					match self
-						.client
-						.runtime_api()
-						.convert_transaction_before_version_2(&block_hash, legacy_transaction)
-					{
-						Ok(extrinsic) => extrinsic,
-						Err(_) => return Err(internal_err("cannot access runtime api")),
-					}
-				} else {
-					return Err(internal_err("This runtime not support eth transactions v2"))
-				}
-			},
-			None =>
-				if let Some(ref convert_transaction) = self.convert_transaction {
-					convert_transaction.convert_transaction(transaction.clone())
-				} else {
-					return Err(internal_err(
-						"No TransactionConverter is provided and the runtime api ConvertTransactionRuntimeApi is not found"
-					));
-				},
-			_ => return Err(internal_err("ConvertTransactionRuntimeApi version not supported")),
-		};
+		// no need for version check, we support all v2 transactions
+		let extrinsic =
+			match self.client.runtime_api().convert_transaction(&block_hash, transaction) {
+				Ok(extrinsic) => extrinsic,
+				Err(_) => return Err(internal_err("cannot access runtime api")),
+			};
 
 		self.pool
 			.submit_one(&block_hash, TransactionSource::Local, extrinsic)
