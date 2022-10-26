@@ -85,18 +85,13 @@ where
 			.ok()
 			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
 
-		// we accept input of both scale-encoded Bytes or plain Bytes
-		// TODO: check endianess of eth-clients
-		let input = <Vec<u8>>::decode(&mut &self.inner.input[..])
-			.unwrap_or_else(|_| self.inner.input.to_vec());
-
 		pallet_contracts::Pallet::<T>::call(
 			elevated_origin,
 			contract_addr_source,
 			self.inner.value.try_into().unwrap_or_default(),
 			self.max_allowed.as_u64(),
 			storage_deposit_limit,
-			input,
+			self.inner.input.to_vec(),
 		)
 	}
 

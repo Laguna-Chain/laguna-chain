@@ -236,7 +236,7 @@ fn test_create() {
 
 			input.extend(Bytes::from_str("0x633aa551").unwrap().iter());
 
-			let eth_raw_call = dummy_contract_call(H160(contract_addr), input.encode(), chain_id);
+			let eth_raw_call = dummy_contract_call(H160(contract_addr), input, chain_id);
 			let eth_signed =
 				LegacyTxMsg(eth_raw_call).sign_with_chain_id(&pair.seed().into(), chain_id);
 
