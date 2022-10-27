@@ -35,6 +35,7 @@ pub mod executor;
 pub mod net_api;
 pub mod pending_api;
 pub mod pubsub;
+// pub mod pubsub;
 pub mod transaction;
 use block_mapper::BlockMapper;
 
@@ -240,12 +241,8 @@ where
 	async fn transaction_by_hash(&self, hash: H256) -> Result<Option<Transaction>> {
 		let tx_api =
 			transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone());
-		let from_pool = tx_api.get_transaction_from_pool(hash)?;
 
-		match from_pool {
-			Some(_) => Ok(from_pool),
-			_ => tx_api.get_transaction_from_blocks(hash),
-		}
+		tx_api.get_transaction_from_blocks(hash)
 	}
 
 	/// Returns transaction at given block hash and index.
@@ -274,13 +271,11 @@ where
 	async fn transaction_receipt(&self, hash: H256) -> Result<Option<Receipt>> {
 		let tx_api =
 			transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone());
-		let from_pool = tx_api.get_transaction_from_pool(hash)?;
 
-		match from_pool {
-			Some(_) => Ok(from_pool.map(|v| transaction::get_transaction_receipt(v, true))),
-			_ => tx_api
-				.get_transaction_from_blocks(hash)
-				.map(|o| o.map(|v| transaction::get_transaction_receipt(v, false))),
+		if let Some(tx) = tx_api.get_transaction_from_blocks(hash)? {
+			tx_api.get_transaction_receipt(tx).map(Some)
+		} else {
+			Ok(None)
 		}
 	}
 

@@ -348,16 +348,13 @@ where
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
 	<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + TypeInfo + Encode + Debug,
 {
-	pub(crate) fn recover_tx_signer(transaction: &Transaction) -> Option<H160> {
+	pub fn recover_tx_signer(transaction: &Transaction) -> Option<H160> {
 		let (msg, sig) = Self::unpack_transaction(transaction);
 		Self::recover_signer(&msg, &sig).and_then(|p| p.to_eth_address().map(H160).ok())
 	}
 
 	/// try recover uncompressed signer from a raw payload
-	pub(crate) fn recover_signer(
-		msg_raw: &[u8],
-		signed_payload_raw: &[u8],
-	) -> Option<ecdsa::Public> {
+	pub fn recover_signer(msg_raw: &[u8], signed_payload_raw: &[u8]) -> Option<ecdsa::Public> {
 		let sig = sp_core::ecdsa::Signature::try_from(signed_payload_raw).ok()?;
 
 		let msg = <[u8; 32]>::try_from(msg_raw).ok()?;

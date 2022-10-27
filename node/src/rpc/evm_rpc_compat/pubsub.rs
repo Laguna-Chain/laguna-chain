@@ -76,10 +76,13 @@ where
 						block_builder::BlockBuilder::from_client(client.clone(), graph.clone());
 
 					let b = builder
-						.to_eth_block(Some(BlockNumber::Hash {
-							require_canonical: false,
-							hash: notification.hash,
-						}))
+						.to_rich_block(
+							Some(BlockNumber::Hash {
+								require_canonical: false,
+								hash: notification.hash,
+							}),
+							true,
+						)
 						.ok();
 
 					futures::future::ready(b)
@@ -109,15 +112,11 @@ where
 						hash: notification.hash,
 					});
 
-					if let Ok((b, BlockTransactions::Full(txs))) = builder
+					if let Ok((b, rs)) = builder
 						.to_eth_block(bn)
-						.and_then(|b| builder.build_eth_statuses(bn, true).map(|s| (b, s)))
+						.and_then(|b| builder.receipts(bn).map(|rs| (b, rs)))
 					{
-						let rs = txs
-							.iter()
-							.map(|tx| transaction::get_transaction_receipt(tx.clone(), false))
-							.map(convert_receipt)
-							.collect::<Vec<_>>();
+						let rs = rs.into_iter().map(ReceiptV3::EIP1559).collect::<Vec<_>>();
 						return futures::future::ready(Some((b, rs)))
 					}
 
@@ -236,48 +235,14 @@ where
 	}
 }
 
-fn convert_receipt(receipt: Receipt) -> ReceiptV3 {
-	ReceiptV3::EIP1559(EIP658ReceiptData {
-		status_code: receipt
-			.status_code
-			.map(|o| -> u8 { o.as_u32().saturated_into() })
-			.unwrap_or_default(),
-		logs: receipt
-			.logs
-			.into_iter()
-			.map(|o| EthLog { address: o.address, topics: o.topics, data: o.data.into_vec() })
-			.collect(),
-		logs_bloom: receipt.logs_bloom,
-		used_gas: receipt.gas_used.unwrap_or_default(),
-	})
-}
-
 struct SubscriptionResult {}
 impl SubscriptionResult {
 	pub fn new() -> Self {
 		SubscriptionResult {}
 	}
-	pub fn new_heads(&self, block: EthereumBlock) -> PubSubResult {
+	pub fn new_heads(&self, block: RichBlock) -> PubSubResult {
 		PubSubResult::Header(Box::new(Rich {
-			inner: EthHeader {
-				hash: Some(H256::from(keccak_256(&rlp::encode(&block.header)))),
-				parent_hash: block.header.parent_hash,
-				uncles_hash: block.header.ommers_hash,
-				author: block.header.beneficiary,
-				miner: block.header.beneficiary,
-				state_root: block.header.state_root,
-				transactions_root: block.header.transactions_root,
-				receipts_root: block.header.receipts_root,
-				number: Some(block.header.number),
-				gas_used: block.header.gas_used,
-				gas_limit: block.header.gas_limit,
-				extra_data: Bytes(block.header.extra_data.clone()),
-				logs_bloom: block.header.logs_bloom,
-				timestamp: U256::from(block.header.timestamp),
-				difficulty: block.header.difficulty,
-				nonce: Some(block.header.nonce),
-				size: Some(U256::from(rlp::encode(&block.header).len() as u32)),
-			},
+			inner: block.header.clone(),
 			extra_info: BTreeMap::new(),
 		}))
 	}

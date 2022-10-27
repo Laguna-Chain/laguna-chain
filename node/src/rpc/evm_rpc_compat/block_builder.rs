@@ -1,10 +1,10 @@
 //! block helper
 //!
 //! helper functions to respond to queries expecting eth_style richblock
-use super::BlockMapper;
+use super::{deferrable_runtime_api::DeferrableApi, BlockMapper};
 use crate::rpc::evm_rpc_compat::internal_err;
-use codec::{Decode, Encode};
-use ethereum::{BlockV2 as EthereumBlock, PartialHeader, TransactionV2};
+use codec::Encode;
+use ethereum::{BlockV2 as EthereumBlock, EIP658ReceiptData, PartialHeader, TransactionV2};
 use fc_rpc::public_key;
 use fc_rpc_core::types::{
 	Block, BlockNumber, BlockTransactions, Bytes, Header as EthHeader, Rich, RichBlock, Transaction,
@@ -17,14 +17,13 @@ use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
 use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::{HeaderT, ProvideRuntimeApi};
+use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::{keccak_256, H160, H256, H512, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
 };
 use std::{collections::BTreeMap, marker::PhantomData, sync::Arc};
-
-type BlockTx<Block> = Vec<<Block as BlockT>::Extrinsic>;
 
 pub struct BlockBuilder<B, C, A: ChainApi> {
 	client: Arc<C>,
@@ -35,11 +34,12 @@ pub struct BlockBuilder<B, C, A: ChainApi> {
 impl<B, C, A> BlockBuilder<B, C, A>
 where
 	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic>,
-	A: ChainApi<Block = B>,
+	A: ChainApi<Block = B> + 'static + Sync + Send,
 	B: BlockT<Hash = H256>,
 	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
 	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,
+	C::Api: BlockBuilderApi<B>,
 {
 	pub fn from_client(client: Arc<C>, graph: Arc<Pool<A>>) -> Self {
 		Self { client, graph, _marker: Default::default() }
@@ -79,8 +79,15 @@ where
 			Err(_e) => None,
 		};
 
+		let block_hash = block.as_ref().and_then(|block| {
+			self.client
+				.header(BlockId::Number(block.header.number.as_u32()))
+				.ok()
+				.and_then(|h| h.map(|h| h.hash()))
+		});
+
 		// Block hash.
-		transaction.block_hash = block.as_ref().map(|block| block.header.hash());
+		transaction.block_hash = block_hash;
 		// Block number.
 		transaction.block_number = block.as_ref().map(|block| block.header.number);
 		// Transaction index.
@@ -120,55 +127,61 @@ where
 		transaction
 	}
 
-	pub(crate) fn build_eth_transactions(
-		&self,
-		header: &<B as BlockT>::Header,
-		body: Vec<<B as BlockT>::Extrinsic>,
-	) -> Vec<TransactionV2> {
-		// BlockTransactions;
-
-		self.client
-			.runtime_api()
-			.extrinsic_filter(&BlockId::Hash(header.hash()), body)
-			.unwrap_or_default()
-	}
-
 	pub(crate) fn to_eth_block(&self, number: Option<BlockNumber>) -> Result<EthereumBlock> {
 		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
 
-		let id = mapper
-			.map_block(number)
-			.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+		let id = mapper.map_block(number);
+		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
 
-		let body = self.client.block_body(&id);
-		let header = self.client.header(id);
+		let res = self
+			.client
+			.block(&id)
+			.map_err(|e| internal_err(format!("unable to get block {e:?}")))?;
 
-		match (header, body) {
-			(Ok(Some(header)), Ok(Some(body))) => {
-				let txs = self.build_eth_transactions(&header, body);
+		let block = res.map(|b| b.block).ok_or_else(|| internal_err("unable to get block"))?;
 
-				let p_header = PartialHeader {
-					parent_hash: *header.parent_hash(),
-					beneficiary: Default::default(),
-					state_root: *header.state_root(),
-					receipts_root: Default::default(),
-					number: U256::from(*header.number()),
-					gas_used: Default::default(),
-					gas_limit: Default::default(),
-					extra_data: header.digest().encode(),
-					logs_bloom: Default::default(),
-					timestamp: Default::default(),
-					difficulty: Default::default(),
-					nonce: Default::default(),
-					mix_hash: Default::default(),
-				};
+		self.client
+			.runtime_api()
+			.map_block(&id, block)
+			.map_err(|e| internal_err(format!("unable to map eth_block {e:?}")))
+	}
 
-				let eth_block = EthereumBlock::new(p_header, txs, vec![]);
+	pub(crate) fn statuses(&self, number: Option<BlockNumber>) -> Result<Vec<TransactionStatus>> {
+		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
 
-				Ok(eth_block)
-			},
-			_ => Err(internal_err("unable to gather required information to build eth_block")),
-		}
+		let id = mapper.map_block(number);
+		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+
+		let res = self
+			.client
+			.block(&id)
+			.map_err(|e| internal_err(format!("unable to get block {e:?}")))?;
+
+		let block = res.map(|b| b.block).ok_or_else(|| internal_err("unable to get block"))?;
+
+		self.client
+			.runtime_api()
+			.transaction_status(&id, block)
+			.map_err(|e| internal_err(format!("unable to get statuses {e:?}")))
+	}
+
+	pub(crate) fn receipts(&self, number: Option<BlockNumber>) -> Result<Vec<EIP658ReceiptData>> {
+		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+
+		let id = mapper.map_block(number);
+		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+
+		let res = self
+			.client
+			.block(&id)
+			.map_err(|e| internal_err(format!("unable to get block {e:?}")))?;
+
+		let block = res.map(|b| b.block).ok_or_else(|| internal_err("unable to get block"))?;
+
+		self.client
+			.runtime_api()
+			.transaction_receipts(&id, block)
+			.map_err(|e| internal_err(format!("unable to get receipts {e:?}")))
 	}
 
 	pub fn build_eth_statuses(
@@ -177,33 +190,24 @@ where
 		full: bool,
 	) -> Result<BlockTransactions> {
 		let block = self.to_eth_block(number)?;
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let txs = &block.transactions;
 
-		let id = mapper
-			.map_block(number)
-			.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+		let statuses = self.statuses(number)?;
 
-		let body = self.client.block_body(&id);
-		let header = self.client.header(id);
+		let status = if full {
+			let expanded = txs
+				.iter()
+				.zip(statuses.into_iter())
+				.map(|(tx, status)| {
+					self.expand_eth_transaction(tx, Some(&block), Some(status), None)
+				})
+				.collect::<Vec<_>>();
+			BlockTransactions::Full(expanded)
+		} else {
+			BlockTransactions::Hashes(statuses.iter().map(|tx| tx.transaction_hash).collect())
+		};
 
-		match (header, body) {
-			(Ok(Some(header)), Ok(Some(body))) => {
-				let txs = self.build_eth_transactions(&header, body);
-
-				let status = if full {
-					let expanded = txs
-						.iter()
-						.map(|tx| self.expand_eth_transaction(tx, Some(&block), None, None))
-						.collect::<Vec<_>>();
-					BlockTransactions::Full(expanded)
-				} else {
-					BlockTransactions::Hashes(txs.iter().map(|tx| tx.hash()).collect())
-				};
-
-				Ok(status)
-			},
-			_ => Err(internal_err("unable to gather required information to build block_statuses")),
-		}
+		Ok(status)
 	}
 
 	pub(crate) fn to_rich_block(
@@ -219,6 +223,7 @@ where
 		let id = mapper
 			.map_block(number)
 			.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+
 		let header = self
 			.client
 			.header(id)

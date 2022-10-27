@@ -5,7 +5,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::Codec;
-use ethereum::TransactionV2;
+use ethereum::{BlockV2, EIP658ReceiptData, TransactionV2};
+use fp_rpc::TransactionStatus;
 use pallet_contracts_primitives::ExecReturnValue;
 use sp_core::{H160, H256, U256};
 use sp_runtime::{traits::Block as BlockT, DispatchError};
@@ -53,5 +54,12 @@ sp_api::decl_runtime_apis! {
 		fn extrinsic_filter(
 			xts: Vec<<Block as BlockT>::Extrinsic>,
 		) -> Vec<TransactionV2>;
+
+		fn map_block(block: Block) -> BlockV2;
+
+		fn transaction_status(block: Block) -> Vec<TransactionStatus>;
+
+
+		fn transaction_receipts(block: Block) -> Vec<EIP658ReceiptData>;
 	}
 }

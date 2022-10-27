@@ -9,6 +9,8 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use codec::{Decode, Encode};
 use constants::LAGUNA_NATIVE_CURRENCY;
+
+use fp_rpc::TransactionStatus;
 use frame_support::{
 	self, construct_runtime,
 	dispatch::{Dispatchable, GetDispatchInfo},
@@ -32,7 +34,7 @@ use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{Bytes, H160, H256, U256};
 use sp_runtime::{traits::UniqueSaturatedInto, DispatchError};
 
-use ethereum::TransactionV2;
+use ethereum::{BlockV2 as EthereumBlock, EIP658ReceiptData, TransactionV2};
 use frame_support::sp_std::prelude::*;
 use scale_info::prelude::format;
 
@@ -607,6 +609,7 @@ impl_runtime_apis! {
 
 		fn author(digests: Vec<ConesensusDigest>) -> Option<H160>{
 
+
 			// find author using all consensus digests
 			AuraAccountAdapter::find_author(digests.iter().map(|(a, b)| {
 				(*a, &b[..])
@@ -627,7 +630,19 @@ impl_runtime_apis! {
 				}
 			}).collect()
 
+		}
 
+
+		fn map_block(block: Block) -> EthereumBlock {
+			impl_pallet_evm_compat::map_block(block)
+		}
+
+		fn transaction_status(block: Block) -> Vec<TransactionStatus>{
+			impl_pallet_evm_compat::transaction_statuses(block)
+		}
+
+		fn transaction_receipts(block: Block) -> Vec<EIP658ReceiptData>{
+			impl_pallet_evm_compat::get_receipts(block)
 		}
 	}
 

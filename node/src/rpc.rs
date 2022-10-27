@@ -3,7 +3,6 @@
 use fp_rpc::ConvertTransactionRuntimeApi;
 use laguna_runtime::opaque::Block;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Index};
-use sp_core::traits::SpawnNamed;
 use std::sync::Arc;
 
 use pallet_contracts_rpc::{Contracts, ContractsApiServer, ContractsRuntimeApi};

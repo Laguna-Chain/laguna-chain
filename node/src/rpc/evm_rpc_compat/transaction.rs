@@ -2,9 +2,7 @@
 //!
 //! helper functions for transaction details
 
-use super::block_builder;
-use codec::{Decode, Encode};
-use ethereum::TransactionV2;
+use super::{block_builder, internal_err};
 use fc_rpc_core::types::{BlockNumber, BlockTransactions, Index, Receipt, Transaction};
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
@@ -27,12 +25,12 @@ pub struct TransactionApi<B, C, A: ChainApi> {
 
 impl<B, C, A> TransactionApi<B, C, A>
 where
-	A: ChainApi<Block = B>,
+	A: ChainApi<Block = B> + 'static + Sync + Send,
 	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic>,
 	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
 	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,
-	C::Api: BlockBuilderApi<B>,
+	C::Api: BlockBuilderApi<B> + 'static + Sync + Send,
 {
 	pub fn from_client(client: Arc<C>, graph: Arc<Pool<A>>) -> TransactionApi<B, C, A> {
 		TransactionApi { client, graph, _marker: PhantomData }
@@ -72,38 +70,12 @@ where
 		}
 	}
 
-	pub fn get_transaction_from_pool(&self, hash: H256) -> Result<Option<Transaction>> {
-		// collect all tx waiting to be included in the pending block
-		let pending_txs = self
-			.graph
-			.validated_pool()
-			.ready()
-			.map(|in_pool_tx| in_pool_tx.data().clone())
-			.collect();
-
-		// we only care about eth-txs
-		let eth_txs = self
-			.client
-			.runtime_api()
-			.extrinsic_filter(&BlockId::Hash(self.client.info().best_hash), pending_txs)
-			.unwrap_or_default();
-
-		// return the one matching the queried hash
-		Ok(eth_txs.into_iter().find_map(|tx| {
-			if tx.hash() == hash {
-				Some(Transaction::from(tx))
-			} else {
-				None
-			}
-		}))
-	}
-
 	pub fn get_transaction_from_blocks(&self, hash: H256) -> Result<Option<Transaction>> {
 		let mut latest = BlockId::<B>::hash(self.client.info().best_hash);
 		let builder =
 			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
 
-		// stargin from latest
+		// starting from latest
 
 		// checking previous block until we can't find any block
 		while let Ok(Some(header)) = self.client.header(latest) {
@@ -128,25 +100,43 @@ where
 
 		Ok(None)
 	}
-}
 
-pub fn get_transaction_receipt(tx: Transaction, pending: bool) -> Receipt {
-	let status_code = if pending { None } else { Some(1_u64.into()) };
-	Receipt {
-		transaction_hash: Some(tx.hash),
-		transaction_index: tx.transaction_index,
-		block_hash: tx.block_hash,
-		from: Some(tx.from),
-		to: tx.to,
-		block_number: tx.block_number,
-		cumulative_gas_used: Default::default(),
-		gas_used: None,
-		contract_address: None,
-		logs: vec![],
-		state_root: None,
-		logs_bloom: Default::default(),
-		status_code,
-		effective_gas_price: Default::default(),
-		transaction_type: tx.transaction_type.unwrap_or_default(),
+	pub fn get_transaction_receipt(&self, tx: Transaction) -> Result<Receipt> {
+		let builder =
+			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+
+		let receipts = builder.receipts(Some(BlockNumber::Hash {
+			hash: tx.block_hash.unwrap_or_default(),
+			require_canonical: false,
+		}))?;
+
+		tx.transaction_index
+			.and_then(|i| {
+				receipts.iter().enumerate().find_map(|(idx, r)| {
+					if idx == i.as_usize() {
+						Some(r)
+					} else {
+						None
+					}
+				})
+			})
+			.map(|r| Receipt {
+				transaction_hash: Some(tx.hash),
+				transaction_index: tx.transaction_index,
+				block_hash: tx.block_hash,
+				from: Some(tx.from),
+				to: tx.to,
+				block_number: tx.block_number,
+				cumulative_gas_used: Default::default(),
+				gas_used: None,
+				contract_address: None,
+				logs: vec![],
+				state_root: None,
+				logs_bloom: Default::default(),
+				status_code: Some(r.status_code.into()),
+				effective_gas_price: Default::default(),
+				transaction_type: tx.transaction_type.unwrap_or_default(),
+			})
+			.ok_or_else(|| internal_err("fetch tx receipt failed"))
 	}
 }
