@@ -96,58 +96,79 @@ impl AddressGenerator<Runtime> for EvmCompatAdderssGenerator {
 	}
 }
 
-pub fn get_receipts(block: Block) -> Vec<EIP658ReceiptData> {
-	let statuses = transaction_statuses(block);
-
+pub fn tx_bundles(block: Block) -> Vec<(EthereumTransaction, Vec<Event>)> {
 	let all_records = System::read_events_no_consensus();
 
-	let mut receipts = vec![];
-
-	for status in statuses.into_iter() {
-		// find all related records that matches the same extrinsic
-		let related = all_records
-			.iter()
-			.filter_map(|record| {
-				if let Phase::ApplyExtrinsic(i) = record.phase {
-					if i == status.transaction_index {
-						return Some(&record.event)
-					}
-				}
-
+	block
+		.extrinsics
+		.into_iter()
+		.enumerate()
+		.filter_map(|(idx, xt)| {
+			if let Call::EvmCompat(pallet_evm_compat::Call::transact { t }) = xt.0.function {
+				Some((idx, t))
+			} else {
 				None
-			})
-			.collect::<Vec<_>>();
+			}
+		})
+		.map(|(idx, tx)| {
+			let evts = all_records
+				.iter()
+				.filter_map(|record| {
+					if let Phase::ApplyExtrinsic(i) = record.phase {
+						if i == idx as u32 {
+							return Some(record.event.clone())
+						}
+					}
 
-		// check the final execution result
-		let (status_code, used_weight) = related
-			.iter()
-			.find_map(|e| match e {
-				Event::System(frame_system::Event::ExtrinsicSuccess { dispatch_info }) =>
-					Some((1_u8, dispatch_info.weight)),
-				Event::System(frame_system::Event::ExtrinsicFailed {
-					dispatch_error,
-					dispatch_info,
-				}) => Some((0_u8, dispatch_info.weight)),
-				_ => None,
-			})
-			.unwrap_or_default();
+					None
+				})
+				.collect::<Vec<_>>();
 
-		let receipt = EIP658ReceiptData {
-			status_code,
-			used_gas: used_weight.into(),
-			logs_bloom: status.logs_bloom,
-			logs: status.logs,
-		};
+			(tx, evts)
+		})
+		.collect::<Vec<_>>()
+}
 
-		receipts.push(receipt);
-	}
+pub fn get_receipts(block: Block) -> Vec<EIP658ReceiptData> {
+	let statuses = transaction_statuses(block.clone());
+	let bundles = tx_bundles(block);
 
-	receipts
+	bundles
+		.into_iter()
+		.zip(statuses.into_iter())
+		.map(|((_, evts), status)| {
+			let (status_code, used_weight) = evts
+				.iter()
+				.find_map(|e| match e {
+					Event::System(frame_system::Event::ExtrinsicSuccess { dispatch_info }) =>
+						Some((1_u8, dispatch_info.weight)),
+					Event::System(frame_system::Event::ExtrinsicFailed {
+						dispatch_error,
+						dispatch_info,
+					}) => Some((0_u8, dispatch_info.weight)),
+					_ => None,
+				})
+				.unwrap_or_default();
+
+			EIP658ReceiptData {
+				status_code,
+				used_gas: used_weight.into(),
+				logs_bloom: status.logs_bloom,
+				logs: status.logs,
+			}
+		})
+		.collect::<Vec<_>>()
 }
 
 pub fn map_block(block: Block) -> EthereumBlock {
-	let statuses = transaction_statuses(block.clone());
+	let eth_txs = tx_bundles(block.clone()).into_iter().map(|v| v.0).collect();
 	let receipts = get_receipts(block.clone());
+
+	let total_used = receipts
+		.iter()
+		.map(|v| v.used_gas)
+		.reduce(|acc, item| acc + item)
+		.unwrap_or_default();
 
 	let header = block.header;
 
@@ -168,55 +189,6 @@ pub fn map_block(block: Block) -> EthereumBlock {
 		})
 		.unwrap_or_default();
 
-	let all_records = System::read_events_no_consensus();
-
-	let eth_txs = block
-		.extrinsics
-		.into_iter()
-		.filter_map(|xt| {
-			if let Call::EvmCompat(pallet_evm_compat::Call::transact { t }) = xt.0.function {
-				Some(t)
-			} else {
-				None
-			}
-		})
-		.collect::<Vec<_>>();
-
-	let mut total_used = 0;
-
-	for status in statuses.into_iter() {
-		// find all related records that matches the same extrinsic
-		let related = all_records
-			.iter()
-			.filter_map(|record| {
-				if let Phase::ApplyExtrinsic(i) = record.phase {
-					if i == status.transaction_index {
-						return Some(&record.event)
-					}
-				}
-
-				None
-			})
-			.collect::<Vec<_>>();
-
-		// check the final execution result
-		let used_weight = related
-			.iter()
-			.find_map(|e| match e {
-				Event::System(frame_system::Event::ExtrinsicSuccess {
-					dispatch_info: DispatchInfo { weight, .. },
-				}) |
-				Event::System(frame_system::Event::ExtrinsicFailed {
-					dispatch_info: DispatchInfo { weight, .. },
-					..
-				}) => Some(*weight),
-				_ => None,
-			})
-			.unwrap_or_default();
-
-		total_used += used_weight;
-	}
-
 	let receipts_root = ethereum::util::ordered_trie_root(receipts.iter().map(rlp::encode));
 
 	let partial = PartialHeader {
@@ -227,8 +199,8 @@ pub fn map_block(block: Block) -> EthereumBlock {
 		logs_bloom: [0_u8; 256].into(),
 		difficulty: Default::default(),
 		number: header.number.into(),
-		gas_limit: Default::default(), // this should be handled by CheckWeight
-		gas_used: total_used.into(),   // total weight used for all eth-txs
+		gas_limit: Default::default(),
+		gas_used: total_used,
 		timestamp,
 		extra_data: header.digest.encode(),
 		mix_hash: Default::default(),
@@ -239,97 +211,70 @@ pub fn map_block(block: Block) -> EthereumBlock {
 }
 
 pub fn transaction_statuses(block: Block) -> Vec<TransactionStatus> {
-	let mut statuses = vec![];
+	let bundles = tx_bundles(block);
 
-	let eth_txs = block
-		.extrinsics
+	bundles
 		.into_iter()
-		.filter_map(|xt| {
-			if let Call::EvmCompat(pallet_evm_compat::Call::transact { t }) = xt.0.function {
-				Some(t)
-			} else {
-				None
-			}
-		})
-		.collect::<Vec<_>>();
+		.enumerate()
+		.map(|(idx, (tx, evts))| {
+			let logs = evts
+				.iter()
+				.filter_map(|e| {
+					if let Event::Contracts(pallet_contracts::Event::ContractEmitted {
+						contract,
+						data,
+					}) = e
+					{
+						let addr_slice: &[u8; 32] = contract.as_ref();
+						let contract_addr = H160::from_slice(&addr_slice[12..]);
 
-	let all_records = System::read_events_no_consensus();
-
-	for (idx, tx) in eth_txs.iter().enumerate() {
-		// find all related records that matches the same extrinsic
-		let related = all_records
-			.iter()
-			.filter_map(|record| {
-				if let Phase::ApplyExtrinsic(i) = record.phase {
-					if i == (idx as u32) {
-						return Some(&record.event)
+						Some(Log { address: contract_addr, topics: vec![], data: data.clone() })
+					} else {
+						None
 					}
-				}
+				})
+				.collect::<Vec<_>>();
 
-				None
-			})
-			.collect::<Vec<_>>();
+			let to = match tx {
+				EthereumTransaction::Legacy(LegacyTransaction {
+					action: ethereum::TransactionAction::Call(to),
+					..
+				}) |
+				EthereumTransaction::EIP2930(EIP2930Transaction {
+					action: ethereum::TransactionAction::Call(to),
+					..
+				}) |
+				EthereumTransaction::EIP1559(EIP1559Transaction {
+					action: ethereum::TransactionAction::Call(to),
+					..
+				}) => Some(to),
+				_ => None,
+			};
 
-		// extract all contract events from this call
-		let logs = related
-			.iter()
-			.filter_map(|e| {
-				if let Event::Contracts(pallet_contracts::Event::ContractEmitted {
+			let contract_address = evts.iter().find_map(|e| {
+				if let Event::Contracts(pallet_contracts::Event::Instantiated {
+					deployer,
 					contract,
-					data,
 				}) = e
 				{
 					let addr_slice: &[u8; 32] = contract.as_ref();
 					let contract_addr = H160::from_slice(&addr_slice[12..]);
 
-					Some(Log { address: contract_addr, topics: vec![], data: data.clone() })
+					Some(contract_addr)
 				} else {
 					None
 				}
-			})
-			.collect::<Vec<_>>();
+			});
 
-		let to = match tx {
-			EthereumTransaction::Legacy(LegacyTransaction {
-				action: ethereum::TransactionAction::Call(to),
-				..
-			}) |
-			EthereumTransaction::EIP2930(EIP2930Transaction {
-				action: ethereum::TransactionAction::Call(to),
-				..
-			}) |
-			EthereumTransaction::EIP1559(EIP1559Transaction {
-				action: ethereum::TransactionAction::Call(to),
-				..
-			}) => Some(*to),
-			_ => None,
-		};
-
-		let contract_address = related.iter().find_map(|e| {
-			if let Event::Contracts(pallet_contracts::Event::Instantiated { deployer, contract }) =
-				e
-			{
-				let addr_slice: &[u8; 32] = contract.as_ref();
-				let contract_addr = H160::from_slice(&addr_slice[12..]);
-
-				Some(contract_addr)
-			} else {
-				None
+			TransactionStatus {
+				transaction_hash: tx.hash(),
+				transaction_index: idx as u32,
+				from: EvmCompat::recover_tx_signer(&tx).unwrap_or_default(),
+				to,
+				contract_address,
+				logs,
+				logs_bloom: [0_u8; 256].into(),
 			}
-		});
-
-		let status = TransactionStatus {
-			transaction_hash: tx.hash(),
-			transaction_index: idx as u32,
-			from: EvmCompat::recover_tx_signer(tx).unwrap_or_default(),
-			to,
-			contract_address,
-			logs,
-			logs_bloom: [0_u8; 256].into(),
-		};
-
-		statuses.push(status);
-	}
-
-	statuses
+		})
+		.collect::<Vec<_>>()
 }

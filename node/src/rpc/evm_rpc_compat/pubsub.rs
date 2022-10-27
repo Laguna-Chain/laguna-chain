@@ -170,7 +170,6 @@ where
 	async fn syncing(
 		mut sink: SubscriptionSink,
 		client: Arc<C>,
-		pool: Arc<P>,
 		network: Arc<NetworkService<B, H>>,
 		starting_block: u64,
 	) {
@@ -246,6 +245,7 @@ impl SubscriptionResult {
 			extra_info: BTreeMap::new(),
 		}))
 	}
+
 	pub fn logs(
 		&self,
 		block: EthereumBlock,
@@ -364,12 +364,12 @@ where
 					Self::new_pending(sink, client, pool).await;
 				},
 				Kind::Syncing => {
-					Self::syncing(sink, client, pool, network, starting_block).await;
+					Self::syncing(sink, client, network, starting_block).await;
 				},
 			}
 		};
 
 		self.subscriptions
-			.spawn("frontier-rpc-subscription", Some("rpc"), fut.map(drop).boxed());
+			.spawn("frontier-rpc-subscription", Some("rpc"), Box::pin(fut));
 	}
 }

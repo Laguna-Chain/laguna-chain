@@ -3,7 +3,7 @@
 //! helper functions for transaction details
 
 use super::{block_builder, internal_err};
-use fc_rpc_core::types::{BlockNumber, BlockTransactions, Index, Receipt, Transaction};
+use fc_rpc_core::types::{BlockNumber, BlockTransactions, Index, Log, Receipt, Transaction};
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
@@ -110,29 +110,64 @@ where
 			require_canonical: false,
 		}))?;
 
-		tx.transaction_index
-			.and_then(|i| {
-				receipts.iter().enumerate().find_map(|(idx, r)| {
-					if idx == i.as_usize() {
-						Some(r)
-					} else {
-						None
-					}
-				})
+		let statuses = builder.statuses(Some(BlockNumber::Hash {
+			hash: tx.block_hash.unwrap_or_default(),
+			require_canonical: false,
+		}))?;
+
+		// all consumed before the current transaction_index
+		let cumulated = receipts
+			.iter()
+			.enumerate()
+			.filter_map(|(idx, item)| {
+				if tx.transaction_index.map(|v| v < idx.into()).unwrap_or(false) {
+					Some(item.used_gas)
+				} else {
+					None
+				}
 			})
-			.map(|r| Receipt {
+			.reduce(|acc, item| acc + item)
+			.unwrap_or_default();
+
+		receipts
+			.iter()
+			.zip(statuses.iter())
+			.find_map(|(r, s)| {
+				if let Some(i) = tx.transaction_index {
+					if s.transaction_index == i.as_u32() {
+						return Some((r, s))
+					}
+				}
+				None
+			})
+			.map(|(r, s)| Receipt {
 				transaction_hash: Some(tx.hash),
 				transaction_index: tx.transaction_index,
 				block_hash: tx.block_hash,
 				from: Some(tx.from),
 				to: tx.to,
 				block_number: tx.block_number,
-				cumulative_gas_used: Default::default(),
-				gas_used: None,
-				contract_address: None,
-				logs: vec![],
+				cumulative_gas_used: cumulated,
+				gas_used: Some(r.used_gas),
+				contract_address: tx.creates,
+				logs: s
+					.logs
+					.iter()
+					.map(|l| Log {
+						address: l.address,
+						transaction_hash: Some(tx.hash),
+						transaction_index: tx.transaction_index,
+						block_hash: tx.block_hash,
+						block_number: tx.block_number,
+						data: l.data.clone().into(),
+						log_index: None,
+						topics: l.topics.clone(),
+						transaction_log_index: None,
+						removed: false,
+					})
+					.collect(),
 				state_root: None,
-				logs_bloom: Default::default(),
+				logs_bloom: s.logs_bloom,
 				status_code: Some(r.status_code.into()),
 				effective_gas_price: Default::default(),
 				transaction_type: tx.transaction_type.unwrap_or_default(),
