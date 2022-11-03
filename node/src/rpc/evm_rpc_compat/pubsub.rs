@@ -34,6 +34,8 @@ use fc_rpc_core::types::{
 	RichBlock, Transaction,
 };
 
+use super::block_mapper::BlockMapper;
+
 pub struct PubSub<B: BlockT, C, A: ChainApi, H: ExHashT, P> {
 	client: Arc<C>,
 	network: Arc<NetworkService<B, H>>,
@@ -111,19 +113,19 @@ where
 						require_canonical: false,
 						hash: notification.hash,
 					});
+					let mapper = BlockMapper::<B, C, A>::from_client(client.clone());
 
-					if let Ok((b, rs)) = builder
-						.to_eth_block(bn)
-						.and_then(|b| builder.receipts(bn).map(|rs| (b, rs)))
-					{
-						let rs = rs.into_iter().map(ReceiptV3::EIP1559).collect::<Vec<_>>();
+					if let (Ok(Some(b)), Ok(rs)) = (
+						mapper.reflect_block(bn),
+						builder
+							.receipts(bn)
+							.map(|rs| rs.into_iter().map(ReceiptV3::EIP1559).collect::<Vec<_>>()),
+					) {
 						return futures::future::ready(Some((b, rs)))
 					}
-
-					futures::future::ready(None)
-				} else {
-					futures::future::ready(None)
 				}
+
+				futures::future::ready(None)
 			})
 			.flat_map(move |(block, receipts)| {
 				futures::stream::iter(SubscriptionResult::new().logs(

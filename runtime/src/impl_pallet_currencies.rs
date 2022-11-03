@@ -1,7 +1,7 @@
 use frame_support::parameter_types;
 
-use frame_support::sp_runtime::traits::{Convert, ConvertInto};
-use primitives::{AccountId, CurrencyId};
+use frame_support::sp_runtime::traits::ConvertInto;
+use primitives::CurrencyId;
 
 use crate::{constants::LAGUNA_NATIVE_CURRENCY, ContractAssetsRegistry, Runtime, Tokens};
 
@@ -14,12 +14,4 @@ impl pallet_currencies::Config for Runtime {
 	type MultiCurrency = Tokens;
 	type ContractAssets = ContractAssetsRegistry;
 	type ConvertIntoAccountId = ConvertInto;
-}
-
-struct AddressConvert;
-
-impl Convert<[u8; 32], AccountId> for AddressConvert {
-	fn convert(a: [u8; 32]) -> AccountId {
-		a.into()
-	}
 }

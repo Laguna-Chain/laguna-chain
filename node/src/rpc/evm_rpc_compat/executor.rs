@@ -5,6 +5,7 @@
 use super::{deferrable_runtime_api::DeferrableApi, BlockMapper};
 use crate::rpc::evm_rpc_compat::internal_err;
 use fc_rpc_core::types::{BlockNumber, Bytes, CallRequest};
+use fp_ethereum::TransactionData;
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
@@ -44,9 +45,9 @@ where
 		request: CallRequest,
 		number: Option<BlockNumber>,
 	) -> Result<(U256, Bytes)> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = BlockMapper::<B, C, A>::from_client(self.client.clone());
 
-		// return none is toward pending
+		// return none if toward pending
 		let id = mapper.map_block(number);
 
 		let deferrable = DeferrableApi::from_client(self.client.clone(), self.graph.clone());
@@ -55,27 +56,33 @@ where
 		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
 
 		DeferrableApi::<B, C, A>::run_with_api(deferred_api, |api| {
-			let CallRequest { from, to, value, ref data, gas, gas_price, .. } = request;
+			dbg!(&request);
+			let CallRequest { from, to, value, ref data, gas, gas_price, max_fee_per_gas, .. } =
+				request;
 
-			// return gas_used and return value from either create or call
-			let (f, rv) = api
+			let storage_price = match (max_fee_per_gas, gas_price) {
+				(Some(max), _) => max,
+				(_, Some(max)) => max,
+				_ => U256::zero(),
+			};
+
+			// return (return_value, weight_used) from create, call or transfer
+			let (rv, w) = api
 				.call(
 					&id,
 					from,
 					to,
 					value.map(|v| v.unique_saturated_into()).unwrap_or_default(),
 					data.clone().map(|v| v.0.to_vec()).unwrap_or_default(),
-					gas.map(|v| {
-						(gas_price.unwrap_or_else(|| 1_u32.into()) * v).unique_saturated_into()
-					})
-					.unwrap_or_default(),
+					gas.unwrap_or_default(),
+					storage_price,
 				)
 				.map(|o| {
 					o.map_err(|err| internal_err(format!("fetch runtime call failed: {:?}", err)))
 				})
 				.map_err(|err| internal_err(format!("fetch runtime call failed: {:?}", err)))??;
 
-			Ok((f.into(), Bytes::from(rv.data.to_vec())))
+			Ok((w.into(), Bytes::from(rv.to_vec())))
 		})
 	}
 

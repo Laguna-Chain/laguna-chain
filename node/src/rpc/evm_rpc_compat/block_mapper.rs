@@ -20,7 +20,6 @@ use std::{marker::PhantomData, sync::Arc};
 /// ethereum request block time to a greater extend, we can ansower some of them locally, lets try!
 pub struct BlockMapper<B, C, A: ChainApi> {
 	client: Arc<C>,
-	graph: Arc<Pool<A>>,
 	_marker: PhantomData<(B, A)>,
 }
 
@@ -33,8 +32,8 @@ where
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
 	C::Api: BlockBuilderApi<B>,
 {
-	pub fn from_client(client: Arc<C>, graph: Arc<Pool<A>>) -> BlockMapper<B, C, A> {
-		BlockMapper { client, graph, _marker: PhantomData }
+	pub fn from_client(client: Arc<C>) -> BlockMapper<B, C, A> {
+		BlockMapper { client, _marker: PhantomData }
 	}
 
 	pub(crate) fn map_block(&self, number: Option<BlockNumber>) -> Option<BlockId<B>> {
@@ -49,27 +48,25 @@ where
 		}
 	}
 
-	pub fn find_digest(&self, at: &BlockId<B>) -> Result<Vec<([u8; 4], Vec<u8>)>> {
-		let header = self.client.header(*at).map_err(|err| {
-			internal_err(format!("fetch runtime header digest failed: {:?}", err))
-		})?;
-
-		header
-			.ok_or_else(|| internal_err("fetch runtime header digest failed"))
-			.map(|v| extract_digest(v.digest()))
-	}
-
-	pub fn find_author(&self, number: Option<BlockNumber>) -> Result<Option<H160>> {
+	pub fn reflect_block(&self, number: Option<BlockNumber>) -> Result<Option<EthereumBlock>> {
 		let id = self
 			.map_block(number)
 			.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
 
-		let latest_digests = self.find_digest(&id)?;
+		match self.client.block(&id) {
+			Ok(Some(b)) => self
+				.client
+				.runtime_api()
+				.map_block(&id, b.block)
+				.map(Some)
+				.map_err(|e| internal_err(format!("reflect eth block failed: {:?}", e))),
+			Ok(None) => Ok(None),
+			Err(e) => Err(internal_err(format!("fetch substrate block failed: {:?}", e))),
+		}
+	}
 
-		self.client
-			.runtime_api()
-			.author(&id, latest_digests)
-			.map_err(|err| internal_err(format!("fetch runtime author failed: {:?}", err)))
+	pub fn find_author(&self, number: Option<BlockNumber>) -> Result<Option<H160>> {
+		self.reflect_block(number).map(|v| v.map(|b| b.header.beneficiary))
 	}
 
 	pub fn transaction_count_by_hash(&self, hash: H256) -> Result<Option<U256>> {
@@ -78,61 +75,6 @@ where
 	}
 
 	pub fn transaction_count_by_number(&self, number: BlockNumber) -> Result<Option<U256>> {
-		if let Some(id) = self.map_block(Some(number)) {
-			BlockBuilder::from_client(self.client.clone(), self.graph.clone());
-
-			// Get all transactions from the target block.
-			if let Some(txs) = self.client.block_body(&id).map_err(|err| {
-				internal_err(format!("fetch runtime block body failed: {:?}", err))
-			})? {
-				// only count eth-txs
-				Ok(Some(
-					self.client
-						.runtime_api()
-						.extrinsic_filter(&id, txs)
-						.map_err(|err| {
-							internal_err(format!(
-								"fetch eth-txs from runtime block body failed: {:?}",
-								err
-							))
-						})?
-						.len()
-						.into(),
-				))
-			} else {
-				Ok(None)
-			}
-		} else {
-			let pending_txs = self
-				.graph
-				.validated_pool()
-				.ready()
-				.map(|t| t.data().clone())
-				.collect::<Vec<_>>();
-
-			let latest = BlockId::Hash(self.client.info().best_hash);
-
-			Ok(Some(
-				self.client
-					.runtime_api()
-					.extrinsic_filter(&latest, pending_txs)
-					.map_err(|err| {
-						internal_err(format!(
-							"fetch eth-txs from runtime ready queue failed: {:?}",
-							err
-						))
-					})?
-					.len()
-					.into(),
-			))
-		}
+		self.reflect_block(Some(number)).map(|v| v.map(|b| b.transactions.len().into()))
 	}
-}
-
-fn extract_digest(digest: &Digest) -> Vec<([u8; 4], Vec<u8>)> {
-	digest
-		.logs()
-		.iter()
-		.filter_map(|v| v.as_consensus().map(|(a, b)| (a, b.to_vec())))
-		.collect::<Vec<_>>()
 }

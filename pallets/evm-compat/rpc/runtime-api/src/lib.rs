@@ -35,9 +35,6 @@ sp_api::decl_runtime_apis! {
 		/// balances of the h160 address, only returns accounts not contracts
 		fn balances(address: H160) -> U256;
 
-
-		fn block_hash(number: u32) -> H256;
-
 		/// read contract storage of a contract
 		fn storage_at(address: H160, index: U256,) -> H256;
 
@@ -45,10 +42,7 @@ sp_api::decl_runtime_apis! {
 		fn account_nonce(addrss: H160) -> U256;
 
 		/// try-run a transaction, used to get the estimated cost or return value
-		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64) ->  Result<(Balance, ExecReturnValue), DispatchError>;
-
-		/// get the block author, returns the first 20 bytes as h160 identifier
-		fn author(digest: Vec<ConesensusDigest>) -> Option<H160>;
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: U256, storage_limit: U256) ->  Result<(Vec<u8>, Balance), DispatchError>;
 
 		/// return only extrinsics that contains valid eth-transaction
 		fn extrinsic_filter(
@@ -58,7 +52,6 @@ sp_api::decl_runtime_apis! {
 		fn map_block(block: Block) -> BlockV2;
 
 		fn transaction_status(block: Block) -> Vec<TransactionStatus>;
-
 
 		fn transaction_receipts(block: Block) -> Vec<EIP658ReceiptData>;
 	}

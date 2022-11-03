@@ -44,9 +44,9 @@ use frame_support::weights::WeightToFee;
 use pallet_contracts_primitives::ExecReturnValue;
 
 pub(crate) mod self_contained;
-pub(crate) mod tx_adapter;
-
-use tx_adapter::ContractTransactionAdapter;
+pub mod tx_adapter;
+use pallet_evm_compat_common::EvmFeeRequest;
+use tx_adapter::WEVMAdapter;
 
 #[cfg(test)]
 mod mock;
@@ -147,18 +147,16 @@ mod pallet {
 			// only allow origin obtained from self_contained_call
 			let source = ensure_ethereum_transaction(origin)?;
 
-			let (max_allowed, tip) = fee_details::<T>(&t);
+			// convert it to pallet_contract instructions
+			let adapter = WEVMAdapter::<T, _>::new_from_signed(&t);
 
 			Self::deposit_event(Event::<T>::PayloadInfo {
 				address: source,
-				max_fee_allowed: max_allowed.try_into().unwrap_or_default(),
-				tip: tip.try_into().unwrap_or_default(),
+				max_fee_allowed: adapter.inner.max_allowed().try_into().unwrap_or_default(),
+				tip: adapter.inner.tip().try_into().unwrap_or_default(),
 			});
 
-			// convert it to pallet_contract instructions
-			let runner = ContractTransactionAdapter::<T>::from_tx(&t);
-
-			runner.call_or_create(source)
+			adapter.execute(&source)
 		}
 
 		#[pallet::weight(200_000_000)]
@@ -197,27 +195,6 @@ mod pallet {
 
 			CurrencyOf::<T>::transfer(&who, &target_acc, value, ExistenceRequirement::KeepAlive)
 		}
-	}
-}
-
-fn fee_details<T: Config>(t: &Transaction) -> (U256, U256)
-where
-	BalanceOf<T>: TryFrom<U256> + Into<U256>,
-{
-	match t {
-		Transaction::Legacy(t) => {
-			let max_allowed = t.gas_limit * t.gas_price;
-			(max_allowed, Default::default())
-		},
-		Transaction::EIP2930(t) => {
-			let max_allowed = t.gas_limit * t.gas_price;
-			(max_allowed, Default::default())
-		},
-		Transaction::EIP1559(t) => {
-			let max_allowed = t.gas_limit * t.max_priority_fee_per_gas;
-			let tip = t.max_fee_per_gas * t.max_priority_fee_per_gas;
-			(max_allowed, tip)
-		},
 	}
 }
 
@@ -421,75 +398,5 @@ where
 		.ok()
 		.flatten()
 		.map(|v| <Keccak256 as HashT>::hash(&v[..]))
-	}
-
-	/// return try_call result and total fee consumed within this call, excludes base fee and length
-	/// fee
-	pub fn try_call_or_create(
-		from: Option<H160>,
-		target: Option<H160>,
-		value: BalanceOf<T>,
-		gas_limit: u64,
-		input: Vec<u8>,
-	) -> Result<(BalanceOf<T>, ExecReturnValue), DispatchError> {
-		let origin = Self::to_mapped_account(from.unwrap_or_default());
-
-		if let Some(to) = target {
-			let dest = Self::account_from_contract_addr(to);
-
-			let allowed_max =
-				<<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(&gas_limit);
-
-			let call_result = pallet_contracts::Pallet::<T>::bare_call(
-				origin,
-				dest,
-				value,
-				gas_limit,
-				Some(allowed_max),
-				input,
-				true,
-			);
-
-			let return_value = call_result.result?;
-
-			let fee_consumed = <<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(
-				&call_result.gas_consumed,
-			);
-
-			Ok((fee_consumed, return_value))
-		} else {
-			let (code, selector, salt) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut &input[..])
-				.map_err(|_| Error::<T>::InputBufferUndecodable)?;
-
-			let allowed_max =
-				<<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(&gas_limit);
-
-			let uploaded_code = pallet_contracts::Pallet::<T>::bare_upload_code(
-				origin.clone(),
-				code,
-				Some(allowed_max),
-			)?;
-
-			let reserved = uploaded_code.deposit;
-
-			let create_result = pallet_contracts::Pallet::<T>::bare_instantiate(
-				origin,
-				value,
-				gas_limit,
-				Some(allowed_max),
-				Code::Existing(uploaded_code.code_hash),
-				selector,
-				salt,
-				true,
-			);
-
-			let return_value = create_result.result?.result;
-			let fee_consumed = <<T as Config>::WeightToFee as WeightToFee>::weight_to_fee(
-				&create_result.gas_consumed,
-			);
-
-			// the reserved is also required to make this call successful
-			Ok((fee_consumed + reserved, return_value))
-		}
 	}
 }

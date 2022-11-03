@@ -10,7 +10,9 @@ use frame_system::pallet_prelude::*;
 use fp_ethereum::TransactionData;
 use sp_core::{crypto::UncheckedFrom, H160, U256};
 
-use crate::{fee_details, AccountIdOf, BalanceOf, Call, Config, Pallet, RawOrigin};
+use super::tx_adapter::WEVMAdapter;
+use crate::{AccountIdOf, BalanceOf, Call, Config, Pallet, RawOrigin};
+use pallet_evm_compat_common::{EvmActionRequest, EvmFeeRequest};
 
 #[repr(u8)]
 enum TransactionValidationError {
@@ -80,9 +82,10 @@ where
 	fn expose_extra(&self) -> (U256, U256) {
 		match self {
 			Call::transact { t } => {
+				let adapter = WEVMAdapter::<T, _>::new_from_signed(t);
 				let nonce = TransactionData::from(t).nonce;
-				let (_, tips) = fee_details::<T>(t);
-				(nonce, tips)
+
+				(nonce, adapter.inner.tip())
 			},
 			Call::set_proxy { nonce, .. } => (*nonce, Default::default()),
 			_ => Default::default(),

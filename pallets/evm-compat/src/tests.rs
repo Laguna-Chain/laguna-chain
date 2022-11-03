@@ -5,7 +5,9 @@ use crate::{
 	Transaction,
 };
 use codec::Encode;
-use ethereum::{LegacyTransactionMessage, TransactionSignature};
+use ethereum::{
+	EIP1559TransactionMessage, LegacyTransactionMessage, TransactionAction, TransactionSignature,
+};
 use fp_self_contained::SelfContainedCall;
 use frame_support::{
 	assert_ok,
@@ -15,6 +17,7 @@ use frame_support::{
 };
 use hex::FromHex;
 use orml_traits::arithmetic::Zero;
+use pallet_evm_compat_common::TransactionMessage;
 use primitives::IdentifyAccount;
 use rlp::Encodable;
 use sp_core::{
@@ -77,10 +80,15 @@ fn dummy_call(target: H160, chain_id: u64) -> LegacyTransactionMessage {
 	}
 }
 
-fn dummy_transfer(target: H160, chain_id: u64, value: U256) -> LegacyTransactionMessage {
+fn dummy_transfer(
+	target: H160,
+	chain_id: u64,
+	value: U256,
+	gas_price: U256,
+) -> LegacyTransactionMessage {
 	LegacyTransactionMessage {
 		nonce: Default::default(),
-		gas_price: Default::default(),
+		gas_price,
 		gas_limit: U256::MAX,
 		action: ethereum::TransactionAction::Call(target),
 		value,
@@ -93,6 +101,7 @@ fn dummy_contract_create(
 	chain_id: u64,
 	blob: Vec<u8>,
 	selector: Vec<u8>,
+	gas_price: U256,
 ) -> LegacyTransactionMessage {
 	let mut input_buf = vec![];
 
@@ -100,7 +109,7 @@ fn dummy_contract_create(
 
 	LegacyTransactionMessage {
 		nonce: Default::default(),
-		gas_price: 1_u8.into(),
+		gas_price,
 		gas_limit: U256::from_dec_str("20000000000000").unwrap(),
 		action: ethereum::TransactionAction::Create,
 		value: Default::default(),
@@ -194,7 +203,12 @@ fn test_create() {
 
 			let selector = Bytes::from_str("0xed4b9d1b").unwrap();
 
-			let eth_raw_call = dummy_contract_create(chain_id, blob.clone(), selector.to_vec());
+			let eth_raw_call = dummy_contract_create(
+				chain_id,
+				blob.clone(),
+				selector.to_vec(),
+				10_u128.pow(9).into(),
+			);
 
 			let eth_signed =
 				LegacyTxMsg(eth_raw_call).sign_with_chain_id(&pair.seed().into(), chain_id);
@@ -271,7 +285,8 @@ fn test_transfer() {
 
 			let target = H160([0x11; 20]);
 
-			let eth_raw_call = dummy_transfer(target, chain_id, (2_u128 << 20).into());
+			let eth_raw_call =
+				dummy_transfer(target, chain_id, (2_u128 << 20).into(), 10_u128.pow(9).into());
 
 			let eth_signed =
 				LegacyTxMsg(eth_raw_call).sign_with_chain_id(&pair.seed().into(), chain_id);
@@ -361,7 +376,7 @@ fn test_try_call() {
 	let dev_acc = EvmCompat::to_mapped_account(dev_addr);
 
 	ExtBuilder::default()
-		.balances(vec![(dev_acc.clone(), 2 << 64), (ALICE, 2 << 64)])
+		.balances(vec![(dev_acc, 2 << 64), (ALICE, 2 << 64)])
 		.build()
 		.execute_with(|| {
 			let blob = std::fs::read(
@@ -371,15 +386,49 @@ fn test_try_call() {
 
 			let selector = Bytes::from_str("0xed4b9d1b").unwrap();
 
-			let input = (blob, selector.to_vec(), Vec::<u8>::new()).encode();
+			let input = (blob.clone(), selector.to_vec(), Vec::<u8>::new()).encode();
 
-			// test create
-			assert_ok!(EvmCompat::try_call_or_create(
-				Some(dev_addr),
-				None,
-				0,
-				20000000000000,
+			let raw_tx = TransactionMessage::Legacy(LegacyTransactionMessage {
+				nonce: Default::default(),
+				gas_price: 10_u128.pow(9).into(),
+				gas_limit: 10_u128.pow(12).into(),
+				action: TransactionAction::Create,
+				value: Default::default(),
 				input,
-			));
+				chain_id: Some(ChainId::get()),
+			});
+
+			let adapter = crate::tx_adapter::WEVMAdapter::<Runtime, _>::new_from_raw(&raw_tx);
+
+			let rv = adapter.try_create(&dev_addr);
+
+			assert_ok!(&rv);
+			let res = rv.unwrap();
+
+			assert_ok!(&res.result);
+
+			let input = (blob, selector.to_vec(), [0x1].to_vec()).encode();
+
+			let raw_tx = TransactionMessage::EIP1559(EIP1559TransactionMessage {
+				nonce: Default::default(),
+				action: TransactionAction::Create,
+				value: Default::default(),
+				input,
+				chain_id: ChainId::get(),
+				max_priority_fee_per_gas: Default::default(),
+				max_fee_per_gas: 10_u128.pow(9).into(),
+				gas_limit: 10_u128.pow(12).into(),
+				access_list: vec![],
+			});
+
+			let adapter = crate::tx_adapter::WEVMAdapter::<Runtime, _>::new_from_raw(&raw_tx);
+
+			// TODO: this seems to introduce side effect, need to test it further with subxt
+			let rv = adapter.try_create(&dev_addr);
+
+			assert_ok!(&rv);
+			let res = rv.unwrap();
+
+			assert_ok!(&res.result);
 		});
 }

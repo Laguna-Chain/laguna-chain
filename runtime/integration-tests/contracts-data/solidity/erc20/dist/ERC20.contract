@@ -52,7 +52,7 @@
               "label": "from",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -63,7 +63,7 @@
               "label": "to",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -93,7 +93,7 @@
               "label": "owner",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -104,7 +104,7 @@
               "label": "spender",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -198,7 +198,7 @@
               "label": "",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -224,7 +224,7 @@
               "label": "",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -233,7 +233,7 @@
               "label": "",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -259,7 +259,7 @@
               "label": "to",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -294,7 +294,7 @@
               "label": "spender",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -329,7 +329,7 @@
               "label": "from",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -338,7 +338,7 @@
               "label": "to",
               "type": {
                 "displayName": [
-                  "AccountId"
+                  ""
                 ],
                 "type": 4
               }
@@ -469,7 +469,7 @@
             }
           },
           "path": [
-            "AccountId"
+            ""
           ]
         }
       },

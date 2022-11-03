@@ -127,27 +127,8 @@ where
 		transaction
 	}
 
-	pub(crate) fn to_eth_block(&self, number: Option<BlockNumber>) -> Result<EthereumBlock> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
-
-		let id = mapper.map_block(number);
-		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
-
-		let res = self
-			.client
-			.block(&id)
-			.map_err(|e| internal_err(format!("unable to get block {e:?}")))?;
-
-		let block = res.map(|b| b.block).ok_or_else(|| internal_err("unable to get block"))?;
-
-		self.client
-			.runtime_api()
-			.map_block(&id, block)
-			.map_err(|e| internal_err(format!("unable to map eth_block {e:?}")))
-	}
-
 	pub(crate) fn statuses(&self, number: Option<BlockNumber>) -> Result<Vec<TransactionStatus>> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		let id = mapper.map_block(number);
 		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
@@ -166,7 +147,7 @@ where
 	}
 
 	pub(crate) fn receipts(&self, number: Option<BlockNumber>) -> Result<Vec<EIP658ReceiptData>> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		let id = mapper.map_block(number);
 		let id = id.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
@@ -189,7 +170,12 @@ where
 		number: Option<BlockNumber>,
 		full: bool,
 	) -> Result<BlockTransactions> {
-		let block = self.to_eth_block(number)?;
+		let mapper = BlockMapper::<B, C, A>::from_client(self.client.clone());
+
+		let block = mapper
+			.reflect_block(number)?
+			.ok_or_else(|| internal_err("unable to get target block"))?;
+
 		let txs = &block.transactions;
 
 		let statuses = self.statuses(number)?;
@@ -215,10 +201,15 @@ where
 		number: Option<BlockNumber>,
 		full: bool,
 	) -> Result<RichBlock> {
-		let block = self.to_eth_block(number)?;
+		let mapper = BlockMapper::<B, C, A>::from_client(self.client.clone());
 
+		// find the eth-block reflected from substrate
+		let block = mapper
+			.reflect_block(number)?
+			.ok_or_else(|| internal_err("unable to get target block"))?;
+
+		// collect tx status from runtime events
 		let tx_statuses = self.build_eth_statuses(number, full)?;
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
 
 		let id = mapper
 			.map_block(number)

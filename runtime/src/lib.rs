@@ -9,26 +9,29 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use codec::{Decode, Encode};
 use constants::LAGUNA_NATIVE_CURRENCY;
-
+use ethereum::{EIP1559TransactionMessage, TransactionAction};
 use fp_rpc::TransactionStatus;
 use frame_support::{
 	self, construct_runtime,
-	dispatch::{Dispatchable, GetDispatchInfo},
-	pallet_prelude::TransactionValidityError,
+	dispatch::{DispatchErrorWithPostInfo, Dispatchable, GetDispatchInfo},
+	pallet_prelude::{DispatchResult, TransactionValidityError},
 	sp_runtime::{
 		app_crypto::sp_core::OpaqueMetadata,
 		create_runtime_str, generic, impl_opaque_keys,
 		traits::{
-			BlakeTwo256, Block as BlockT, DispatchInfoOf, NumberFor, PostDispatchInfoOf,
+			BlakeTwo256, Block as BlockT, Checkable, DispatchInfoOf, NumberFor, PostDispatchInfoOf,
 			SignedExtension,
 		},
 		transaction_validity::{TransactionSource, TransactionValidity},
 		ApplyExtrinsicResult, KeyTypeId, SaturatedConversion,
 	},
-	traits::{FindAuthor, Get},
+	traits::Get,
 };
+use pallet_evm_compat_common::{ActionRequest, EvmActionRequest};
+
 use impl_frame_system::BlockHashCount;
 use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
+use pallet_evm_compat_common::TransactionMessage;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_core::{Bytes, H160, H256, U256};
@@ -36,6 +39,7 @@ use sp_runtime::{traits::UniqueSaturatedInto, DispatchError};
 
 use ethereum::{BlockV2 as EthereumBlock, EIP658ReceiptData, TransactionV2};
 use frame_support::sp_std::prelude::*;
+use pallet_evm_compat::tx_adapter::WEVMAdapter;
 use scale_info::prelude::format;
 
 pub mod contract_extensions;
@@ -52,8 +56,6 @@ use frame_support::weights::Weight;
 use primitives::{
 	AccountId, Address, Balance, BlockNumber, CurrencyId, Hash, Header, Index, Signature,
 };
-
-use pallet_evm_compat_rpc_runtime_api::ConesensusDigest;
 
 // include all needed pallets and their impl below
 // we put palelt implementation code in a separate module to enhahce readability
@@ -79,7 +81,6 @@ pub mod impl_pallet_system_contract_deployer;
 pub mod impl_pallet_timestamp;
 pub mod impl_pallet_transaction_payment;
 
-use impl_pallet_authorship::AuraAccountAdapter;
 use impl_pallet_evm_compat::ETH_CONTRACT_PREFIX;
 
 pub mod constants;
@@ -183,8 +184,10 @@ construct_runtime!(
 pub type UncheckedExtrinsic =
 	fp_self_contained::UncheckedExtrinsic<Address, Call, Signature, SignedExtra>;
 
-// pub type CheckedExtrinsic = <UncheckedExtrinsic as Checkable>::Checked;
-pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, Call, SignedExtra, H160>;
+pub type CheckedExtrinsic =
+	<UncheckedExtrinsic as Checkable<frame_system::ChainContext<Runtime>>>::Checked;
+// pub type CheckedExtrinsic = fp_self_contained::CheckedExtrinsic<AccountId, Call, SignedExtra,
+// H160>;
 
 pub type SignedPayload = generic::SignedPayload<Call, SignedExtra>;
 
@@ -201,8 +204,6 @@ pub type SignedExtra = (
 	frame_system::CheckEra<Runtime>,
 	frame_system::CheckNonce<Runtime>,
 	frame_system::CheckWeight<Runtime>,
-	// fee and tipping related
-	// TODO: justify whether we need to include if "feeless" transaction is included
 	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 
@@ -255,7 +256,6 @@ impl fp_self_contained::SelfContainedCall for Call {
 		if let Call::EvmCompat(call) = self {
 			if let Some(Ok((source, origin, (nonce, tip)))) = call.check_self_contained() {
 				let extra = new_extra(nonce.as_u32(), tip.as_u128());
-
 				return Some(Ok((source, origin, extra)))
 			}
 		}
@@ -284,8 +284,8 @@ impl fp_self_contained::SelfContainedCall for Call {
 		len: usize,
 	) -> Option<Result<(), TransactionValidityError>> {
 		if let Call::EvmCompat(_) = self {
-			let (_, origin, extra) = info;
-			return Some(extra.clone().pre_dispatch(origin, self, dispatch_info, len).map(|_| ()))
+			// move all validate action into apply
+			return Some(Ok(()))
 		}
 
 		None
@@ -296,10 +296,39 @@ impl fp_self_contained::SelfContainedCall for Call {
 		info: Self::SignedInfo,
 	) -> Option<sp_runtime::DispatchResultWithInfo<PostDispatchInfoOf<Self>>> {
 		match self {
-			call @ Call::EvmCompat(pallet_evm_compat::Call::transact { .. }) =>
-				Some(call.dispatch(Origin::from(
+			call @ Call::EvmCompat(pallet_evm_compat::Call::transact { .. }) => {
+				let (_, origin, extra) = info;
+				let len = call.encoded_size();
+				let dispatch_info = call.get_dispatch_info();
+
+				let pre = extra.pre_dispatch(&origin, &call, &dispatch_info, len).ok();
+
+				let res = call.dispatch(Origin::from(
 					pallet_evm_compat::RawOrigin::EthereumTransaction(info.0),
-				))),
+				));
+
+				// apply post_info, needed to do refunding from fluent-fee
+				match res {
+					Ok(info) => {
+						let res = Ok(());
+						let post_info = info;
+
+						// never error for post_correction
+						let _ =
+							SignedExtra::post_dispatch(pre, &dispatch_info, &post_info, len, &res);
+					},
+					Err(err) => {
+						let res = Err(err.error);
+						let post_info = err.post_info;
+
+						// never error for post_correction
+						let _ =
+							SignedExtra::post_dispatch(pre, &dispatch_info, &post_info, len, &res);
+					},
+				}
+
+				Some(res)
+			},
 			_ => None,
 		}
 	}
@@ -570,11 +599,6 @@ impl_runtime_apis! {
 			Currencies::free_balance(addr, LAGUNA_NATIVE_CURRENCY).into()
 		}
 
-
-		fn block_hash(number: u32) -> H256 {
-			H256::from_slice(System::block_hash(number).as_ref())
-		}
-
 		fn storage_at(address: H160, index: U256) -> H256 {
 			EvmCompat::storage_at(&address, index.as_u32()).unwrap_or_default()
 		}
@@ -585,39 +609,56 @@ impl_runtime_apis! {
 			U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce))
 		}
 
-		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64) -> Result<(Balance, ExecReturnValue), DispatchError> {
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: U256, storage_limit: U256) -> Result<(Vec<u8>,  Balance), DispatchError> {
 
-			if target.is_some() && input.is_empty() {
-
-				let to = EvmCompat::to_mapped_account(target.unwrap_or_default());
-				let call = pallet_currencies::Call::<Runtime>::transfer{to, currency_id: LAGUNA_NATIVE_CURRENCY, balance: value};
-				let info = call.get_dispatch_info();
-				let len = call.encode().len();
-				let final_fee = TransactionPayment::compute_fee(len as _, &info, 0);
-
-				let rv = ExecReturnValue {
-					data: Bytes::from(vec![]),
-					flags: ReturnFlags::empty(),
-				};
-
-				Ok((final_fee, rv))
-
+			let action = if let Some(t) = target {
+				 TransactionAction::Call(t)
 			} else {
-				EvmCompat::try_call_or_create(from, target, value,  gas_limit, input)
+				TransactionAction::Create
+			};
+
+			let msg = TransactionMessage::EIP1559(EIP1559TransactionMessage {
+				action,
+				chain_id: Default::default(),
+				access_list: vec![],
+				gas_limit,
+				input: input.clone(),
+				max_priority_fee_per_gas: Default::default(),
+				max_fee_per_gas: storage_limit, // unconfigurable gas_price
+				nonce: Default::default(),
+				value: value.into()
+			});
+
+			let adapter = WEVMAdapter::<Runtime, ()>::new_from_raw(&msg);
+
+			match adapter.inner.action_request() {
+
+				ActionRequest::Create => {
+					let rv = adapter.try_create(&from.unwrap_or_default())?;
+					rv.result?;
+					let (code, _, _) = <(Vec<u8>, Vec<u8>, Vec<u8>)>::decode(&mut &input[..]).map_err(|_|
+					DispatchError::CannotLookup
+					)?;
+
+					Ok((code, rv.gas_consumed.into()))
+				}
+
+				ActionRequest::Call(_) => {
+					let rv = adapter.try_call(&from.unwrap_or_default())?;
+					let data = rv.result?;
+
+					Ok((data.data.to_vec(), rv.gas_consumed.into()))
+				}
+
+				ActionRequest::Transfer(target) => {
+					let to = EvmCompat::to_mapped_account(target);
+					let call = pallet_currencies::Call::<Runtime>::transfer{to, currency_id: LAGUNA_NATIVE_CURRENCY, balance: value};
+					let info = call.get_dispatch_info();
+					Ok((vec![], info.weight.into()))
+				}
+
 			}
-		}
 
-		fn author(digests: Vec<ConesensusDigest>) -> Option<H160>{
-
-
-			// find author using all consensus digests
-			AuraAccountAdapter::find_author(digests.iter().map(|(a, b)| {
-				(*a, &b[..])
-			})).map(|author| {
-				// return the first 20 bytes as h160
-				let buf: &[u8; 32] = author.as_ref();
-				H160::from_slice(&buf[0..20])
-			})
 		}
 
 		fn extrinsic_filter(

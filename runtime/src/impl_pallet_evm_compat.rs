@@ -16,7 +16,6 @@ use frame_support::sp_std::prelude::*;
 use frame_support::{
 	sp_runtime::traits::{AccountIdConversion, Convert, Keccak256},
 	traits::{ConstU64, FindAuthor},
-	weights::DispatchInfo,
 };
 use frame_system::Phase;
 use pallet_contracts::AddressGenerator;
@@ -143,8 +142,7 @@ pub fn get_receipts(block: Block) -> Vec<EIP658ReceiptData> {
 					Event::System(frame_system::Event::ExtrinsicSuccess { dispatch_info }) =>
 						Some((1_u8, dispatch_info.weight)),
 					Event::System(frame_system::Event::ExtrinsicFailed {
-						dispatch_error,
-						dispatch_info,
+						dispatch_info, ..
 					}) => Some((0_u8, dispatch_info.weight)),
 					_ => None,
 				})
@@ -166,7 +164,7 @@ pub fn map_block(block: Block) -> EthereumBlock {
 
 	let total_used = receipts
 		.iter()
-		.map(|v| v.used_gas)
+		.map(|r| r.used_gas)
 		.reduce(|acc, item| acc + item)
 		.unwrap_or_default();
 
@@ -253,8 +251,7 @@ pub fn transaction_statuses(block: Block) -> Vec<TransactionStatus> {
 
 			let contract_address = evts.iter().find_map(|e| {
 				if let Event::Contracts(pallet_contracts::Event::Instantiated {
-					deployer,
-					contract,
+					contract, ..
 				}) = e
 				{
 					let addr_slice: &[u8; 32] = contract.as_ref();

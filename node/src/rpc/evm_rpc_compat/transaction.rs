@@ -3,20 +3,19 @@
 //! helper functions for transaction details
 
 use super::{block_builder, internal_err};
+use ethereum::TransactionV2 as EthereumTransaction;
 use fc_rpc_core::types::{BlockNumber, BlockTransactions, Index, Log, Receipt, Transaction};
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
-use sc_service::InPoolTransaction;
 use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::H256;
 use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 use std::{marker::PhantomData, sync::Arc};
-
 pub struct TransactionApi<B, C, A: ChainApi> {
 	client: Arc<C>,
 	graph: Arc<Pool<A>>,
@@ -58,16 +57,8 @@ where
 		hash: H256,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		let builder =
-			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
-		let rich_block = builder
-			.to_rich_block(Some(BlockNumber::Hash { hash, require_canonical: false }), true)?;
-
-		if let BlockTransactions::Full(txs) = &rich_block.transactions {
-			Ok(txs.iter().find(|v| v.transaction_index == Some(index.value().into())).cloned())
-		} else {
-			Ok(None)
-		}
+		let bn = BlockNumber::Hash { hash, require_canonical: false };
+		self.get_transaction_by_block_number_and_index(bn, index).await
 	}
 
 	pub fn get_transaction_from_blocks(&self, hash: H256) -> Result<Option<Transaction>> {

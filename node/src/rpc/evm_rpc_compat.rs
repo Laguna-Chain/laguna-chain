@@ -142,15 +142,9 @@ where
 
 	/// Returns block author.
 	fn author(&self) -> Result<H160> {
-		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
-			.find_author(None)
-			.and_then(|v| {
-				v.ok_or_else(|| {
-					internal_err(
-						"fetch runtime author failed, unable to get backed address from digest",
-					)
-				})
-			})
+		block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone())
+			.reflect_block(Some(BlockNumber::Pending))
+			.map(|v| v.map(|b| b.header.beneficiary).unwrap_or_default())
 	}
 
 	/// Returns accounts list.
@@ -199,13 +193,13 @@ where
 
 	/// Returns the number of transactions in a block with given hash.
 	fn block_transaction_count_by_hash(&self, hash: H256) -> Result<Option<U256>> {
-		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
+		block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone())
 			.transaction_count_by_hash(hash)
 	}
 
 	/// Returns the number of transactions in a block with given block number.
 	fn block_transaction_count_by_number(&self, number: BlockNumber) -> Result<Option<U256>> {
-		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
+		block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone())
 			.transaction_count_by_number(number)
 	}
 
@@ -285,7 +279,7 @@ where
 
 	/// Returns balance of the given account.
 	fn balance(&self, address: H160, number: Option<BlockNumber>) -> Result<U256> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		let deferrable = deferrable_runtime_api::DeferrableApi::from_client(
 			self.client.clone(),
@@ -305,7 +299,7 @@ where
 
 	/// Returns content of the storage at given address.
 	fn storage_at(&self, address: H160, index: U256, number: Option<BlockNumber>) -> Result<H256> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		let deferrable = deferrable_runtime_api::DeferrableApi::from_client(
 			self.client.clone(),
@@ -325,7 +319,7 @@ where
 
 	/// Returns the number of transactions sent from given address at given time (block number).
 	fn transaction_count(&self, address: H160, number: Option<BlockNumber>) -> Result<U256> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		if let Some(id) = mapper.map_block(number) {
 			let api = self.client.runtime_api();
@@ -388,7 +382,7 @@ where
 
 	/// Returns current gas_price.
 	fn gas_price(&self) -> Result<U256> {
-		Ok(1_u32.into())
+		Err(internal_err("gas_price not supported"))
 	}
 
 	/// Introduced in EIP-1159 for getting information on the appropriate priority fee to use.
