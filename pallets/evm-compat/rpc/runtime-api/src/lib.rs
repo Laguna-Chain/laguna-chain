@@ -42,7 +42,7 @@ sp_api::decl_runtime_apis! {
 		fn account_nonce(addrss: H160) -> U256;
 
 		/// try-run a transaction, used to get the estimated cost or return value
-		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: U256, storage_limit: U256) ->  Result<(Vec<u8>, Balance), DispatchError>;
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: U256,  gas_price: U256) ->  Result<(Vec<u8>, Balance), DispatchError>;
 
 		/// return only extrinsics that contains valid eth-transaction
 		fn extrinsic_filter(

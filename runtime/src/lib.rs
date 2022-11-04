@@ -609,7 +609,7 @@ impl_runtime_apis! {
 			U256::from(UniqueSaturatedInto::<u128>::unique_saturated_into(nonce))
 		}
 
-		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: U256, storage_limit: U256) -> Result<(Vec<u8>,  Balance), DispatchError> {
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: U256, gas_price: U256) -> Result<(Vec<u8>,  Balance), DispatchError> {
 
 			let action = if let Some(t) = target {
 				 TransactionAction::Call(t)
@@ -624,7 +624,7 @@ impl_runtime_apis! {
 				gas_limit,
 				input: input.clone(),
 				max_priority_fee_per_gas: Default::default(),
-				max_fee_per_gas: storage_limit, // unconfigurable gas_price
+				max_fee_per_gas: gas_price, // unconfigurable gas_price
 				nonce: Default::default(),
 				value: value.into()
 			});

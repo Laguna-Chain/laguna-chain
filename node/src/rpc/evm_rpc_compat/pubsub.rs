@@ -269,6 +269,7 @@ impl SubscriptionResult {
 			} else {
 				None
 			};
+
 			for log in receipt_logs {
 				if self.add_log(block_hash.unwrap(), &log, &block, params) {
 					logs.push(Log {

@@ -66,26 +66,29 @@ where
 		let builder =
 			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
 
-		// starting from latest
+		// NOTICE: this is needed to avoid hanging query forever
+		// allow query up to 1024 past blocks
+		for _ in 0..1024 {
+			if let Ok(Some(header)) = self.client.header(latest) {
+				let bn = Some(BlockNumber::Hash { hash: header.hash(), require_canonical: false });
+				// prepare the mapped rich_block
+				let rich_block = builder.to_rich_block(bn, true)?;
 
-		// checking previous block until we can't find any block
-		while let Ok(Some(header)) = self.client.header(latest) {
-			let bn = Some(BlockNumber::Hash { hash: header.hash(), require_canonical: false });
-			// prepare the mapped rich_block
-			let rich_block = builder.to_rich_block(bn, true)?;
+				let txs = if let BlockTransactions::Full(txs) = &rich_block.transactions {
+					Some(txs.clone())
+				} else {
+					None
+				};
 
-			let txs = if let BlockTransactions::Full(txs) = &rich_block.transactions {
-				Some(txs.clone())
+				// find the tx with the same tx
+				if let Some(tx) = txs.and_then(|txs| txs.into_iter().find(|tx| tx.hash == hash)) {
+					return Ok(Some(tx))
+				} else {
+					// otherwise look into previous block
+					latest = BlockId::Hash(header.parent_hash);
+				}
 			} else {
-				None
-			};
-
-			// find the tx with the same tx
-			if let Some(tx) = txs.and_then(|txs| txs.into_iter().find(|tx| tx.hash == hash)) {
-				return Ok(Some(tx))
-			} else {
-				// otherwise look into previous block
-				latest = BlockId::Hash(header.parent_hash);
+				break
 			}
 		}
 

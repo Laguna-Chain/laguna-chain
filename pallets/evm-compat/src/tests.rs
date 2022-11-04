@@ -203,12 +203,8 @@ fn test_create() {
 
 			let selector = Bytes::from_str("0xed4b9d1b").unwrap();
 
-			let eth_raw_call = dummy_contract_create(
-				chain_id,
-				blob.clone(),
-				selector.to_vec(),
-				10_u128.pow(9).into(),
-			);
+			let eth_raw_call =
+				dummy_contract_create(chain_id, blob.clone(), selector.to_vec(), 1_u32.into());
 
 			let eth_signed =
 				LegacyTxMsg(eth_raw_call).sign_with_chain_id(&pair.seed().into(), chain_id);
@@ -390,7 +386,7 @@ fn test_try_call() {
 
 			let raw_tx = TransactionMessage::Legacy(LegacyTransactionMessage {
 				nonce: Default::default(),
-				gas_price: 10_u128.pow(9).into(),
+				gas_price: 1_u32.into(),
 				gas_limit: 10_u128.pow(12).into(),
 				action: TransactionAction::Create,
 				value: Default::default(),
@@ -416,7 +412,7 @@ fn test_try_call() {
 				input,
 				chain_id: ChainId::get(),
 				max_priority_fee_per_gas: Default::default(),
-				max_fee_per_gas: 10_u128.pow(9).into(),
+				max_fee_per_gas: 1_u32.into(),
 				gas_limit: 10_u128.pow(12).into(),
 				access_list: vec![],
 			});

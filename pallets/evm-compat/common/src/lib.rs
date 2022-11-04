@@ -34,19 +34,21 @@ impl From<EthereumTransaction> for TransactionMessage {
 
 /// map evm-fee-request into substrate-standards using pallet-contracts as backend
 pub trait EvmFeeRequest {
-	/// max allowed storage deposit reserve
-	fn storage_deposit(&self) -> U256;
+	/// unit price multiplier
+	fn gas_price(&self) -> U256;
+
+	/// max spendings allowed, including both transaction-fee and storage-deposit
+	fn max_allowed(&self) -> U256;
 
 	/// max weight allowed
-	fn max_allowed(&self) -> U256;
+	fn weight_limit(&self) -> U256;
 
 	/// tip added
 	fn tip(&self) -> U256;
 }
 
 impl EvmFeeRequest for TransactionMessage {
-	// since gas_price is non-configurable, we use gas_price, max_fee_per_gas to report
-	fn storage_deposit(&self) -> U256 {
+	fn gas_price(&self) -> U256 {
 		match self {
 			TransactionMessage::Legacy(LegacyTransactionMessage { gas_price, .. }) |
 			TransactionMessage::EIP2930(EIP2930TransactionMessage { gas_price, .. }) => *gas_price,
@@ -55,13 +57,8 @@ impl EvmFeeRequest for TransactionMessage {
 		}
 	}
 
-	// return gas_limit as max weight allowed
 	fn max_allowed(&self) -> U256 {
-		match self {
-			TransactionMessage::Legacy(LegacyTransactionMessage { gas_limit, .. }) |
-			TransactionMessage::EIP2930(EIP2930TransactionMessage { gas_limit, .. }) |
-			TransactionMessage::EIP1559(EIP1559TransactionMessage { gas_limit, .. }) => *gas_limit,
-		}
+		self.gas_price().saturating_mul(self.weight_limit())
 	}
 
 	// use max_priority_fee_per_gas as tip
@@ -76,6 +73,14 @@ impl EvmFeeRequest for TransactionMessage {
 			U256::zero()
 		}
 	}
+
+	fn weight_limit(&self) -> U256 {
+		match self {
+			TransactionMessage::Legacy(LegacyTransactionMessage { gas_limit, .. }) |
+			TransactionMessage::EIP2930(EIP2930TransactionMessage { gas_limit, .. }) |
+			TransactionMessage::EIP1559(EIP1559TransactionMessage { gas_limit, .. }) => *gas_limit,
+		}
+	}
 }
 
 impl EvmFeeRequest for EthereumTransaction {
@@ -87,8 +92,12 @@ impl EvmFeeRequest for EthereumTransaction {
 		TransactionMessage::from(self.clone()).tip()
 	}
 
-	fn storage_deposit(&self) -> U256 {
-		TransactionMessage::from(self.clone()).storage_deposit()
+	fn gas_price(&self) -> U256 {
+		TransactionMessage::from(self.clone()).gas_price()
+	}
+
+	fn weight_limit(&self) -> U256 {
+		TransactionMessage::from(self.clone()).weight_limit()
 	}
 }
 

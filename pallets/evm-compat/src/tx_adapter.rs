@@ -85,16 +85,16 @@ where
 		match self.inner.action_request() {
 			ActionRequest::Create => Runner::<T>::create(
 				source,
+				&self.inner.weight_limit(),
 				&self.inner.max_allowed(),
-				&self.inner.storage_deposit(),
 				&(self.inner.value().try_into().unwrap_or_default()),
 				&self.inner.input()[..],
 			),
 			ActionRequest::Call(target) => Runner::<T>::call(
 				source,
 				&target,
+				&self.inner.weight_limit(),
 				&self.inner.max_allowed(),
-				&self.inner.storage_deposit(),
 				&(self.inner.value().try_into().unwrap_or_default()),
 				&self.inner.input()[..],
 			),
@@ -124,8 +124,8 @@ where
 		Ok(Runner::<T>::try_call(
 			source,
 			&target,
+			&self.inner.weight_limit(),
 			&self.inner.max_allowed(),
-			&self.inner.storage_deposit(),
 			&(self.inner.value().try_into().unwrap_or_default()),
 			&self.inner.input(),
 		))
@@ -138,8 +138,8 @@ where
 	) -> Result<ContractInstantiateResult<AccountIdOf<T>, BalanceOf<T>>, DispatchError> {
 		Runner::<T>::try_create(
 			source,
+			&self.inner.weight_limit(),
 			&self.inner.max_allowed(),
-			&self.inner.storage_deposit(),
 			&(self.inner.value().try_into().unwrap_or_default()),
 			&self.inner.input()[..],
 		)
@@ -156,8 +156,8 @@ where
 {
 	pub fn create(
 		source: &H160,
+		max_weight: &U256,
 		max_allowed: &U256,
-		storage_deposit_limit: &U256,
 		value: &BalanceOf<T>,
 		input: &[u8],
 	) -> DispatchResultWithPostInfo {
@@ -168,14 +168,14 @@ where
 		// this origin cannot be controled from outside
 		let elevated_origin = Pallet::<T>::to_mapped_origin(*source);
 
-		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(*storage_deposit_limit)
+		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(*max_allowed)
 			.ok()
 			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
 
 		pallet_contracts::Pallet::<T>::instantiate_with_code(
 			elevated_origin,
 			*value,
-			(*max_allowed).saturated_into(),
+			(*max_weight).saturated_into(),
 			storage_deposit_limit,
 			code,
 			data,
@@ -185,8 +185,8 @@ where
 
 	pub fn try_create(
 		source: &H160,
+		max_weight: &U256,
 		max_allowed: &U256,
-		storage_deposit_limit: &U256,
 		value: &BalanceOf<T>,
 		input: &[u8],
 	) -> Result<ContractInstantiateResult<AccountIdOf<T>, BalanceOf<T>>, DispatchError> {
@@ -197,7 +197,7 @@ where
 		// this origin cannot be controled from outside
 		let from = Pallet::<T>::to_mapped_account(*source);
 
-		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(*storage_deposit_limit).ok();
+		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(*max_allowed).ok();
 
 		let upload_result = pallet_contracts::Pallet::<T>::bare_upload_code(
 			from.clone(),
@@ -210,7 +210,7 @@ where
 		let mut instantiate_result = pallet_contracts::Pallet::<T>::bare_instantiate(
 			from,
 			*value,
-			(*max_allowed).saturated_into(),
+			(*max_weight).saturated_into(),
 			storage_deposit_limit,
 			code,
 			data,
@@ -233,8 +233,8 @@ where
 	pub fn call(
 		source: &H160,
 		target: &H160,
+		max_weight: &U256,
 		max_allowed: &U256,
-		storage_deposit_limit: &U256,
 		value: &BalanceOf<T>,
 		input: &[u8],
 	) -> DispatchResultWithPostInfo {
@@ -247,7 +247,7 @@ where
 		let elevated_origin = Pallet::<T>::to_mapped_origin(*source);
 
 		// into compact form
-		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(*storage_deposit_limit)
+		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(*max_allowed)
 			.ok()
 			.map(Into::<<BalanceOf<T> as codec::HasCompact>::Type>::into);
 
@@ -255,7 +255,7 @@ where
 			elevated_origin,
 			contract_addr_source,
 			*value,
-			(*max_allowed).saturated_into(),
+			(*max_weight).saturated_into(),
 			storage_deposit_limit,
 			input.to_vec(),
 		)
@@ -264,8 +264,8 @@ where
 	pub fn try_call(
 		source: &H160,
 		target: &H160,
+		max_weight: &U256,
 		max_allowed: &U256,
-		storage_deposit_limit: &U256,
 		value: &BalanceOf<T>,
 		input: &[u8],
 	) -> ContractExecResult<BalanceOf<T>> {
@@ -274,13 +274,13 @@ where
 
 		let dest = Pallet::<T>::account_from_contract_addr(*target);
 
-		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(*storage_deposit_limit).ok();
+		let storage_deposit_limit = TryInto::<BalanceOf<T>>::try_into(*max_allowed).ok();
 
 		pallet_contracts::Pallet::<T>::bare_call(
 			from,
 			dest,
 			*value,
-			(*max_allowed).saturated_into(),
+			(*max_weight).saturated_into(),
 			storage_deposit_limit,
 			input.to_vec(),
 			true,
