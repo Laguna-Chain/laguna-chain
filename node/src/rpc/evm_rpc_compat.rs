@@ -382,7 +382,7 @@ where
 
 	/// Returns current gas_price.
 	fn gas_price(&self) -> Result<U256> {
-		Err(internal_err("gas_price not supported"))
+		Ok(U256::one())
 	}
 
 	/// Introduced in EIP-1159 for getting information on the appropriate priority fee to use.
