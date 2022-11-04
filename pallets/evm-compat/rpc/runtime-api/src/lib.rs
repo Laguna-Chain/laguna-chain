@@ -5,7 +5,8 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::Codec;
-use ethereum::TransactionV2;
+use ethereum::{BlockV2, EIP658ReceiptData, TransactionV2};
+use fp_rpc::TransactionStatus;
 use pallet_contracts_primitives::ExecReturnValue;
 use sp_core::{H160, H256, U256};
 use sp_runtime::{traits::Block as BlockT, DispatchError};
@@ -34,9 +35,6 @@ sp_api::decl_runtime_apis! {
 		/// balances of the h160 address, only returns accounts not contracts
 		fn balances(address: H160) -> U256;
 
-
-		fn block_hash(number: u32) -> H256;
-
 		/// read contract storage of a contract
 		fn storage_at(address: H160, index: U256,) -> H256;
 
@@ -44,14 +42,17 @@ sp_api::decl_runtime_apis! {
 		fn account_nonce(addrss: H160) -> U256;
 
 		/// try-run a transaction, used to get the estimated cost or return value
-		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: u64) ->  Result<(Balance, ExecReturnValue), DispatchError>;
-
-		/// get the block author, returns the first 20 bytes as h160 identifier
-		fn author(digest: Vec<ConesensusDigest>) -> Option<H160>;
+		fn call(from: Option<H160>, target: Option<H160>, value: Balance, input: Vec<u8>, gas_limit: U256,  gas_price: U256) ->  Result<(Vec<u8>, Balance), DispatchError>;
 
 		/// return only extrinsics that contains valid eth-transaction
 		fn extrinsic_filter(
 			xts: Vec<<Block as BlockT>::Extrinsic>,
 		) -> Vec<TransactionV2>;
+
+		fn map_block(block: Block) -> BlockV2;
+
+		fn transaction_status(block: Block) -> Vec<TransactionStatus>;
+
+		fn transaction_receipts(block: Block) -> Vec<EIP658ReceiptData>;
 	}
 }

@@ -21,7 +21,7 @@ use sc_network::{ExHashT, NetworkService};
 use sc_service::InPoolTransaction;
 use sc_transaction_pool::{ChainApi, Pool};
 use sc_transaction_pool_api::{TransactionPool, TransactionSource};
-use sp_api::{ApiExt, ProvideRuntimeApi};
+use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::{H160, H256, U256};
 use sp_runtime::{
@@ -35,6 +35,7 @@ pub mod executor;
 pub mod net_api;
 pub mod pending_api;
 pub mod pubsub;
+// pub mod pubsub;
 pub mod transaction;
 use block_mapper::BlockMapper;
 
@@ -141,15 +142,9 @@ where
 
 	/// Returns block author.
 	fn author(&self) -> Result<H160> {
-		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
-			.find_author(None)
-			.and_then(|v| {
-				v.ok_or_else(|| {
-					internal_err(
-						"fetch runtime author failed, unable to get backed address from digest",
-					)
-				})
-			})
+		block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone())
+			.reflect_block(Some(BlockNumber::Pending))
+			.map(|v| v.map(|b| b.header.beneficiary).unwrap_or_default())
 	}
 
 	/// Returns accounts list.
@@ -198,13 +193,13 @@ where
 
 	/// Returns the number of transactions in a block with given hash.
 	fn block_transaction_count_by_hash(&self, hash: H256) -> Result<Option<U256>> {
-		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
+		block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone())
 			.transaction_count_by_hash(hash)
 	}
 
 	/// Returns the number of transactions in a block with given block number.
 	fn block_transaction_count_by_number(&self, number: BlockNumber) -> Result<Option<U256>> {
-		block_mapper::BlockMapper::from_client(self.client.clone(), self.graph.clone())
+		block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone())
 			.transaction_count_by_number(number)
 	}
 
@@ -240,12 +235,8 @@ where
 	async fn transaction_by_hash(&self, hash: H256) -> Result<Option<Transaction>> {
 		let tx_api =
 			transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone());
-		let from_pool = tx_api.get_transaction_from_pool(hash)?;
 
-		match from_pool {
-			Some(_) => Ok(from_pool),
-			_ => tx_api.get_transaction_from_blocks(hash),
-		}
+		tx_api.get_transaction_from_blocks(hash)
 	}
 
 	/// Returns transaction at given block hash and index.
@@ -274,14 +265,11 @@ where
 	async fn transaction_receipt(&self, hash: H256) -> Result<Option<Receipt>> {
 		let tx_api =
 			transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone());
-		let from_pool = tx_api.get_transaction_from_pool(hash)?;
 
-		match from_pool {
-			Some(_) => Ok(from_pool.map(|v| transaction::get_transaction_receipt(v))),
-			_ => tx_api
-				.get_transaction_from_blocks(hash)?
-				.map(|o| Some(transaction::get_transaction_receipt(o)))
-				.ok_or_else(|| internal_err("fetch runtime transaction_receipt failed")),
+		if let Some(tx) = tx_api.get_transaction_from_blocks(hash)? {
+			tx_api.get_transaction_receipt(tx).map(Some)
+		} else {
+			Ok(None)
 		}
 	}
 
@@ -291,7 +279,7 @@ where
 
 	/// Returns balance of the given account.
 	fn balance(&self, address: H160, number: Option<BlockNumber>) -> Result<U256> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		let deferrable = deferrable_runtime_api::DeferrableApi::from_client(
 			self.client.clone(),
@@ -311,7 +299,7 @@ where
 
 	/// Returns content of the storage at given address.
 	fn storage_at(&self, address: H160, index: U256, number: Option<BlockNumber>) -> Result<H256> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		let deferrable = deferrable_runtime_api::DeferrableApi::from_client(
 			self.client.clone(),
@@ -331,7 +319,7 @@ where
 
 	/// Returns the number of transactions sent from given address at given time (block number).
 	fn transaction_count(&self, address: H160, number: Option<BlockNumber>) -> Result<U256> {
-		let mapper = BlockMapper::from_client(self.client.clone(), self.graph.clone());
+		let mapper = block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		if let Some(id) = mapper.map_block(number) {
 			let api = self.client.runtime_api();
@@ -394,7 +382,7 @@ where
 
 	/// Returns current gas_price.
 	fn gas_price(&self) -> Result<U256> {
-		Ok(1_u32.into())
+		Err(internal_err("gas_price not supported"))
 	}
 
 	/// Introduced in EIP-1159 for getting information on the appropriate priority fee to use.
@@ -482,47 +470,13 @@ where
 		let transaction_hash = transaction.hash();
 
 		let block_hash = BlockId::hash(self.client.info().best_hash);
-		let api_version = match self
-			.client
-			.runtime_api()
-			.api_version::<dyn ConvertTransactionRuntimeApi<B>>(&block_hash)
-		{
-			Ok(api_version) => api_version,
-			_ => return Err(internal_err("cannot access runtime api")),
-		};
 
-		let extrinsic = match api_version {
-			Some(2) =>
-				match self.client.runtime_api().convert_transaction(&block_hash, transaction) {
-					Ok(extrinsic) => extrinsic,
-					Err(_) => return Err(internal_err("cannot access runtime api")),
-				},
-			Some(1) => {
-				if let ethereum::TransactionV2::Legacy(legacy_transaction) = transaction {
-					// To be compatible with runtimes that do not support transactions v2
-					#[allow(deprecated)]
-					match self
-						.client
-						.runtime_api()
-						.convert_transaction_before_version_2(&block_hash, legacy_transaction)
-					{
-						Ok(extrinsic) => extrinsic,
-						Err(_) => return Err(internal_err("cannot access runtime api")),
-					}
-				} else {
-					return Err(internal_err("This runtime not support eth transactions v2"))
-				}
-			},
-			None =>
-				if let Some(ref convert_transaction) = self.convert_transaction {
-					convert_transaction.convert_transaction(transaction.clone())
-				} else {
-					return Err(internal_err(
-						"No TransactionConverter is provided and the runtime api ConvertTransactionRuntimeApi is not found"
-					));
-				},
-			_ => return Err(internal_err("ConvertTransactionRuntimeApi version not supported")),
-		};
+		// no need for version check, we support all v2 transactions
+		let extrinsic =
+			match self.client.runtime_api().convert_transaction(&block_hash, transaction) {
+				Ok(extrinsic) => extrinsic,
+				Err(_) => return Err(internal_err("cannot access runtime api")),
+			};
 
 		self.pool
 			.submit_one(&block_hash, TransactionSource::Local, extrinsic)

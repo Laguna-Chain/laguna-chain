@@ -25,6 +25,7 @@ pallet-contracts-primitives = {default-features = false, git = 'https://github.c
 pallet-contracts-rpc-runtime-api = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-randomness-collective-flip = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
 pallet-evm-compat = {path = "../pallets/evm-compat", default-features = false}
+pallet-evm-compat-common = {path = "../pallets/evm-compat/common", default-features = false}
 pallet-evm-compat-rpc-runtime-api = {path = "../pallets/evm-compat/rpc/runtime-api", default-features = false}
 
 
@@ -71,6 +72,7 @@ sp-version = {default-features = false, git = 'https://github.com/paritytech/sub
 fp-self-contained = {default-features = false, git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
 fp-rpc = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27" , default-features = false}
 pallet-evm = {default-features = false, git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
+
 ethereum = { version = "0.12.0", default-features = false, features = ["with-codec"] }
 
 
@@ -79,6 +81,7 @@ codec = {default-features = false, features = ['derive'], package = 'parity-scal
 hex-literal = {version = '0.3.1'}
 pallet-currencies-rpc-runtime-api = {version = "0.1.0", path = "../pallets/currencies/rpc/runtime-api", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
+rlp = { version = "0.5.2", default-features = false }
 
 # build dependency for the wasm runtime
 [build-dependencies]
@@ -124,6 +127,7 @@ std = [
   'pallet-currencies-rpc-runtime-api/std',
   'pallet-transaction-payment/std',
   'pallet-evm-compat/std',
+  'pallet-evm-compat-common/std',
   'pallet-evm-compat-rpc-runtime-api/std',
   'pallet-evm/std',
   'ethereum/std',
@@ -141,5 +145,5 @@ std = [
   'traits/std',
   'pallet-contract-asset-registry/std',
   'pallet-system-contract-deployer/std',
-  
+  "rlp/std"
 ]

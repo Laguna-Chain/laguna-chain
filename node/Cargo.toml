@@ -81,7 +81,6 @@ pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.gi
 ethereum = { version = "0.12.0", features = ["with-codec"] }
 rlp = "0.5"
 
-
 sc-network = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27" }
 hex = "0.4.3"
 ethereum-types = "0.13.1"

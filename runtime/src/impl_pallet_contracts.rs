@@ -1,8 +1,10 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use crate::{
-	constants::MICRO_LAGUNAS, impl_frame_system::BlockWeights,
-	impl_pallet_currencies::NativeCurrencyId, impl_pallet_evm_compat::EvmCompatAdderssGenerator,
+	constants::{MICRO_LAGUNAS, NANO_LAGUNAS},
+	impl_frame_system::BlockWeights,
+	impl_pallet_currencies::NativeCurrencyId,
+	impl_pallet_evm_compat::EvmCompatAdderssGenerator,
 	Call, Event, RandomnessCollectiveFlip, Runtime, Timestamp, TransactionPayment, Weight,
 };
 use frame_support::{parameter_types, traits::ConstU32};
@@ -17,8 +19,18 @@ use primitives::Balance;
 
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
 
+const fn item_price(items: u32) -> Balance {
+	// every item costs 1 MICRO_LAGUNAS
+	(items as Balance) * MICRO_LAGUNAS
+}
+
+const fn bytes_price(bytes: u32) -> Balance {
+	// every byte costs 1 NANO LAGUNAS
+	(bytes as Balance) * NANO_LAGUNAS
+}
+
 const fn deposit(items: u32, bytes: u32) -> Balance {
-	(items as Balance * MICRO_LAGUNAS + (bytes as Balance) * (5 * MICRO_LAGUNAS / 100)) / 10
+	item_price(items) + bytes_price(bytes)
 }
 
 parameter_types! {
@@ -52,13 +64,14 @@ impl pallet_contracts::Config for Runtime {
 	type WeightPrice = TransactionPayment;
 	type WeightInfo = pallet_contracts::weights::SubstrateWeight<Self>;
 	type ChainExtension = DemoExtension;
+
 	type Schedule = Schedule;
+
 	type CallStack = [pallet_contracts::Frame<Self>; 31];
 	type DeletionQueueDepth = DeletionQueueDepth;
 	type DeletionWeightLimit = DeletionWeightLimit;
 
 	type DepositPerByte = DepositPerByte;
-
 	type DepositPerItem = DepositPerItem;
 
 	type AddressGenerator = EvmCompatAdderssGenerator;

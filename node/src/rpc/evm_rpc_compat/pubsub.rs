@@ -3,14 +3,14 @@
 use super::{block_builder, transaction};
 use ethereum::{
 	BlockV2 as EthereumBlock, EIP1559Transaction, EIP2930Transaction, EIP658ReceiptData,
-	Header as EthereumHeader, LegacyTransaction, Log as EthLog, ReceiptV3, TransactionAction,
-	TransactionV2,
+	Header as EthereumHeader, LegacyTransaction, Log as EthLog, PartialHeader, ReceiptV3,
+	TransactionAction, TransactionV2,
 };
 use fc_rpc::EthPubSubApiServer;
 use futures::{FutureExt, StreamExt};
 use hex::FromHex;
 use jsonrpsee::SubscriptionSink;
-use laguna_runtime::opaque::Header;
+use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, BlockchainEvents, HeaderBackend};
@@ -34,6 +34,8 @@ use fc_rpc_core::types::{
 	RichBlock, Transaction,
 };
 
+use super::block_mapper::BlockMapper;
+
 pub struct PubSub<B: BlockT, C, A: ChainApi, H: ExHashT, P> {
 	client: Arc<C>,
 	network: Arc<NetworkService<B, H>>,
@@ -47,7 +49,7 @@ pub struct PubSub<B: BlockT, C, A: ChainApi, H: ExHashT, P> {
 impl<B, C, A, H: ExHashT, P> PubSub<B, C, A, H, P>
 where
 	A: ChainApi<Block = B> + Sync + Send + 'static,
-	B: BlockT<Hash = H256, Header = Header> + Send + Sync + 'static,
+	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic> + Send + Sync + 'static,
 	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
 	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + BlockchainEvents<B>,
@@ -83,8 +85,7 @@ where
 							}),
 							true,
 						)
-						.ok()
-						.map(convert_block);
+						.ok();
 
 					futures::future::ready(b)
 				} else {
@@ -108,32 +109,23 @@ where
 					let builder =
 						block_builder::BlockBuilder::from_client(client.clone(), graph.clone());
 
-					let out = builder
-						.to_rich_block(
-							Some(BlockNumber::Hash {
-								require_canonical: false,
-								hash: notification.hash,
-							}),
-							true,
-						)
-						.ok()
-						.and_then(|v| {
-							if let BlockTransactions::Full(txs) = &v.transactions {
-								let rs = txs
-									.iter()
-									.map(|tx| transaction::get_transaction_receipt(tx.clone()))
-									.map(convert_receipt)
-									.collect::<Vec<_>>();
-								Some((convert_block(v), rs))
-							} else {
-								None
-							}
-						});
+					let bn = Some(BlockNumber::Hash {
+						require_canonical: false,
+						hash: notification.hash,
+					});
+					let mapper = BlockMapper::<B, C, A>::from_client(client.clone());
 
-					futures::future::ready(out)
-				} else {
-					futures::future::ready(None)
+					if let (Ok(Some(b)), Ok(rs)) = (
+						mapper.reflect_block(bn),
+						builder
+							.receipts(bn)
+							.map(|rs| rs.into_iter().map(ReceiptV3::EIP1559).collect::<Vec<_>>()),
+					) {
+						return futures::future::ready(Some((b, rs)))
+					}
 				}
+
+				futures::future::ready(None)
 			})
 			.flat_map(move |(block, receipts)| {
 				futures::stream::iter(SubscriptionResult::new().logs(
@@ -180,7 +172,6 @@ where
 	async fn syncing(
 		mut sink: SubscriptionSink,
 		client: Arc<C>,
-		pool: Arc<P>,
 		network: Arc<NetworkService<B, H>>,
 		starting_block: u64,
 	) {
@@ -205,6 +196,7 @@ where
 					.ok()
 					.and_then(|res| res.best_seen_block)
 					.map(UniqueSaturatedInto::<u64>::unique_saturated_into);
+
 				// Best imported block.
 				let current_block =
 					UniqueSaturatedInto::<u64>::unique_saturated_into(client.info().best_number);
@@ -244,136 +236,18 @@ where
 	}
 }
 
-fn convert_block(block: RichBlock) -> EthereumBlock {
-	let EthHeader {
-		parent_hash,
-		state_root,
-		transactions_root,
-		receipts_root,
-		logs_bloom,
-		difficulty,
-		number,
-		gas_limit,
-		gas_used,
-		timestamp,
-		extra_data,
-		nonce,
-		uncles_hash,
-		author,
-		..
-	} = block.header.clone();
-
-	let txs = if let BlockTransactions::Full(txs) = &block.transactions {
-		txs.clone()
-			.into_iter()
-			.map(|tx| {
-				let Transaction {
-					nonce,
-					to,
-					max_fee_per_gas,
-					max_priority_fee_per_gas,
-					value,
-					input,
-					chain_id,
-					access_list,
-					v,
-					r,
-					s,
-					..
-				} = tx;
-
-				let action = to.map(TransactionAction::Call).unwrap_or(TransactionAction::Create);
-
-				TransactionV2::EIP1559(EIP1559Transaction {
-					chain_id: chain_id.map(|o| o.as_u64()).unwrap_or_default(),
-					nonce,
-					max_priority_fee_per_gas: max_priority_fee_per_gas.unwrap_or_default(),
-					max_fee_per_gas: max_fee_per_gas.unwrap_or_default(),
-					gas_limit,
-					action,
-					value,
-					input: input.into_vec(),
-					access_list: access_list.unwrap_or_default(),
-					odd_y_parity: v == 1_u32.into(),
-					r: H256(<[u8; 32]>::from_hex(format!("{r:032x}")).unwrap_or_default()),
-					s: H256(<[u8; 32]>::from_hex(format!("{s:032x}")).unwrap_or_default()),
-				})
-			})
-			.collect()
-	} else {
-		vec![]
-	};
-
-	EthereumBlock {
-		header: EthereumHeader {
-			parent_hash,
-			ommers_hash: uncles_hash,
-			beneficiary: author,
-			state_root,
-			transactions_root,
-			receipts_root,
-			logs_bloom,
-			difficulty,
-			number: number.unwrap_or_default(),
-			gas_limit,
-			gas_used,
-			timestamp: timestamp.as_u64(),
-			extra_data: extra_data.into_vec(),
-			mix_hash: Default::default(),
-			nonce: nonce.unwrap_or_default(),
-		},
-		ommers: vec![],
-		transactions: txs,
-	};
-
-	todo!()
-}
-
-fn convert_receipt(receipt: Receipt) -> ReceiptV3 {
-	ReceiptV3::EIP1559(EIP658ReceiptData {
-		status_code: receipt
-			.status_code
-			.map(|o| -> u8 { o.as_u32().saturated_into() })
-			.unwrap_or_default(),
-		logs: receipt
-			.logs
-			.into_iter()
-			.map(|o| EthLog { address: o.address, topics: o.topics, data: o.data.into_vec() })
-			.collect(),
-		logs_bloom: receipt.logs_bloom,
-		used_gas: receipt.gas_used.unwrap_or_default(),
-	})
-}
-
 struct SubscriptionResult {}
 impl SubscriptionResult {
 	pub fn new() -> Self {
 		SubscriptionResult {}
 	}
-	pub fn new_heads(&self, block: EthereumBlock) -> PubSubResult {
+	pub fn new_heads(&self, block: RichBlock) -> PubSubResult {
 		PubSubResult::Header(Box::new(Rich {
-			inner: EthHeader {
-				hash: Some(H256::from(keccak_256(&rlp::encode(&block.header)))),
-				parent_hash: block.header.parent_hash,
-				uncles_hash: block.header.ommers_hash,
-				author: block.header.beneficiary,
-				miner: block.header.beneficiary,
-				state_root: block.header.state_root,
-				transactions_root: block.header.transactions_root,
-				receipts_root: block.header.receipts_root,
-				number: Some(block.header.number),
-				gas_used: block.header.gas_used,
-				gas_limit: block.header.gas_limit,
-				extra_data: Bytes(block.header.extra_data.clone()),
-				logs_bloom: block.header.logs_bloom,
-				timestamp: U256::from(block.header.timestamp),
-				difficulty: block.header.difficulty,
-				nonce: Some(block.header.nonce),
-				size: Some(U256::from(rlp::encode(&block.header).len() as u32)),
-			},
+			inner: block.header.clone(),
 			extra_info: BTreeMap::new(),
 		}))
 	}
+
 	pub fn logs(
 		&self,
 		block: EthereumBlock,
@@ -395,6 +269,7 @@ impl SubscriptionResult {
 			} else {
 				None
 			};
+
 			for log in receipt_logs {
 				if self.add_log(block_hash.unwrap(), &log, &block, params) {
 					logs.push(Log {
@@ -453,7 +328,7 @@ impl SubscriptionResult {
 impl<B, C, A, H: ExHashT, P> EthPubSubApiServer for PubSub<B, C, A, H, P>
 where
 	A: ChainApi<Block = B> + Sync + Send + 'static,
-	B: BlockT<Hash = H256, Header = Header> + Send + Sync + 'static,
+	B: BlockT<Hash = H256, Header = Header, Extrinsic = UncheckedExtrinsic> + Send + Sync + 'static,
 	C: ProvideRuntimeApi<B> + Sync + Send + 'static,
 	C::Api: EvmCompatApiRuntimeApi<B, AccountId, Balance>,
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,
@@ -492,12 +367,12 @@ where
 					Self::new_pending(sink, client, pool).await;
 				},
 				Kind::Syncing => {
-					Self::syncing(sink, client, pool, network, starting_block).await;
+					Self::syncing(sink, client, network, starting_block).await;
 				},
 			}
 		};
 
 		self.subscriptions
-			.spawn("frontier-rpc-subscription", Some("rpc"), fut.map(drop).boxed());
+			.spawn("frontier-rpc-subscription", Some("rpc"), Box::pin(fut));
 	}
 }
