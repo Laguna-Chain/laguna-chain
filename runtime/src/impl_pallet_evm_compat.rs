@@ -1,5 +1,3 @@
-use core::f32::consts::E;
-
 use crate::{
 	impl_pallet_authorship::AuraAccountAdapter, Block, Call, Event, EvmCompat, Runtime, System,
 	Timestamp,
