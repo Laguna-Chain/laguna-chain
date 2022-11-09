@@ -485,3 +485,57 @@ where
 			.map_err(|err| internal_err(format::Geth::pool_error(err)))
 	}
 }
+use fc_rpc_core::{
+	types::{Filter, FilterChanges, Log},
+	EthFilterApiServer,
+};
+
+#[async_trait]
+impl<B, C, H: ExHashT, CT, BE, P, A> EthFilterApiServer for EthApi<B, C, H, CT, BE, P, A>
+where
+	B: BlockT<Hash = H256, Extrinsic = UncheckedExtrinsic, Header = Header> + Send + Sync + 'static,
+	C: ProvideRuntimeApi<B> + StorageProvider<B, BE>,
+	BE: Backend<B> + 'static,
+	BE::State: StateBackend<BlakeTwo256>,
+	C::Api: ConvertTransactionRuntimeApi<B>,
+	C::Api: EvmCompatRuntimeApi<B, AccountId, Balance>,
+	C::Api: BlockBuilderApi<B>,
+	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
+	CT: fp_rpc::ConvertTransaction<<B as BlockT>::Extrinsic> + Send + Sync + 'static,
+	P: TransactionPool<Block = B> + Send + Sync + 'static,
+	A: ChainApi<Block = B> + 'static,
+{
+	fn new_filter(&self, filter: Filter) -> Result<U256> {
+		Err(internal_err("eth_new_filter not supported"))
+	}
+
+	/// Returns id of new block filter.
+	fn new_block_filter(&self) -> Result<U256> {
+		Err(internal_err("eth_new_block_filter not supported"))
+	}
+
+	/// Returns id of new block filter.
+	fn new_pending_transaction_filter(&self) -> Result<U256> {
+		Err(internal_err("Method not available."))
+	}
+
+	/// Returns filter changes since last poll.
+	async fn filter_changes(&self, index: Index) -> Result<FilterChanges> {
+		Err(internal_err("eth_filter_changes not supported"))
+	}
+
+	/// Returns all logs matching given filter (in a range 'from' - 'to').
+	async fn filter_logs(&self, index: Index) -> Result<Vec<Log>> {
+		Err(internal_err("eth_filter_logs not supported"))
+	}
+
+	fn uninstall_filter(&self, index: Index) -> Result<bool> {
+		Err(internal_err("eth_uninstall_filter not supported"))
+	}
+
+	async fn logs(&self, filter: Filter) -> Result<Vec<Log>> {
+		block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone())
+			.logs(filter)
+			.await
+	}
+}

@@ -5,12 +5,12 @@ use super::{deferrable_runtime_api::DeferrableApi, BlockMapper};
 use crate::rpc::evm_rpc_compat::internal_err;
 use codec::Encode;
 use ethereum::{BlockV2 as EthereumBlock, EIP658ReceiptData, PartialHeader, TransactionV2};
-use fc_rpc::public_key;
+use fc_rpc::{public_key, EthFilterApiServer};
 use fc_rpc_core::types::{
 	Block, BlockNumber, BlockTransactions, Bytes, Header as EthHeader, Rich, RichBlock, Transaction,
 };
 use fp_rpc::TransactionStatus;
-use jsonrpsee::core::RpcResult as Result;
+use jsonrpsee::core::{async_trait, RpcResult as Result};
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};

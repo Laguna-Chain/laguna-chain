@@ -24,7 +24,7 @@ use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use substrate_frame_rpc_system::{AccountNonceApi, System, SystemApiServer};
 
 mod evm_rpc_compat;
-use fc_rpc_core::{EthApiServer, NetApiServer};
+use fc_rpc_core::{EthApiServer, EthFilterApiServer, NetApiServer};
 use sc_network::NetworkService;
 pub struct FullDeps<Client, P, A: ChainApi> {
 	pub client: Arc<Client>,
@@ -103,17 +103,26 @@ where
 		.into_rpc(),
 	)?;
 
-	module.merge(
-		evm_rpc_compat::EthApi::new(
-			client.clone(),
-			pool.clone(),
-			graph.clone(),
-			network.clone(),
-			is_authority,
-			Some(laguna_runtime::TransactionConverter),
-		)
-		.into_rpc(),
-	)?;
+	let eth = evm_rpc_compat::EthApi::new(
+		client.clone(),
+		pool.clone(),
+		graph.clone(),
+		network.clone(),
+		is_authority,
+		Some(laguna_runtime::TransactionConverter),
+	);
+
+	let filter = evm_rpc_compat::EthApi::new(
+		client.clone(),
+		pool.clone(),
+		graph.clone(),
+		network.clone(),
+		is_authority,
+		Some(laguna_runtime::TransactionConverter),
+	);
+
+	module.merge(EthFilterApiServer::into_rpc(filter))?;
+	module.merge(EthApiServer::into_rpc(eth))?;
 
 	Ok(module)
 }
