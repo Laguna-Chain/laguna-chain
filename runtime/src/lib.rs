@@ -9,12 +9,12 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use codec::{Decode, Encode};
 use constants::LAGUNA_NATIVE_CURRENCY;
-use ethereum::{EIP1559TransactionMessage, TransactionAction};
+use ethereum::{EIP1559TransactionMessage, ReceiptV3 as EthereumReceipt, TransactionAction};
 use fp_rpc::TransactionStatus;
 use frame_support::{
 	self, construct_runtime,
-	dispatch::{DispatchErrorWithPostInfo, Dispatchable, GetDispatchInfo},
-	pallet_prelude::{DispatchResult, TransactionValidityError},
+	dispatch::{Dispatchable, GetDispatchInfo},
+	pallet_prelude::TransactionValidityError,
 	sp_runtime::{
 		app_crypto::sp_core::OpaqueMetadata,
 		create_runtime_str, generic, impl_opaque_keys,
@@ -27,14 +27,15 @@ use frame_support::{
 	},
 	traits::Get,
 };
+use pallet_evm_compat::mapper::MapBlock;
 use pallet_evm_compat_common::{ActionRequest, EvmActionRequest};
 
+use crate::impl_pallet_evm_compat::BlockMapper;
 use impl_frame_system::BlockHashCount;
-use pallet_contracts_primitives::{ExecReturnValue, ReturnFlags};
 use pallet_evm_compat_common::TransactionMessage;
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
-use sp_core::{Bytes, H160, H256, U256};
+use sp_core::{H160, H256, U256};
 use sp_runtime::{traits::UniqueSaturatedInto, DispatchError};
 
 use ethereum::{BlockV2 as EthereumBlock, EIP658ReceiptData, TransactionV2};
@@ -675,15 +676,15 @@ impl_runtime_apis! {
 
 
 		fn map_block(block: Block) -> EthereumBlock {
-			impl_pallet_evm_compat::map_block(block)
+			BlockMapper::get_block(&block)
 		}
 
 		fn transaction_status(block: Block) -> Vec<TransactionStatus>{
-			impl_pallet_evm_compat::transaction_statuses(block)
+			BlockMapper::transaction_status(&block).into_iter().map(|(a, _)| a).collect()
 		}
 
-		fn transaction_receipts(block: Block) -> Vec<EIP658ReceiptData>{
-			impl_pallet_evm_compat::get_receipts(block)
+		fn transaction_receipts(block: Block) -> Vec<EthereumReceipt>{
+			BlockMapper::transaction_status(&block).into_iter().map(|(_, b)| b).collect()
 		}
 	}
 

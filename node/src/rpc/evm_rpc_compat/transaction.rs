@@ -3,14 +3,14 @@
 //! helper functions for transaction details
 
 use super::{block_builder, internal_err};
-use ethereum::TransactionV2 as EthereumTransaction;
+use ethereum::ReceiptV3 as EthereumReceipt;
 use fc_rpc_core::types::{BlockNumber, BlockTransactions, Index, Log, Receipt, Transaction};
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
-use sc_transaction_pool::{ChainApi, Pool};
+use sc_transaction_pool::ChainApi;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::H256;
@@ -18,7 +18,6 @@ use sp_runtime::{generic::BlockId, traits::Block as BlockT};
 use std::{marker::PhantomData, sync::Arc};
 pub struct TransactionApi<B, C, A: ChainApi> {
 	client: Arc<C>,
-	graph: Arc<Pool<A>>,
 	_marker: PhantomData<(B, A)>,
 }
 
@@ -31,8 +30,8 @@ where
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,
 	C::Api: BlockBuilderApi<B> + 'static + Sync + Send,
 {
-	pub fn from_client(client: Arc<C>, graph: Arc<Pool<A>>) -> TransactionApi<B, C, A> {
-		TransactionApi { client, graph, _marker: PhantomData }
+	pub fn from_client(client: Arc<C>) -> TransactionApi<B, C, A> {
+		TransactionApi { client, _marker: PhantomData }
 	}
 
 	pub async fn get_transaction_by_block_number_and_index(
@@ -40,8 +39,7 @@ where
 		number: BlockNumber,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		let builder =
-			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+		let builder = block_builder::BlockBuilder::<B, C, A>::from_client(self.client.clone());
 
 		let rich_block = builder.to_rich_block(Some(number), true)?;
 
@@ -63,8 +61,7 @@ where
 
 	pub fn get_transaction_from_blocks(&self, hash: H256) -> Result<Option<Transaction>> {
 		let mut latest = BlockId::<B>::hash(self.client.info().best_hash);
-		let builder =
-			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+		let builder = block_builder::BlockBuilder::<B, C, A>::from_client(self.client.clone());
 
 		// NOTICE: this is needed to avoid hanging query forever
 		// allow query up to 1024 past blocks
@@ -96,8 +93,7 @@ where
 	}
 
 	pub fn get_transaction_receipt(&self, tx: Transaction) -> Result<Receipt> {
-		let builder =
-			block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone());
+		let builder = block_builder::BlockBuilder::<B, C, A>::from_client(self.client.clone());
 
 		let receipts = builder.receipts(Some(BlockNumber::Hash {
 			hash: tx.block_hash.unwrap_or_default(),
@@ -110,18 +106,6 @@ where
 		}))?;
 
 		// all consumed before the current transaction_index
-		let cumulated = receipts
-			.iter()
-			.enumerate()
-			.filter_map(|(idx, item)| {
-				if tx.transaction_index.map(|v| v < idx.into()).unwrap_or(false) {
-					Some(item.used_gas)
-				} else {
-					None
-				}
-			})
-			.reduce(|acc, item| acc + item)
-			.unwrap_or_default();
 
 		receipts
 			.iter()
@@ -134,37 +118,45 @@ where
 				}
 				None
 			})
-			.map(|(r, s)| Receipt {
-				transaction_hash: Some(tx.hash),
-				transaction_index: tx.transaction_index,
-				block_hash: tx.block_hash,
-				from: Some(tx.from),
-				to: tx.to,
-				block_number: tx.block_number,
-				cumulative_gas_used: cumulated,
-				gas_used: Some(r.used_gas),
-				contract_address: tx.creates,
-				logs: s
-					.logs
-					.iter()
-					.map(|l| Log {
-						address: l.address,
-						transaction_hash: Some(tx.hash),
-						transaction_index: tx.transaction_index,
-						block_hash: tx.block_hash,
-						block_number: tx.block_number,
-						data: l.data.clone().into(),
-						log_index: None,
-						topics: l.topics.clone(),
-						transaction_log_index: None,
-						removed: false,
-					})
-					.collect(),
-				state_root: None,
-				logs_bloom: s.logs_bloom,
-				status_code: Some(r.status_code.into()),
-				effective_gas_price: Default::default(),
-				transaction_type: tx.transaction_type.unwrap_or_default(),
+			.map(|(r, s)| {
+				let status_code = match r {
+					EthereumReceipt::Legacy(t) |
+					EthereumReceipt::EIP1559(t) |
+					EthereumReceipt::EIP2930(t) => t.status_code,
+				};
+
+				Receipt {
+					transaction_hash: Some(tx.hash),
+					transaction_index: tx.transaction_index,
+					block_hash: tx.block_hash,
+					from: Some(tx.from),
+					to: tx.to,
+					block_number: tx.block_number,
+					cumulative_gas_used: Default::default(),
+					gas_used: None,
+					contract_address: tx.creates,
+					logs: s
+						.logs
+						.iter()
+						.map(|l| Log {
+							address: l.address,
+							transaction_hash: Some(tx.hash),
+							transaction_index: tx.transaction_index,
+							block_hash: tx.block_hash,
+							block_number: tx.block_number,
+							data: l.data.clone().into(),
+							log_index: None,
+							topics: l.topics.clone(),
+							transaction_log_index: None,
+							removed: false,
+						})
+						.collect(),
+					state_root: None,
+					logs_bloom: s.logs_bloom,
+					status_code: Some(status_code.into()),
+					effective_gas_price: Default::default(),
+					transaction_type: tx.transaction_type.unwrap_or_default(),
+				}
 			})
 			.ok_or_else(|| internal_err("fetch tx receipt failed"))
 	}

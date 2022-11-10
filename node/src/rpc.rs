@@ -103,26 +103,29 @@ where
 		.into_rpc(),
 	)?;
 
-	let eth = evm_rpc_compat::EthApi::new(
-		client.clone(),
-		pool.clone(),
-		graph.clone(),
-		network.clone(),
-		is_authority,
-		Some(laguna_runtime::TransactionConverter),
-	);
+	module.merge(
+		evm_rpc_compat::EthApi::new(
+			client.clone(),
+			pool.clone(),
+			graph.clone(),
+			network.clone(),
+			is_authority,
+			Some(laguna_runtime::TransactionConverter),
+		)
+		.into_rpc(),
+	)?;
 
-	let filter = evm_rpc_compat::EthApi::new(
-		client.clone(),
-		pool.clone(),
-		graph.clone(),
-		network.clone(),
-		is_authority,
-		Some(laguna_runtime::TransactionConverter),
-	);
-
-	module.merge(EthFilterApiServer::into_rpc(filter))?;
-	module.merge(EthApiServer::into_rpc(eth))?;
+	module.merge(
+		evm_rpc_compat::EthFilterApi::new(
+			client.clone(),
+			pool.clone(),
+			graph.clone(),
+			network.clone(),
+			is_authority,
+			Some(laguna_runtime::TransactionConverter),
+		)
+		.into_rpc(),
+	)?;
 
 	Ok(module)
 }

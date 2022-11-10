@@ -1,14 +1,10 @@
 //! pubsub helper
 
-use super::{block_builder, transaction};
-use ethereum::{
-	BlockV2 as EthereumBlock, EIP1559Transaction, EIP2930Transaction, EIP658ReceiptData,
-	Header as EthereumHeader, LegacyTransaction, Log as EthLog, PartialHeader, ReceiptV3,
-	TransactionAction, TransactionV2,
-};
+use super::block_builder;
+use ethereum::{BlockV2 as EthereumBlock, ReceiptV3};
 use fc_rpc::EthPubSubApiServer;
-use futures::{FutureExt, StreamExt};
-use hex::FromHex;
+use futures::StreamExt;
+
 use jsonrpsee::SubscriptionSink;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
@@ -24,14 +20,12 @@ use sp_core::{keccak_256, H256, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
-	SaturatedConversion,
 };
 use std::{collections::BTreeMap, marker::PhantomData, sync::Arc};
 
 use fc_rpc_core::types::{
 	pubsub::{Kind, Params, PubSubSyncStatus, Result as PubSubResult, SyncStatusMetadata},
-	BlockNumber, BlockTransactions, Bytes, FilteredParams, Header as EthHeader, Log, Receipt, Rich,
-	RichBlock, Transaction,
+	BlockNumber, Bytes, FilteredParams, Log, Rich, RichBlock,
 };
 
 use super::block_mapper::BlockMapper;
@@ -69,13 +63,13 @@ where
 		PubSub { client, graph, network, starting_block, pool, _marker: PhantomData, subscriptions }
 	}
 
-	async fn new_heads(mut sink: SubscriptionSink, client: Arc<C>, graph: Arc<Pool<A>>) {
+	async fn new_heads(mut sink: SubscriptionSink, client: Arc<C>) {
 		let stream = client
 			.import_notification_stream()
 			.filter_map(move |notification| {
 				if notification.is_new_best {
 					let builder =
-						block_builder::BlockBuilder::from_client(client.clone(), graph.clone());
+						block_builder::BlockBuilder::<B, C, A>::from_client(client.clone());
 
 					let b = builder
 						.to_rich_block(
@@ -96,18 +90,13 @@ where
 		sink.pipe_from_stream(stream).await;
 	}
 
-	async fn logs(
-		mut sink: SubscriptionSink,
-		filtered_params: FilteredParams,
-		client: Arc<C>,
-		graph: Arc<Pool<A>>,
-	) {
+	async fn logs(mut sink: SubscriptionSink, filtered_params: FilteredParams, client: Arc<C>) {
 		let stream = client
 			.import_notification_stream()
 			.filter_map(move |notification| {
 				if notification.is_new_best {
 					let builder =
-						block_builder::BlockBuilder::from_client(client.clone(), graph.clone());
+						block_builder::BlockBuilder::<B, C, A>::from_client(client.clone());
 
 					let bn = Some(BlockNumber::Hash {
 						require_canonical: false,
@@ -117,9 +106,7 @@ where
 
 					if let (Ok(Some(b)), Ok(rs)) = (
 						mapper.reflect_block(bn),
-						builder
-							.receipts(bn)
-							.map(|rs| rs.into_iter().map(ReceiptV3::EIP1559).collect::<Vec<_>>()),
+						builder.receipts(bn).map(|rs| rs.into_iter().collect::<Vec<_>>()),
 					) {
 						return futures::future::ready(Some((b, rs)))
 					}
@@ -237,6 +224,7 @@ where
 }
 
 struct SubscriptionResult {}
+
 impl SubscriptionResult {
 	pub fn new() -> Self {
 		SubscriptionResult {}
@@ -350,7 +338,6 @@ where
 		};
 
 		let client = self.client.clone();
-		let graph = self.graph.clone();
 		let network = self.network.clone();
 		let pool = self.pool.clone();
 		let starting_block = self.starting_block;
@@ -358,10 +345,10 @@ where
 		let fut = async move {
 			match kind {
 				Kind::NewHeads => {
-					Self::new_heads(sink, client, graph).await;
+					Self::new_heads(sink, client).await;
 				},
 				Kind::Logs => {
-					Self::logs(sink, filtered_params, client, graph).await;
+					Self::logs(sink, filtered_params, client).await;
 				},
 				Kind::NewPendingTransactions => {
 					Self::new_pending(sink, client, pool).await;

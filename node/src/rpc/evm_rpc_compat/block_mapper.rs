@@ -1,3 +1,9 @@
+//! ethereum style block mapping
+//!
+//! this module is supposed to used by node via runtime-api
+//! we do not store ethereum and receipt as it is on chain.
+//! we rely on the indexer to store and provide information to client that expects those information
+
 use super::internal_err;
 use ethereum::BlockV2 as EthereumBlock;
 use fc_rpc_core::types::BlockNumber;
@@ -9,7 +15,7 @@ use sc_client_api::{BlockBackend, HeaderBackend};
 use sc_transaction_pool::ChainApi;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
-use sp_core::{H160, H256, U256};
+use sp_core::{H256, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
@@ -67,10 +73,6 @@ where
 			Ok(None) => Ok(None),
 			Err(e) => Err(internal_err(format!("fetch substrate block failed: {:?}", e))),
 		}
-	}
-
-	pub fn find_author(&self, number: Option<BlockNumber>) -> Result<Option<H160>> {
-		self.reflect_block(number).map(|v| v.map(|b| b.header.beneficiary))
 	}
 
 	pub fn transaction_count_by_hash(&self, hash: H256) -> Result<Option<U256>> {
@@ -142,7 +144,7 @@ where
 		// this is run in dumping mode, not other filers params will be taken seriously
 
 		match (block_hash, from_block, to_block) {
-			(Some(hash), _, _) => return self.block_logs(hash).await,
+			(Some(hash), _, _) => self.block_logs(hash).await,
 			(None, _, _) => {
 				let best_number = self.client.info().best_number;
 

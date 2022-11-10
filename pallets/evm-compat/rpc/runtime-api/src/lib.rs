@@ -5,9 +5,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::Codec;
-use ethereum::{BlockV2, EIP658ReceiptData, TransactionV2};
+use ethereum::{
+	BlockV2 as EthereumBlock, ReceiptV3 as EthereumReceipt, TransactionV2 as EthereumTransaction,
+};
 use fp_rpc::TransactionStatus;
-use pallet_contracts_primitives::ExecReturnValue;
+
 use sp_core::{H160, H256, U256};
 use sp_runtime::{traits::Block as BlockT, DispatchError};
 use sp_std::vec::Vec;
@@ -47,12 +49,12 @@ sp_api::decl_runtime_apis! {
 		/// return only extrinsics that contains valid eth-transaction
 		fn extrinsic_filter(
 			xts: Vec<<Block as BlockT>::Extrinsic>,
-		) -> Vec<TransactionV2>;
+		) -> Vec<EthereumTransaction>;
 
-		fn map_block(block: Block) -> BlockV2;
+		fn map_block(block: Block) -> EthereumBlock;
 
 		fn transaction_status(block: Block) -> Vec<TransactionStatus>;
 
-		fn transaction_receipts(block: Block) -> Vec<EIP658ReceiptData>;
+		fn transaction_receipts(block: Block) -> Vec<EthereumReceipt>;
 	}
 }
