@@ -13,7 +13,7 @@ use sc_client_api::{BlockBackend, HeaderBackend};
 use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
-use sp_core::{ H256, U256};
+use sp_core::{H256, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
