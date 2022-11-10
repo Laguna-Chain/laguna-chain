@@ -4,6 +4,7 @@ use ethereum::{
 	LegacyTransaction, Log, PartialHeader, ReceiptV3 as EthereumReceipt,
 	TransactionV2 as EthereumTransaction,
 };
+use ethereum_types::{Bloom, BloomInput};
 use fp_rpc::TransactionStatus;
 use frame_system::{EventRecord, Phase};
 
@@ -145,6 +146,21 @@ where
 		let receipts =
 			Self::transaction_status(block).into_iter().map(|(_, b)| b).collect::<Vec<_>>();
 
+		let mut logs_bloom = Bloom::default();
+
+		for logs in receipts.iter().map(|r| match r {
+			EthereumReceipt::Legacy(t) |
+			EthereumReceipt::EIP1559(t) |
+			EthereumReceipt::EIP2930(t) => &t.logs,
+		}) {
+			for log in logs {
+				logs_bloom.accrue(BloomInput::Raw(&log.address[..]));
+				for topic in &log.topics {
+					logs_bloom.accrue(BloomInput::Raw(&topic[..]));
+				}
+			}
+		}
+
 		let digests = header
 			.digest()
 			.logs()
@@ -162,7 +178,7 @@ where
 			beneficiary,
 			state_root: *header.state_root(),
 			receipts_root,
-			logs_bloom: [0_u8; 256].into(),
+			logs_bloom,
 			difficulty: Default::default(),
 			number: (*header.number()).into(),
 			gas_limit: Default::default(),

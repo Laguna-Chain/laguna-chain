@@ -4854,6 +4854,7 @@ name = "pallet-evm-compat"
 version = "0.1.0"
 dependencies = [
  "ethereum",
+ "ethereum-types",
  "fp-ethereum",
  "fp-rpc",
  "fp-self-contained",
