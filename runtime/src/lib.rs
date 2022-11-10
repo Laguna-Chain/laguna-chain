@@ -659,7 +659,6 @@ impl_runtime_apis! {
 				}
 
 			}
-
 		}
 
 		fn extrinsic_filter(
@@ -671,9 +670,7 @@ impl_runtime_apis! {
 					None
 				}
 			}).collect()
-
 		}
-
 
 		fn map_block(block: Block) -> EthereumBlock {
 			BlockMapper::get_block(&block)
