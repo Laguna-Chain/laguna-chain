@@ -21,10 +21,6 @@ use sp_runtime::{
 	traits::{Block as BlockT, UniqueSaturatedInto},
 };
 
-use fc_rpc_core::types::{Filter, Log};
-
-use tokio::time::{timeout, Duration};
-
 use std::{marker::PhantomData, sync::Arc};
 
 /// ethereum request block time to a greater extend, we can ansower some of them locally, lets try!

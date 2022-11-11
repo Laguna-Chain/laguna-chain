@@ -12,7 +12,7 @@ use codec::Encode;
 use frame_support::{
 	sp_runtime::traits::{Block as BlockT, Header as HeaderT, UniqueSaturatedInto},
 	sp_std::prelude::*,
-	traits::FindAuthor,
+	traits::{FindAuthor, Time},
 };
 use sp_core::{H160, H256, U256};
 
@@ -20,6 +20,7 @@ pub trait BlockFilter {
 	type Runtime: frame_system::Config;
 	type Block: BlockT;
 
+	/// tag only call with EthTransactions
 	fn filter_extrinsic(ext: &<Self::Block as BlockT>::Extrinsic) -> Option<EthereumTransaction>;
 
 	fn result_event(
@@ -57,9 +58,10 @@ where
 	T: Config<Hash = H256>,
 	<Block as BlockT>::Header: HeaderT<Hash = H256>,
 	<<Block as BlockT>::Header as HeaderT>::Number: Into<U256>,
-	<T as pallet_timestamp::Config>::Moment: UniqueSaturatedInto<u64>,
+	<Self::Time as Time>::Moment: UniqueSaturatedInto<u64>,
 {
 	type FindAuthor: FindAuthor<H160>;
+	type Time: Time;
 
 	fn transaction_status(block: &Block) -> Vec<(TransactionStatus, EthereumReceipt)> {
 		let records = frame_system::Pallet::<T>::read_events_no_consensus();
@@ -94,6 +96,14 @@ where
 					})
 					.collect::<Vec<_>>();
 
+				let mut logs_bloom: Bloom = Bloom::default();
+				for log in logs.iter() {
+					logs_bloom.accrue(BloomInput::Raw(&log.address[..]));
+					for topic in &log.topics {
+						logs_bloom.accrue(BloomInput::Raw(&topic[..]));
+					}
+				}
+
 				let to = match tx {
 					EthereumTransaction::Legacy(LegacyTransaction {
 						action: ethereum::TransactionAction::Call(to),
@@ -125,7 +135,7 @@ where
 					to,
 					contract_address,
 					logs,
-					logs_bloom: [0_u8; 256].into(),
+					logs_bloom,
 				};
 
 				let receipt = EthereumReceipt::EIP1559(EIP1559ReceiptData {
@@ -183,7 +193,7 @@ where
 			number: (*header.number()).into(),
 			gas_limit: Default::default(),
 			gas_used: Default::default(),
-			timestamp: pallet_timestamp::Pallet::<T>::now().unique_saturated_into(),
+			timestamp: Self::Time::now().unique_saturated_into(),
 			extra_data: header.digest().encode(),
 			mix_hash: Default::default(),
 			nonce: Default::default(),

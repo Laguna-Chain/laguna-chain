@@ -73,10 +73,7 @@ where
 			}
 		}
 
-		let pubkey = match public_key(ethereum_transaction) {
-			Ok(p) => Some(p),
-			Err(_e) => None,
-		};
+		let pubkey = public_key(ethereum_transaction).ok();
 
 		let block_hash = block.as_ref().and_then(|block| {
 			self.client
@@ -245,7 +242,7 @@ where
 				uncles: vec![],
 				transactions: tx_statuses,
 				size: Some(U256::from(rlp::encode(&block).len() as u32)),
-				base_fee_per_gas: None,
+				base_fee_per_gas: Some(Default::default()),
 			},
 			extra_info: BTreeMap::new(),
 		};

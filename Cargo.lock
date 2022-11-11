@@ -4898,12 +4898,14 @@ dependencies = [
 name = "pallet-evm-compat-rpc"
 version = "0.1.0"
 dependencies = [
+ "fc-rpc-core",
  "jsonrpsee",
  "pallet-contracts-primitives",
  "pallet-contracts-rpc",
  "pallet-evm-compat-rpc-runtime-api",
  "parity-scale-codec",
  "primitives",
+ "sc-client-api",
  "serde",
  "sp-api",
  "sp-blockchain",

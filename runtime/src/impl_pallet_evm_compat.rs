@@ -1,10 +1,10 @@
 use crate::{impl_pallet_authorship::AuraAccountAdapter, Event, Runtime};
 use ethereum::TransactionV2 as EthereumTransaction;
 
-use frame_support::sp_std::prelude::*;
-
+use crate::Timestamp;
 use frame_support::{
 	sp_runtime::traits::{AccountIdConversion, Convert, Keccak256},
+	sp_std::prelude::*,
 	traits::{ConstU64, FindAuthor},
 };
 use pallet_contracts::AddressGenerator;
@@ -184,4 +184,5 @@ impl FindAuthor<H160> for EvmAuthorFinder {
 
 impl MapBlock<crate::Block, crate::Runtime> for BlockMapper {
 	type FindAuthor = EvmAuthorFinder;
+	type Time = Timestamp;
 }

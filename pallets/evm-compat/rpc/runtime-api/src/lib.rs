@@ -26,6 +26,10 @@ sp_api::decl_runtime_apis! {
 		/// find the mapped AccoundId
 		fn source_to_mapped_address(source: H160) -> AccountId;
 
+		fn source_to_contract_address(source: H160) -> AccountId;
+
+		fn check_source_is_contract(source: H160) -> bool;
+
 		/// check whether this h160 has a backing proxy behind it
 		fn source_is_backed_by(source: H160) -> Option<AccountId>;
 

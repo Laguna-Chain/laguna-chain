@@ -108,15 +108,16 @@ where
 						mapper.reflect_block(bn),
 						builder.receipts(bn).map(|rs| rs.into_iter().collect::<Vec<_>>()),
 					) {
-						return futures::future::ready(Some((b, rs)))
+						return futures::future::ready(Some((b, rs, notification.hash)))
 					}
 				}
 
 				futures::future::ready(None)
 			})
-			.flat_map(move |(block, receipts)| {
+			.flat_map(move |(block, receipts, block_hash)| {
 				futures::stream::iter(SubscriptionResult::new().logs(
 					block,
+					block_hash,
 					receipts,
 					&filtered_params,
 				))
@@ -136,6 +137,7 @@ where
 
 					let xts = vec![xt.data().clone()];
 
+					// we only care about eth pending's
 					let pendings = api.extrinsic_filter(&best_block, xts).ok();
 
 					let res = match pendings {
@@ -239,42 +241,43 @@ impl SubscriptionResult {
 	pub fn logs(
 		&self,
 		block: EthereumBlock,
+		block_hash: H256,
 		receipts: Vec<ethereum::ReceiptV3>,
 		params: &FilteredParams,
 	) -> Vec<Log> {
-		let block_hash = Some(H256::from(keccak_256(&rlp::encode(&block.header))));
+		let block_number = block.header.number;
+
 		let mut logs: Vec<Log> = vec![];
 		let mut log_index: u32 = 0;
+
 		for (receipt_index, receipt) in receipts.into_iter().enumerate() {
 			let receipt_logs = match receipt {
 				ethereum::ReceiptV3::Legacy(d) |
 				ethereum::ReceiptV3::EIP2930(d) |
 				ethereum::ReceiptV3::EIP1559(d) => d.logs,
 			};
-			let mut transaction_log_index: u32 = 0;
 			let transaction_hash: Option<H256> = if receipt_logs.is_empty() {
 				Some(block.transactions[receipt_index as usize].hash())
 			} else {
 				None
 			};
 
-			for log in receipt_logs {
-				if self.add_log(block_hash.unwrap(), &log, &block, params) {
+			for (tx_log_idx, log) in receipt_logs.into_iter().enumerate() {
+				if self.add_log(block_hash, &log, &block, params) {
 					logs.push(Log {
 						address: log.address,
 						topics: log.topics,
 						data: Bytes(log.data),
-						block_hash,
+						block_hash: Some(block_hash),
 						block_number: Some(block.header.number),
 						transaction_hash,
 						transaction_index: Some(U256::from(receipt_index)),
 						log_index: Some(U256::from(log_index)),
-						transaction_log_index: Some(U256::from(transaction_log_index)),
+						transaction_log_index: Some(U256::from(tx_log_idx)),
 						removed: false,
 					});
 				}
 				log_index += 1;
-				transaction_log_index += 1;
 			}
 		}
 		logs
