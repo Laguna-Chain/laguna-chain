@@ -115,17 +115,5 @@ where
 		.into_rpc(),
 	)?;
 
-	module.merge(
-		evm_rpc_compat::EthFilterApi::new(
-			client.clone(),
-			pool.clone(),
-			graph.clone(),
-			network.clone(),
-			is_authority,
-			Some(laguna_runtime::TransactionConverter),
-		)
-		.into_rpc(),
-	)?;
-
 	Ok(module)
 }

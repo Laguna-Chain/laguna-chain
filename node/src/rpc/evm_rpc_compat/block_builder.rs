@@ -3,9 +3,7 @@
 //! helper functions to respond to queries expecting eth_style richblock
 use super::BlockMapper;
 use crate::rpc::evm_rpc_compat::internal_err;
-use ethereum::{
-	BlockV2 as EthereumBlock, EIP658ReceiptData, ReceiptV3 as EthereumReceipt, TransactionV2,
-};
+use ethereum::{BlockV2 as EthereumBlock, ReceiptV3 as EthereumReceipt, TransactionV2};
 use fc_rpc::public_key;
 use fc_rpc_core::types::{
 	Block, BlockNumber, BlockTransactions, Bytes, Header as EthHeader, Rich, RichBlock, Transaction,
