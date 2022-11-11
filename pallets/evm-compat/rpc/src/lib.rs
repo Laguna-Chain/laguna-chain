@@ -11,6 +11,7 @@ use jsonrpsee::{core::RpcResult, proc_macros::rpc, types::error::CallError};
 
 pub use pallet_evm_compat_rpc_runtime_api::EvmCompatApi as EvmCompatApiRuntimeApi;
 
+use sc_client_api::client::BlockBackend;
 use sp_api::{BlockId, ProvideRuntimeApi};
 use sp_blockchain::HeaderBackend;
 use sp_runtime::{
@@ -18,7 +19,9 @@ use sp_runtime::{
 	traits::{Block as BlockT, Header as HeaderT},
 };
 
-#[rpc(client, server)]
+use fc_rpc_core::types::{Receipt, RichBlock};
+
+#[rpc(server)]
 pub trait EvmCompatApi<BlockHash, BlockNumber, AccountId, Balance> {
 	#[method(name = "evmCompat_source_to_mapped_address")]
 	fn source_to_mapped_address(&self, source: H160, at: Option<BlockHash>)
@@ -37,6 +40,19 @@ pub trait EvmCompatApi<BlockHash, BlockNumber, AccountId, Balance> {
 		contract_addr: AccountId,
 		at: Option<BlockHash>,
 	) -> RpcResult<Option<H160>>;
+}
+
+/// export ethereum compatible data structures, later consumed by either the relayer, indexer or
+/// client from substrate block
+#[rpc(server)]
+pub trait EvmCompatExportApi<BlockHash> {
+	/// export mapped ethereum rich block from substrate block
+	#[method(name = "evmCompat_fetch_block")]
+	fn fetch_block(&self, at: Option<BlockHash>) -> RpcResult<RichBlock>;
+
+	/// export mapped ethereum transaction receipts from substrate block
+	#[method(name = "evmCompat_fetch_receipts")]
+	fn fetch_receipts(&self, at: Option<BlockHash>) -> RpcResult<Vec<Receipt>>;
 }
 
 pub struct EvmCompatRpc<Client, Block> {
@@ -59,7 +75,12 @@ impl<Client, Block, AccountId, Balance>
 	> for EvmCompatRpc<Client, Block>
 where
 	Block: BlockT,
-	Client: Send + Sync + 'static + ProvideRuntimeApi<Block> + HeaderBackend<Block>,
+	Client: Send
+		+ Sync
+		+ 'static
+		+ ProvideRuntimeApi<Block>
+		+ HeaderBackend<Block>
+		+ BlockBackend<Block>,
 	AccountId: Codec,
 	Balance: Codec + Copy + Default,
 	Client::Api: EvmCompatApiRuntimeApi<Block, AccountId, Balance>,

@@ -1,10 +1,9 @@
 //! block helper
 //!
 //! helper functions to respond to queries expecting eth_style richblock
-use super::{deferrable_runtime_api::DeferrableApi, BlockMapper};
+use super::BlockMapper;
 use crate::rpc::evm_rpc_compat::internal_err;
-use codec::Encode;
-use ethereum::{BlockV2 as EthereumBlock, EIP658ReceiptData, PartialHeader, TransactionV2};
+use ethereum::{BlockV2 as EthereumBlock, ReceiptV3 as EthereumReceipt, TransactionV2};
 use fc_rpc::public_key;
 use fc_rpc_core::types::{
 	Block, BlockNumber, BlockTransactions, Bytes, Header as EthHeader, Rich, RichBlock, Transaction,
@@ -15,19 +14,19 @@ use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
-use sc_transaction_pool::{ChainApi, Pool};
-use sp_api::{HeaderT, ProvideRuntimeApi};
+use sc_transaction_pool::ChainApi;
+use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
 use sp_core::{keccak_256, H160, H256, H512, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
 };
+
 use std::{collections::BTreeMap, marker::PhantomData, sync::Arc};
 
 pub struct BlockBuilder<B, C, A: ChainApi> {
 	client: Arc<C>,
-	graph: Arc<Pool<A>>,
 	_marker: PhantomData<(B, A)>,
 }
 
@@ -41,8 +40,8 @@ where
 	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B>,
 	C::Api: BlockBuilderApi<B>,
 {
-	pub fn from_client(client: Arc<C>, graph: Arc<Pool<A>>) -> Self {
-		Self { client, graph, _marker: Default::default() }
+	pub fn from_client(client: Arc<C>) -> Self {
+		Self { client, _marker: Default::default() }
 	}
 
 	// derived from frontier, turns payload tx into block tx format
@@ -74,10 +73,7 @@ where
 			}
 		}
 
-		let pubkey = match public_key(ethereum_transaction) {
-			Ok(p) => Some(p),
-			Err(_e) => None,
-		};
+		let pubkey = public_key(ethereum_transaction).ok();
 
 		let block_hash = block.as_ref().and_then(|block| {
 			self.client
@@ -146,7 +142,7 @@ where
 			.map_err(|e| internal_err(format!("unable to get statuses {e:?}")))
 	}
 
-	pub(crate) fn receipts(&self, number: Option<BlockNumber>) -> Result<Vec<EIP658ReceiptData>> {
+	pub(crate) fn receipts(&self, number: Option<BlockNumber>) -> Result<Vec<EthereumReceipt>> {
 		let mapper = BlockMapper::<B, C, A>::from_client(self.client.clone());
 
 		let id = mapper.map_block(number);
@@ -246,7 +242,7 @@ where
 				uncles: vec![],
 				transactions: tx_statuses,
 				size: Some(U256::from(rlp::encode(&block).len() as u32)),
-				base_fee_per_gas: None,
+				base_fee_per_gas: Some(Default::default()),
 			},
 			extra_info: BTreeMap::new(),
 		};

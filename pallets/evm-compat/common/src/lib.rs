@@ -117,8 +117,8 @@ impl EvmActionRequest for TransactionMessage {
 			TransactionMessage::EIP1559(EIP1559TransactionMessage { action, input, .. }) => {
 				match (action, input) {
 					(TransactionAction::Create, _) => ActionRequest::Create,
-					(TransactionAction::Call(target), tx) =>
-						if tx.is_empty() {
+					(TransactionAction::Call(target), input) =>
+						if input.is_empty() {
 							ActionRequest::Transfer(*target)
 						} else {
 							ActionRequest::Call(*target)

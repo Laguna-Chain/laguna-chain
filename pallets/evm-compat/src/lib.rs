@@ -26,12 +26,12 @@ use frame_support::{
 	sp_std::{fmt::Debug, prelude::*},
 	traits::Currency,
 };
+
 use frame_system::pallet_prelude::*;
 use orml_traits::arithmetic::Zero;
 use scale_info::prelude::format;
 
 use codec::Decode;
-use pallet_contracts_primitives::Code;
 use pallet_evm::AddressMapping;
 
 use frame_support::traits::tokens::ExistenceRequirement;
@@ -41,7 +41,7 @@ use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
 type CurrencyOf<T> = <T as pallet_contracts::Config>::Currency;
 use frame_support::weights::WeightToFee;
-use pallet_contracts_primitives::ExecReturnValue;
+pub mod mapper;
 
 pub(crate) mod self_contained;
 pub mod tx_adapter;

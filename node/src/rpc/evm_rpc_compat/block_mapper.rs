@@ -1,4 +1,10 @@
-use super::{block_builder::BlockBuilder, deferrable_runtime_api::DeferrableApi, internal_err};
+//! ethereum style block mapping
+//!
+//! this module is supposed to used by node via runtime-api
+//! we do not store ethereum and receipt as it is on chain.
+//! we rely on the indexer to store and provide information to client that expects those information
+
+use super::internal_err;
 use ethereum::BlockV2 as EthereumBlock;
 use fc_rpc_core::types::BlockNumber;
 use jsonrpsee::core::RpcResult as Result;
@@ -6,17 +12,17 @@ use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
 use primitives::{AccountId, Balance};
 use sc_client_api::{BlockBackend, HeaderBackend};
-use sc_service::InPoolTransaction;
-use sc_transaction_pool::{ChainApi, Pool};
-use sp_api::{HeaderT, ProvideRuntimeApi};
+use sc_transaction_pool::ChainApi;
+use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
-use sp_core::{H160, H256, U256};
+use sp_core::{H256, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
-	Digest,
 };
+
 use std::{marker::PhantomData, sync::Arc};
+
 /// ethereum request block time to a greater extend, we can ansower some of them locally, lets try!
 pub struct BlockMapper<B, C, A: ChainApi> {
 	client: Arc<C>,
@@ -63,10 +69,6 @@ where
 			Ok(None) => Ok(None),
 			Err(e) => Err(internal_err(format!("fetch substrate block failed: {:?}", e))),
 		}
-	}
-
-	pub fn find_author(&self, number: Option<BlockNumber>) -> Result<Option<H160>> {
-		self.reflect_block(number).map(|v| v.map(|b| b.header.beneficiary))
 	}
 
 	pub fn transaction_count_by_hash(&self, hash: H256) -> Result<Option<U256>> {

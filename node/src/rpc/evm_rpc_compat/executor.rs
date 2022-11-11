@@ -5,7 +5,6 @@
 use super::{deferrable_runtime_api::DeferrableApi, BlockMapper};
 use crate::rpc::evm_rpc_compat::internal_err;
 use fc_rpc_core::types::{BlockNumber, Bytes, CallRequest};
-use fp_ethereum::TransactionData;
 use jsonrpsee::core::RpcResult as Result;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
@@ -14,7 +13,7 @@ use sc_client_api::{BlockBackend, HeaderBackend};
 use sc_transaction_pool::{ChainApi, Pool};
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder as BlockBuilderApi;
-use sp_core::{H160, H256, U256};
+use sp_core::{H256, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
@@ -77,10 +76,5 @@ where
 
 			Ok((w.into(), Bytes::from(rv.to_vec())))
 		})
-	}
-
-	pub fn get_code_at(&self, address: H160, number: Option<BlockNumber>) -> Result<Bytes> {
-		// self.client.state();
-		todo!()
 	}
 }

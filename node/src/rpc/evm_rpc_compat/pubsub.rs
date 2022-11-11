@@ -1,14 +1,10 @@
 //! pubsub helper
 
-use super::{block_builder, transaction};
-use ethereum::{
-	BlockV2 as EthereumBlock, EIP1559Transaction, EIP2930Transaction, EIP658ReceiptData,
-	Header as EthereumHeader, LegacyTransaction, Log as EthLog, PartialHeader, ReceiptV3,
-	TransactionAction, TransactionV2,
-};
+use super::block_builder;
+use ethereum::{BlockV2 as EthereumBlock, ReceiptV3};
 use fc_rpc::EthPubSubApiServer;
-use futures::{FutureExt, StreamExt};
-use hex::FromHex;
+use futures::StreamExt;
+
 use jsonrpsee::SubscriptionSink;
 use laguna_runtime::opaque::{Header, UncheckedExtrinsic};
 use pallet_evm_compat_rpc::EvmCompatApiRuntimeApi;
@@ -24,14 +20,12 @@ use sp_core::{keccak_256, H256, U256};
 use sp_runtime::{
 	generic::BlockId,
 	traits::{Block as BlockT, UniqueSaturatedInto},
-	SaturatedConversion,
 };
 use std::{collections::BTreeMap, marker::PhantomData, sync::Arc};
 
 use fc_rpc_core::types::{
 	pubsub::{Kind, Params, PubSubSyncStatus, Result as PubSubResult, SyncStatusMetadata},
-	BlockNumber, BlockTransactions, Bytes, FilteredParams, Header as EthHeader, Log, Receipt, Rich,
-	RichBlock, Transaction,
+	BlockNumber, Bytes, FilteredParams, Log, Rich, RichBlock,
 };
 
 use super::block_mapper::BlockMapper;
@@ -69,13 +63,13 @@ where
 		PubSub { client, graph, network, starting_block, pool, _marker: PhantomData, subscriptions }
 	}
 
-	async fn new_heads(mut sink: SubscriptionSink, client: Arc<C>, graph: Arc<Pool<A>>) {
+	async fn new_heads(mut sink: SubscriptionSink, client: Arc<C>) {
 		let stream = client
 			.import_notification_stream()
 			.filter_map(move |notification| {
 				if notification.is_new_best {
 					let builder =
-						block_builder::BlockBuilder::from_client(client.clone(), graph.clone());
+						block_builder::BlockBuilder::<B, C, A>::from_client(client.clone());
 
 					let b = builder
 						.to_rich_block(
@@ -96,18 +90,13 @@ where
 		sink.pipe_from_stream(stream).await;
 	}
 
-	async fn logs(
-		mut sink: SubscriptionSink,
-		filtered_params: FilteredParams,
-		client: Arc<C>,
-		graph: Arc<Pool<A>>,
-	) {
+	async fn logs(mut sink: SubscriptionSink, filtered_params: FilteredParams, client: Arc<C>) {
 		let stream = client
 			.import_notification_stream()
 			.filter_map(move |notification| {
 				if notification.is_new_best {
 					let builder =
-						block_builder::BlockBuilder::from_client(client.clone(), graph.clone());
+						block_builder::BlockBuilder::<B, C, A>::from_client(client.clone());
 
 					let bn = Some(BlockNumber::Hash {
 						require_canonical: false,
@@ -117,19 +106,18 @@ where
 
 					if let (Ok(Some(b)), Ok(rs)) = (
 						mapper.reflect_block(bn),
-						builder
-							.receipts(bn)
-							.map(|rs| rs.into_iter().map(ReceiptV3::EIP1559).collect::<Vec<_>>()),
+						builder.receipts(bn).map(|rs| rs.into_iter().collect::<Vec<_>>()),
 					) {
-						return futures::future::ready(Some((b, rs)))
+						return futures::future::ready(Some((b, rs, notification.hash)))
 					}
 				}
 
 				futures::future::ready(None)
 			})
-			.flat_map(move |(block, receipts)| {
+			.flat_map(move |(block, receipts, block_hash)| {
 				futures::stream::iter(SubscriptionResult::new().logs(
 					block,
+					block_hash,
 					receipts,
 					&filtered_params,
 				))
@@ -149,6 +137,7 @@ where
 
 					let xts = vec![xt.data().clone()];
 
+					// we only care about eth pending's
 					let pendings = api.extrinsic_filter(&best_block, xts).ok();
 
 					let res = match pendings {
@@ -237,6 +226,7 @@ where
 }
 
 struct SubscriptionResult {}
+
 impl SubscriptionResult {
 	pub fn new() -> Self {
 		SubscriptionResult {}
@@ -251,42 +241,43 @@ impl SubscriptionResult {
 	pub fn logs(
 		&self,
 		block: EthereumBlock,
+		block_hash: H256,
 		receipts: Vec<ethereum::ReceiptV3>,
 		params: &FilteredParams,
 	) -> Vec<Log> {
-		let block_hash = Some(H256::from(keccak_256(&rlp::encode(&block.header))));
+		let block_number = block.header.number;
+
 		let mut logs: Vec<Log> = vec![];
 		let mut log_index: u32 = 0;
+
 		for (receipt_index, receipt) in receipts.into_iter().enumerate() {
 			let receipt_logs = match receipt {
 				ethereum::ReceiptV3::Legacy(d) |
 				ethereum::ReceiptV3::EIP2930(d) |
 				ethereum::ReceiptV3::EIP1559(d) => d.logs,
 			};
-			let mut transaction_log_index: u32 = 0;
 			let transaction_hash: Option<H256> = if receipt_logs.is_empty() {
 				Some(block.transactions[receipt_index as usize].hash())
 			} else {
 				None
 			};
 
-			for log in receipt_logs {
-				if self.add_log(block_hash.unwrap(), &log, &block, params) {
+			for (tx_log_idx, log) in receipt_logs.into_iter().enumerate() {
+				if self.add_log(block_hash, &log, &block, params) {
 					logs.push(Log {
 						address: log.address,
 						topics: log.topics,
 						data: Bytes(log.data),
-						block_hash,
+						block_hash: Some(block_hash),
 						block_number: Some(block.header.number),
 						transaction_hash,
 						transaction_index: Some(U256::from(receipt_index)),
 						log_index: Some(U256::from(log_index)),
-						transaction_log_index: Some(U256::from(transaction_log_index)),
+						transaction_log_index: Some(U256::from(tx_log_idx)),
 						removed: false,
 					});
 				}
 				log_index += 1;
-				transaction_log_index += 1;
 			}
 		}
 		logs
@@ -350,7 +341,6 @@ where
 		};
 
 		let client = self.client.clone();
-		let graph = self.graph.clone();
 		let network = self.network.clone();
 		let pool = self.pool.clone();
 		let starting_block = self.starting_block;
@@ -358,10 +348,10 @@ where
 		let fut = async move {
 			match kind {
 				Kind::NewHeads => {
-					Self::new_heads(sink, client, graph).await;
+					Self::new_heads(sink, client).await;
 				},
 				Kind::Logs => {
-					Self::logs(sink, filtered_params, client, graph).await;
+					Self::logs(sink, filtered_params, client).await;
 				},
 				Kind::NewPendingTransactions => {
 					Self::new_pending(sink, client, pool).await;

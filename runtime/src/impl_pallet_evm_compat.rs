@@ -1,25 +1,15 @@
-use core::f32::consts::E;
+use crate::{impl_pallet_authorship::AuraAccountAdapter, Event, Runtime};
+use ethereum::TransactionV2 as EthereumTransaction;
 
-use crate::{
-	impl_pallet_authorship::AuraAccountAdapter, Block, Call, Event, EvmCompat, Runtime, System,
-	Timestamp,
-};
-use codec::Encode;
-use ethereum::{
-	BlockV2 as EthereumBlock, EIP1559Transaction, EIP2930Transaction, EIP658ReceiptData,
-	LegacyTransaction, Log, PartialHeader, TransactionV2 as EthereumTransaction,
-};
-
-use fp_rpc::TransactionStatus;
-use frame_support::sp_std::prelude::*;
-
+use crate::Timestamp;
 use frame_support::{
 	sp_runtime::traits::{AccountIdConversion, Convert, Keccak256},
+	sp_std::prelude::*,
 	traits::{ConstU64, FindAuthor},
 };
-use frame_system::Phase;
 use pallet_contracts::AddressGenerator;
 use pallet_evm::{AddressMapping, HashedAddressMapping};
+use pallet_evm_compat::mapper::{BlockFilter, MapBlock};
 use pallet_system_contract_deployer::CustomAddressGenerator;
 use primitives::{AccountId, Balance};
 use sp_core::{H160, U256};
@@ -95,183 +85,104 @@ impl AddressGenerator<Runtime> for EvmCompatAdderssGenerator {
 	}
 }
 
-pub fn tx_bundles(block: Block) -> Vec<(EthereumTransaction, Vec<Event>)> {
-	let all_records = System::read_events_no_consensus();
+pub struct BlockMapper;
 
-	block
-		.extrinsics
-		.into_iter()
-		.enumerate()
-		.filter_map(|(idx, xt)| {
-			if let Call::EvmCompat(pallet_evm_compat::Call::transact { t }) = xt.0.function {
-				Some((idx, t))
-			} else {
-				None
-			}
-		})
-		.map(|(idx, tx)| {
-			let evts = all_records
-				.iter()
-				.filter_map(|record| {
-					if let Phase::ApplyExtrinsic(i) = record.phase {
-						if i == idx as u32 {
-							return Some(record.event.clone())
-						}
-					}
+impl BlockFilter for BlockMapper {
+	type Runtime = crate::Runtime;
+	type Block = crate::Block;
 
-					None
-				})
-				.collect::<Vec<_>>();
+	fn filter_extrinsic(
+		ext: &<Self::Block as sp_api::BlockT>::Extrinsic,
+	) -> Option<EthereumTransaction> {
+		match &ext.0.function {
+			crate::Call::EvmCompat(pallet_evm_compat::Call::transact { t }) => Some(t.clone()),
+			_ => None,
+		}
+	}
 
-			(tx, evts)
-		})
-		.collect::<Vec<_>>()
+	fn result_event(
+		record: &frame_system::EventRecord<
+			<Self::Runtime as frame_system::Config>::Event,
+			<Self::Runtime as frame_system::Config>::Hash,
+		>,
+	) -> Option<bool> {
+		match record.event {
+			crate::Event::System(frame_system::Event::ExtrinsicSuccess { .. }) => Some(true),
+			crate::Event::System(frame_system::Event::ExtrinsicFailed { .. }) => Some(false),
+
+			_ => None,
+		}
+	}
+
+	fn payload_event(
+		record: &frame_system::EventRecord<
+			<Self::Runtime as frame_system::Config>::Event,
+			<Self::Runtime as frame_system::Config>::Hash,
+		>,
+	) -> Option<H160> {
+		match record.event {
+			crate::Event::EvmCompat(pallet_evm_compat::Event::PayloadInfo { address, .. }) =>
+				Some(address),
+			_ => None,
+		}
+	}
+
+	fn create_event(
+		record: &frame_system::EventRecord<
+			<Self::Runtime as frame_system::Config>::Event,
+			<Self::Runtime as frame_system::Config>::Hash,
+		>,
+	) -> Option<H160> {
+		match &record.event {
+			crate::Event::Contracts(pallet_contracts::Event::Instantiated { contract, .. }) => {
+				let addr_slice: &[u8; 32] = contract.as_ref();
+				let contract_addr = H160::from_slice(&addr_slice[12..]);
+
+				Some(contract_addr)
+			},
+
+			_ => None,
+		}
+	}
+
+	fn contract_event(
+		record: &frame_system::EventRecord<
+			<Self::Runtime as frame_system::Config>::Event,
+			<Self::Runtime as frame_system::Config>::Hash,
+		>,
+	) -> Option<(H160, Vec<u8>)> {
+		match &record.event {
+			crate::Event::Contracts(pallet_contracts::Event::ContractEmitted {
+				contract,
+				data,
+			}) => {
+				let addr_slice: &[u8; 32] = contract.as_ref();
+				let contract_addr = H160::from_slice(&addr_slice[12..]);
+
+				Some((contract_addr, data.clone()))
+			},
+
+			_ => None,
+		}
+	}
 }
 
-pub fn get_receipts(block: Block) -> Vec<EIP658ReceiptData> {
-	let statuses = transaction_statuses(block.clone());
-	let bundles = tx_bundles(block);
+pub struct EvmAuthorFinder;
 
-	bundles
-		.into_iter()
-		.zip(statuses.into_iter())
-		.map(|((_, evts), status)| {
-			let (status_code, used_weight) = evts
-				.iter()
-				.find_map(|e| match e {
-					Event::System(frame_system::Event::ExtrinsicSuccess { dispatch_info }) =>
-						Some((1_u8, dispatch_info.weight)),
-					Event::System(frame_system::Event::ExtrinsicFailed {
-						dispatch_info, ..
-					}) => Some((0_u8, dispatch_info.weight)),
-					_ => None,
-				})
-				.unwrap_or_default();
-
-			EIP658ReceiptData {
-				status_code,
-				used_gas: used_weight.into(),
-				logs_bloom: status.logs_bloom,
-				logs: status.logs,
-			}
-		})
-		.collect::<Vec<_>>()
-}
-
-pub fn map_block(block: Block) -> EthereumBlock {
-	let eth_txs = tx_bundles(block.clone()).into_iter().map(|v| v.0).collect();
-	let receipts = get_receipts(block.clone());
-
-	let total_used = receipts
-		.iter()
-		.map(|r| r.used_gas)
-		.reduce(|acc, item| acc + item)
-		.unwrap_or_default();
-
-	let header = block.header;
-
-	let timestamp = Timestamp::now();
-
-	let digests = header
-		.digest
-		.logs()
-		.iter()
-		.filter_map(|v| v.as_consensus().map(|(a, b)| (a, b.to_vec())))
-		.collect::<Vec<_>>();
-
-	let beneficiary = AuraAccountAdapter::find_author(digests.iter().map(|(a, b)| (*a, &b[..])))
-		.map(|author| {
+impl FindAuthor<H160> for EvmAuthorFinder {
+	fn find_author<'a, I>(digests: I) -> Option<H160>
+	where
+		I: 'a + IntoIterator<Item = (frame_support::ConsensusEngineId, &'a [u8])>,
+	{
+		AuraAccountAdapter::find_author(digests).map(|author| {
 			// return the first 20 bytes as h160
 			let buf: &[u8; 32] = author.as_ref();
 			H160::from_slice(&buf[0..20])
 		})
-		.unwrap_or_default();
-
-	let receipts_root = ethereum::util::ordered_trie_root(receipts.iter().map(rlp::encode));
-
-	let partial = PartialHeader {
-		parent_hash: header.parent_hash,
-		beneficiary,
-		state_root: header.state_root,
-		receipts_root,
-		logs_bloom: [0_u8; 256].into(),
-		difficulty: Default::default(),
-		number: header.number.into(),
-		gas_limit: Default::default(),
-		gas_used: total_used,
-		timestamp,
-		extra_data: header.digest.encode(),
-		mix_hash: Default::default(),
-		nonce: Default::default(),
-	};
-
-	EthereumBlock::new(partial, eth_txs, vec![])
+	}
 }
 
-pub fn transaction_statuses(block: Block) -> Vec<TransactionStatus> {
-	let bundles = tx_bundles(block);
-
-	bundles
-		.into_iter()
-		.enumerate()
-		.map(|(idx, (tx, evts))| {
-			let logs = evts
-				.iter()
-				.filter_map(|e| {
-					if let Event::Contracts(pallet_contracts::Event::ContractEmitted {
-						contract,
-						data,
-					}) = e
-					{
-						let addr_slice: &[u8; 32] = contract.as_ref();
-						let contract_addr = H160::from_slice(&addr_slice[12..]);
-
-						Some(Log { address: contract_addr, topics: vec![], data: data.clone() })
-					} else {
-						None
-					}
-				})
-				.collect::<Vec<_>>();
-
-			let to = match tx {
-				EthereumTransaction::Legacy(LegacyTransaction {
-					action: ethereum::TransactionAction::Call(to),
-					..
-				}) |
-				EthereumTransaction::EIP2930(EIP2930Transaction {
-					action: ethereum::TransactionAction::Call(to),
-					..
-				}) |
-				EthereumTransaction::EIP1559(EIP1559Transaction {
-					action: ethereum::TransactionAction::Call(to),
-					..
-				}) => Some(to),
-				_ => None,
-			};
-
-			let contract_address = evts.iter().find_map(|e| {
-				if let Event::Contracts(pallet_contracts::Event::Instantiated {
-					contract, ..
-				}) = e
-				{
-					let addr_slice: &[u8; 32] = contract.as_ref();
-					let contract_addr = H160::from_slice(&addr_slice[12..]);
-
-					Some(contract_addr)
-				} else {
-					None
-				}
-			});
-
-			TransactionStatus {
-				transaction_hash: tx.hash(),
-				transaction_index: idx as u32,
-				from: EvmCompat::recover_tx_signer(&tx).unwrap_or_default(),
-				to,
-				contract_address,
-				logs,
-				logs_bloom: [0_u8; 256].into(),
-			}
-		})
-		.collect::<Vec<_>>()
+impl MapBlock<crate::Block, crate::Runtime> for BlockMapper {
+	type FindAuthor = EvmAuthorFinder;
+	type Time = Timestamp;
 }

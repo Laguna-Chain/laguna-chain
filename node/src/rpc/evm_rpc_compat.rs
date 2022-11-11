@@ -8,6 +8,9 @@ use fc_rpc_core::{
 	EthApiServer,
 };
 
+use pallet_evm_compat_rpc::EvmCompatExportApiServer;
+use primitives::Hash;
+
 use codec::Encode;
 use fc_rpc_core::types::SyncInfo;
 use fp_rpc::ConvertTransactionRuntimeApi;
@@ -35,6 +38,7 @@ pub mod executor;
 pub mod net_api;
 pub mod pending_api;
 pub mod pubsub;
+
 // pub mod pubsub;
 pub mod transaction;
 use block_mapper::BlockMapper;
@@ -179,14 +183,14 @@ where
 	/// Returns block with given hash.
 	async fn block_by_hash(&self, hash: H256, full: bool) -> Result<Option<RichBlock>> {
 		let id = BlockNumber::Hash { hash, require_canonical: false };
-		block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone())
+		block_builder::BlockBuilder::<B, C, A>::from_client(self.client.clone())
 			.to_rich_block(Some(id), full)
 			.map(Some)
 	}
 
 	/// Returns block with given number.
 	async fn block_by_number(&self, number: BlockNumber, full: bool) -> Result<Option<RichBlock>> {
-		block_builder::BlockBuilder::from_client(self.client.clone(), self.graph.clone())
+		block_builder::BlockBuilder::<B, C, A>::from_client(self.client.clone())
 			.to_rich_block(Some(number), full)
 			.map(Some)
 	}
@@ -233,10 +237,16 @@ where
 
 	/// Get transaction by its hash.
 	async fn transaction_by_hash(&self, hash: H256) -> Result<Option<Transaction>> {
-		let tx_api =
-			transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone());
+		let tx_api = transaction::TransactionApi::<B, C, A>::from_client(
+			self.client.clone(),
+			self.graph.clone(),
+		);
 
-		tx_api.get_transaction_from_blocks(hash)
+		if let Some(tx) = tx_api.get_transaction_from_pool(hash)? {
+			Ok(Some(tx))
+		} else {
+			tx_api.get_transaction_from_blocks(hash)
+		}
 	}
 
 	/// Returns transaction at given block hash and index.
@@ -245,7 +255,7 @@ where
 		hash: H256,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone())
+		transaction::TransactionApi::<B, C, A>::from_client(self.client.clone(), self.graph.clone())
 			.get_transaction_by_block_hash_and_index(hash, index)
 			.await
 	}
@@ -256,15 +266,17 @@ where
 		number: BlockNumber,
 		index: Index,
 	) -> Result<Option<Transaction>> {
-		transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone())
+		transaction::TransactionApi::<B, C, A>::from_client(self.client.clone(), self.graph.clone())
 			.get_transaction_by_block_number_and_index(number, index)
 			.await
 	}
 
 	/// Returns transaction receipt by transaction hash.
 	async fn transaction_receipt(&self, hash: H256) -> Result<Option<Receipt>> {
-		let tx_api =
-			transaction::TransactionApi::from_client(self.client.clone(), self.graph.clone());
+		let tx_api = transaction::TransactionApi::<B, C, A>::from_client(
+			self.client.clone(),
+			self.graph.clone(),
+		);
 
 		if let Some(tx) = tx_api.get_transaction_from_blocks(hash)? {
 			tx_api.get_transaction_receipt(tx).map(Some)
@@ -351,7 +363,21 @@ where
 
 	/// Returns the code at given address at given time (block number).
 	fn code_at(&self, address: H160, number: Option<BlockNumber>) -> Result<Bytes> {
-		Err(internal_err("code_at not supported"))
+		let id = block_mapper::BlockMapper::<B, C, A>::from_client(self.client.clone())
+			.map_block(number)
+			.unwrap_or_else(|| BlockId::Hash(self.client.info().best_hash));
+
+		if self
+			.client
+			.runtime_api()
+			.check_source_is_contract(&id, address)
+			.map_err(|err| {
+				internal_err(format!("fetch runtime is_contract_address failed: {:?}", err))
+			})? {
+			Err(internal_err("code_at not supported"))
+		} else {
+			Ok(Bytes::new(vec![]))
+		}
 	}
 
 	// ########################################################################
@@ -398,7 +424,7 @@ where
 	/// Introduced in EIP-1159, a Geth-specific and simplified priority fee oracle.
 	/// Leverages the already existing fee history cache.
 	fn max_priority_fee_per_gas(&self) -> Result<U256> {
-		Err(internal_err("max_priority_fee_per_gas not supported"))
+		Ok(U256::zero())
 	}
 
 	// ########################################################################
@@ -483,5 +509,48 @@ where
 			.await
 			.map(move |_| transaction_hash)
 			.map_err(|err| internal_err(format::Geth::pool_error(err)))
+	}
+}
+
+#[async_trait]
+impl<B, C, H: ExHashT, CT, BE, P, A> EvmCompatExportApiServer<Hash>
+	for EthApi<B, C, H, CT, BE, P, A>
+where
+	B: BlockT<Hash = H256, Extrinsic = UncheckedExtrinsic, Header = Header> + Send + Sync + 'static,
+	C: ProvideRuntimeApi<B> + StorageProvider<B, BE>,
+	BE: Backend<B> + 'static,
+	BE::State: StateBackend<BlakeTwo256>,
+	C::Api: ConvertTransactionRuntimeApi<B>,
+	C::Api: EvmCompatRuntimeApi<B, AccountId, Balance>,
+	C::Api: BlockBuilderApi<B>,
+	C: BlockBackend<B> + HeaderBackend<B> + ProvideRuntimeApi<B> + Send + Sync + 'static,
+	CT: fp_rpc::ConvertTransaction<<B as BlockT>::Extrinsic> + Send + Sync + 'static,
+	P: TransactionPool<Block = B> + Send + Sync + 'static,
+	A: ChainApi<Block = B> + 'static,
+{
+	fn fetch_block(&self, at: Option<Hash>) -> Result<RichBlock> {
+		let bn = BlockNumber::Hash {
+			hash: at.unwrap_or(self.client.info().best_hash),
+			require_canonical: false,
+		};
+
+		block_builder::BlockBuilder::<B, C, A>::from_client(self.client.clone())
+			.to_rich_block(Some(bn), true)
+			.map(Some)?
+			.ok_or_else(|| internal_err("unable to export rich block"))
+	}
+
+	fn fetch_receipts(&self, at: Option<Hash>) -> Result<Vec<Receipt>> {
+		let bn = BlockNumber::Hash {
+			hash: at.unwrap_or(self.client.info().best_hash),
+			require_canonical: false,
+		};
+
+		let tx_api = transaction::TransactionApi::<B, C, A>::from_client(
+			self.client.clone(),
+			self.graph.clone(),
+		);
+
+		tx_api.get_block_receipts(Some(bn))
 	}
 }

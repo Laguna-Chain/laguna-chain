@@ -24,7 +24,7 @@ use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use substrate_frame_rpc_system::{AccountNonceApi, System, SystemApiServer};
 
 mod evm_rpc_compat;
-use fc_rpc_core::{EthApiServer, NetApiServer};
+use fc_rpc_core::{EthApiServer, EthFilterApiServer, NetApiServer};
 use sc_network::NetworkService;
 pub struct FullDeps<Client, P, A: ChainApi> {
 	pub client: Arc<Client>,
