@@ -369,7 +369,7 @@ fn test_fixed_address() {
 				None,
 				blob,
 				sel_constructor,
-				Some([0x11; 32]),
+				Some(vec![0x11; 32]),
 			));
 
 			let evts = System::events();
