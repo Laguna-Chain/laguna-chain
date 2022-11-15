@@ -6,7 +6,7 @@ use core::marker::PhantomData;
 
 use frame_support::{sp_runtime, traits::Get};
 use pallet_contracts::AddressGenerator;
-use sp_core::ByteArray;
+use sp_core::crypto::ByteArray;
 use sp_runtime::traits::AccountIdConversion;
 
 /// generate fixed-address if the deployer is the system-deployer, otherwise use the specified

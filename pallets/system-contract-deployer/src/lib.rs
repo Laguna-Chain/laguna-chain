@@ -20,10 +20,12 @@ pub use fixed_address::FixedAddressGenerator;
 pub mod pallet {
 
 	use codec::HasCompact;
-	use frame_support::{pallet_prelude::*, sp_runtime, sp_std, traits::Currency, PalletId};
+	use frame_support::{
+		pallet_prelude::*, sp_runtime, sp_std, sp_std::prelude::*, traits::Currency, PalletId,
+	};
 	use frame_system::{pallet_prelude::*, RawOrigin};
 	use pallet_contracts::weights::WeightInfo;
-	use sp_core::{crypto::UncheckedFrom, ByteArray};
+	use sp_core::crypto::{ByteArray, UncheckedFrom};
 	use sp_runtime::traits::{AccountIdConversion, Hash};
 	use sp_std::{fmt::Debug, vec::Vec};
 	type AccountIdOf<T> = <T as frame_system::Config>::AccountId;

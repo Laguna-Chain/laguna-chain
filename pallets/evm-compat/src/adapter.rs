@@ -1,7 +1,7 @@
 use core::marker::PhantomData;
 
 use pallet_contracts::AddressGenerator;
-use sp_core::ByteArray;
+use sp_core::crypto::ByteArray;
 
 // evm addrss need to start with specific prefix, so that it can be converted between H160 and
 // AccountIdOf<T>
