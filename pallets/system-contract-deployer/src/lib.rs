@@ -14,19 +14,19 @@ mod mock;
 mod tests;
 
 mod fixed_address;
-pub use fixed_address::CustomAddressGenerator;
+pub use fixed_address::FixedAddressGenerator;
 
 #[frame_support::pallet]
 pub mod pallet {
+
 	use codec::HasCompact;
-	use frame_support::{pallet_prelude::*, sp_runtime, sp_std, traits::Currency, PalletId};
+	use frame_support::{
+		pallet_prelude::*, sp_runtime, sp_std, sp_std::prelude::*, traits::Currency, PalletId,
+	};
 	use frame_system::{pallet_prelude::*, RawOrigin};
 	use pallet_contracts::weights::WeightInfo;
-	use sp_core::crypto::UncheckedFrom;
-	use sp_runtime::{
-		traits::{AccountIdConversion, Hash},
-		AccountId32,
-	};
+	use sp_core::crypto::{ByteArray, UncheckedFrom};
+	use sp_runtime::traits::{AccountIdConversion, Hash};
 	use sp_std::{fmt::Debug, vec::Vec};
 	type AccountIdOf<T> = <T as frame_system::Config>::AccountId;
 
@@ -63,10 +63,17 @@ pub mod pallet {
 		Created(T::AccountId),
 	}
 
+	#[pallet::error]
+	pub enum Error<T> {
+		DestinedAddressOutOfRange,
+		IllegalAddress,
+	}
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T>
 	where
-		T::AccountId: UncheckedFrom<T::Hash> + AsRef<[u8]>,
+		T::AccountId: UncheckedFrom<T::Hash>,
+		T::AccountId: ByteArray,
 		<BalanceOf<T> as HasCompact>::Type: Clone + Eq + PartialEq + Debug + TypeInfo + Encode,
 	{
 		/// Instantiates a new system-contract from the supplied `code` optionally transferring
@@ -85,11 +92,14 @@ pub mod pallet {
 			storage_deposit_limit: Option<<BalanceOf<T> as codec::HasCompact>::Type>,
 			code: Vec<u8>,
 			data: Vec<u8>,
-			destined_address: Option<[u8; 32]>,
+			destined_address: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
-			let destined_address =
-				destined_address.unwrap_or_else(|| Self::get_next_available_bytes());
+
+			let destined_address = match destined_address {
+				Some(addr) => addr,
+				None => Self::get_next_available_bytes()?,
+			};
 
 			let deployer: AccountIdOf<T> =
 				T::PalletId::get().try_into_account().expect("Invalid PalletId");
@@ -133,11 +143,14 @@ pub mod pallet {
 			storage_deposit_limit: Option<<BalanceOf<T> as codec::HasCompact>::Type>,
 			code_hash: CodeHash<T>,
 			data: Vec<u8>,
-			destined_address: Option<[u8; 32]>,
+			destined_address: Option<Vec<u8>>,
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
-			let destined_address =
-				destined_address.unwrap_or_else(|| Self::get_next_available_bytes());
+
+			let destined_address = match destined_address {
+				Some(addr) => addr,
+				None => Self::get_next_available_bytes()?,
+			};
 
 			let output = pallet_contracts::Pallet::<T>::instantiate(
 				RawOrigin::Signed(T::PalletId::get().try_into_account().expect("Invalid PalletId"))
@@ -147,13 +160,12 @@ pub mod pallet {
 				storage_deposit_limit,
 				code_hash,
 				data,
-				destined_address.to_vec(),
+				destined_address.clone(),
 			);
 
 			// @dev: coupling or event extraction?
 			if output.is_ok() {
-				let contract_addr = AccountId32::from(destined_address);
-				let contract_addr = T::AccountId::decode(&mut contract_addr.as_ref())
+				let contract_addr = T::AccountId::from_slice(destined_address.as_ref())
 					.expect("Cannot create an AccountId from the given salt");
 
 				SystemContracts::<T>::insert(contract_addr.clone(), true);
@@ -199,33 +211,65 @@ pub mod pallet {
 		}
 	}
 
-	impl<T: Config> Pallet<T> {
+	impl<T: Config> Pallet<T>
+	where
+		T::AccountId: ByteArray,
+	{
 		/// Returns a list of system-contracts deployed on-chain
 		pub fn get_all_system_contracts() -> Vec<T::AccountId> {
 			SystemContracts::<T>::iter_keys().collect()
 		}
 
 		// Helper function used to find the bytes of the next available sequential address
-		fn get_next_available_bytes() -> [u8; 32] {
+		fn get_next_available_bytes() -> Result<Vec<u8>, DispatchError> {
 			let mut counter = NextAddress::<T>::get().unwrap_or(1);
-			loop {
-				let hex = scale_info::prelude::format!("{:064x}", counter);
-				let mut byte = [0u8; 32];
-				hex::decode_to_slice(hex, &mut byte).unwrap();
-				let addr = AccountId32::from(byte);
-				let addr = T::AccountId::decode(&mut addr.as_ref()).unwrap();
-				if !Self::is_system_contract(addr.clone()) {
-					return byte
+
+			let buffer = {
+				loop {
+					// prepare and address buffer
+					let mut buf = vec![0_u8; T::AccountId::LEN];
+
+					// encode the counter value, don't make assumption about the address length
+					let mut hex = scale_info::prelude::format!("{:x}", counter);
+
+					// prefix 0 if hex string not in odd length
+					if hex.len() % 2 != 0 {
+						hex.insert(0, '0');
+					}
+
+					let raw = hex::decode(hex).map_err(|_| Error::<T>::IllegalAddress)?;
+
+					// detect out of range if the hex string cannot fit into the address buffer
+					// TODO: we could also set a lower len to shrink address allowed to be used as
+					// system deployed contracts
+					if raw.len() > T::AccountId::LEN {
+						return Err(Error::<T>::DestinedAddressOutOfRange.into())
+					}
+
+					// right filed the address buffer from the hex buffer from the counter
+					// basically left filling the hex buffer with 0
+					buf[T::AccountId::LEN - raw.len()..].copy_from_slice(raw.as_ref());
+					let addr = T::AccountId::from_slice(buf.as_ref()).unwrap();
+
+					// skip until we find a non deployed address
+					if !Self::is_system_contract(addr.clone()) {
+						break buf
+					}
+
+					counter += 1;
 				}
-				counter += 1;
-			}
+			};
+
+			Ok(buffer)
 		}
 
 		/// Returns the next available sequential address where the contract can be deployed
-		pub fn get_next_available_address() -> T::AccountId {
-			let byte = Self::get_next_available_bytes();
-			let addr = AccountId32::from(byte);
-			T::AccountId::decode(&mut addr.as_ref()).unwrap()
+		pub fn get_next_available_address() -> Result<T::AccountId, DispatchError> {
+			let bytes = Self::get_next_available_bytes()?;
+
+			// bytes should have the exact length
+			let acc = T::AccountId::from_slice(bytes.as_ref()).unwrap();
+			Ok(acc)
 		}
 	}
 

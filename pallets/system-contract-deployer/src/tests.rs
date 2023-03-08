@@ -36,7 +36,7 @@ fn test_fixed_address() {
 					storage_deposit_limit: None,
 					code: blob,
 					data: sel_constructor,
-					destined_address: Some([0x11; 32]),
+					destined_address: Some(vec![0x11; 32]),
 				},
 			));
 
@@ -149,7 +149,7 @@ fn test_only_root_access() {
 				None,
 				blob,
 				sel_constructor,
-				Some([0x11; 32]),
+				Some(vec![0x11; 32]),
 			),
 			error::BadOrigin
 		);

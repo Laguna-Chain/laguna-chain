@@ -7,7 +7,9 @@ use std::sync::Arc;
 
 use pallet_contracts_rpc::{Contracts, ContractsApiServer, ContractsRuntimeApi};
 use pallet_currencies_rpc::{CurrenciesApiServer, CurrenciesRpc, CurrenciesRuntimeApi};
-use pallet_evm_compat_rpc::{EvmCompatApiRuntimeApi, EvmCompatApiServer, EvmCompatRpc};
+use pallet_evm_compat_rpc::{
+	EvmCompatApiRuntimeApi, EvmCompatApiServer, EvmCompatExportApiServer, EvmCompatRpc,
+};
 use pallet_transaction_payment_rpc::{
 	TransactionPayment, TransactionPaymentApiServer, TransactionPaymentRuntimeApi,
 };
@@ -24,7 +26,7 @@ use sp_blockchain::{Error as BlockChainError, HeaderBackend, HeaderMetadata};
 use substrate_frame_rpc_system::{AccountNonceApi, System, SystemApiServer};
 
 mod evm_rpc_compat;
-use fc_rpc_core::{EthApiServer, EthFilterApiServer, NetApiServer};
+use fc_rpc_core::{EthApiServer, NetApiServer};
 use sc_network::NetworkService;
 pub struct FullDeps<Client, P, A: ChainApi> {
 	pub client: Arc<Client>,
@@ -83,10 +85,10 @@ where
 	// extra rpcs
 	// ++++++++++
 
+	// TODO: deprecate when upgrade to pallet-contracts v4
 	module.merge(Contracts::new(client.clone()).into_rpc())?;
-	module.merge(CurrenciesRpc::new(client.clone()).into_rpc())?;
 
-	module.merge(EvmCompatRpc::new(client.clone()).into_rpc())?;
+	module.merge(CurrenciesRpc::new(client.clone()).into_rpc())?;
 
 	module.merge(
 		evm_rpc_compat::net_api::Net::new(client.clone(), network.clone(), true).into_rpc(),
@@ -103,17 +105,31 @@ where
 		.into_rpc(),
 	)?;
 
-	module.merge(
-		evm_rpc_compat::EthApi::new(
-			client.clone(),
-			pool.clone(),
-			graph.clone(),
-			network.clone(),
-			is_authority,
-			Some(laguna_runtime::TransactionConverter),
-		)
-		.into_rpc(),
-	)?;
+	let eth_rpc = evm_rpc_compat::EthApi::new(
+		client.clone(),
+		pool.clone(),
+		graph.clone(),
+		network.clone(),
+		is_authority,
+		Some(laguna_runtime::TransactionConverter),
+	);
+
+	// custom evm related rpc
+
+	module.merge(EthApiServer::into_rpc(eth_rpc))?;
+
+	module.merge(EvmCompatRpc::new(client.clone()).into_rpc())?;
+
+	let evm_export_rpc = evm_rpc_compat::EthApi::new(
+		client,
+		pool,
+		graph,
+		network,
+		is_authority,
+		Some(laguna_runtime::TransactionConverter),
+	);
+
+	module.merge(EvmCompatExportApiServer::into_rpc(evm_export_rpc))?;
 
 	Ok(module)
 }

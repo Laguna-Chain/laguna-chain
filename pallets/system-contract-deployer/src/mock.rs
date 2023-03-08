@@ -14,8 +14,8 @@ use frame_support::{
 	pallet_prelude::{ConstU32, Weight},
 	PalletId,
 };
-use pallet_contracts::{weights::WeightInfo, DefaultContractAccessWeight};
-use pallet_system_contract_deployer::CustomAddressGenerator;
+use pallet_contracts::{weights::WeightInfo, DefaultAddressGenerator, DefaultContractAccessWeight};
+use pallet_system_contract_deployer::FixedAddressGenerator;
 use pallet_transaction_payment::CurrencyAdapter;
 use primitives::{AccountId, Balance, BlockNumber, Hash, Header, Index};
 use sp_runtime::Perbill;
@@ -146,7 +146,7 @@ impl pallet_contracts::Config for Test {
 	type DeletionWeightLimit = DeletionWeightLimit;
 	type DepositPerByte = DepositPerByte;
 	type DepositPerItem = DepositPerItem;
-	type AddressGenerator = CustomAddressGenerator;
+	type AddressGenerator = FixedAddressGenerator<DefaultAddressGenerator>;
 	type ContractAccessWeight = DefaultContractAccessWeight<()>;
 
 	type MaxCodeLen = ConstU32<{ 256 * 1024 }>;

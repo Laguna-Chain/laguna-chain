@@ -10,7 +10,6 @@ use frame_support::{
 use pallet_contracts::AddressGenerator;
 use pallet_evm::{AddressMapping, HashedAddressMapping};
 use pallet_evm_compat::mapper::{BlockFilter, MapBlock};
-use pallet_system_contract_deployer::CustomAddressGenerator;
 use primitives::{AccountId, Balance};
 use sp_core::{H160, U256};
 
@@ -51,39 +50,6 @@ impl Convert<U256, Balance> for BalanceConvert {
 }
 
 /// generate account address in H160 compatible form
-pub struct EvmCompatAdderssGenerator;
-
-type CodeHash<T> = <T as frame_system::Config>::Hash;
-
-impl AddressGenerator<Runtime> for EvmCompatAdderssGenerator {
-	fn generate_address(
-		deploying_address: &<Runtime as frame_system::Config>::AccountId,
-		code_hash: &CodeHash<Runtime>,
-		salt: &[u8],
-	) -> <Runtime as frame_system::Config>::AccountId {
-		let key: AccountId = <Runtime as pallet_system_contract_deployer::Config>::PalletId::get()
-			.try_into_account()
-			.expect("Invalid PalletId");
-
-		let generated = <CustomAddressGenerator as AddressGenerator<Runtime>>::generate_address(
-			deploying_address,
-			code_hash,
-			salt,
-		);
-		let raw: [u8; 32] = generated.into();
-
-		let h_addr = if *deploying_address == key {
-			// we took trailing 20 bytes as input for system contracts
-			H160::from_slice(&raw[12..])
-		} else {
-			// we took leading 20 bytes as input from normal contracts
-			H160::from_slice(&raw[0..20])
-		};
-
-		// add contract-specific prefix
-		PlainContractAddressMapping::into_account_id(h_addr)
-	}
-}
 
 pub struct BlockMapper;
 

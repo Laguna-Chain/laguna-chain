@@ -41,6 +41,7 @@ use sp_core::{crypto::UncheckedFrom, ecdsa, H160, H256, U256};
 use sp_io::{crypto::secp256k1_ecdsa_recover_compressed, hashing::keccak_256};
 type CurrencyOf<T> = <T as pallet_contracts::Config>::Currency;
 use frame_support::weights::WeightToFee;
+pub mod adapter;
 pub mod mapper;
 
 pub(crate) mod self_contained;
