@@ -8,21 +8,21 @@ codec = {default-features = false, features = ['derive'], package = 'parity-scal
 hex = {version = "0.4", default-features = false}
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
 
-frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 
-pallet-contracts = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-contracts-primitives = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-contracts = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+pallet-contracts-primitives = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+sp-core = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 
 [dev-dependencies]
-pallet-balances = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-randomness-collective-flip = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-sudo = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-timestamp = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+pallet-balances = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+pallet-insecure-randomness-collective-flip = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+pallet-sudo = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+pallet-timestamp = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+pallet-transaction-payment = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 primitives = {path = "../../primitives", default-features = false}
-sp-io = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+sp-io = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 
 [features]
 default = ["std"]

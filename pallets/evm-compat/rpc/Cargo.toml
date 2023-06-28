@@ -13,14 +13,13 @@ pallet-evm-compat-rpc-runtime-api = {version = "0.1.0", path = "runtime-api"}
 primitives = {version = "0.1.0", path = "../../../primitives"}
 
 
-sp-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-pallet-contracts-rpc = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+sp-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 
-sp-blockchain = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sp-runtime = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sp-std = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sc-client-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-fc-rpc-core = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.27"}
+sp-blockchain = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+sp-runtime = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+sp-std = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+sc-client-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+fc-rpc-core = {git = 'https://github.com/paritytech/frontier.git', branch = "polkadot-v0.9.42"}
 
 jsonrpsee = {version = "0.14.0", features = ["server", "macros"]}

@@ -10,22 +10,22 @@ codec = {default-features = false, features = ['derive'], package = 'parity-scal
 log = "0.4.14"
 scale-info = {default-features = false, features = ['derive'], version = '2.0.1'}
 
-frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', default-features = false, branch = "polkadot-v0.9.27"}
-pallet-transaction-payment = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+frame-system = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+orml-traits = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', default-features = false, branch = "polkadot-v0.9.42"}
+pallet-transaction-payment = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 
 hex = {version = "0.4.3", default-features = false}
 hex-literal = "0.3.4"
 traits = {version = "0.1.0", path = "../traits", default-features = false}
 
-frame-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27", optional = true}
+frame-benchmarking = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42", optional = true}
 
 [dev-dependencies]
-orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', branch = "polkadot-v0.9.27"}
+orml-tokens = {git = 'https://github.com/open-web3-stack/open-runtime-module-library.git', branch = "polkadot-v0.9.42"}
 primitives = {path = "../../primitives"}
-sp-core = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
-sp-io = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.27"}
+sp-core = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
+sp-io = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 
 [features]
 default = ["std"]
