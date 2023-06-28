@@ -1,9 +1,9 @@
 use codec::HasCompact;
 use frame_support::{
 	dispatch::Dispatchable,
+	dispatch::{DispatchInfo, PostDispatchInfo},
 	pallet_prelude::*,
 	sp_std::{fmt::Debug, prelude::*},
-	weights::{DispatchInfo, PostDispatchInfo},
 };
 use frame_system::pallet_prelude::*;
 
@@ -27,7 +27,7 @@ impl<T> Call<T>
 where
 	OriginFor<T>: Into<Result<RawOrigin, OriginFor<T>>>,
 	T: Send + Sync + Config,
-	<T as frame_system::Config>::Call:
+	<T as frame_system::Config>::RuntimeCall:
 		Dispatchable<Info = DispatchInfo, PostInfo = PostDispatchInfo>,
 	T::AccountId: UncheckedFrom<<T as frame_system::Config>::Hash> + AsRef<[u8]>,
 	BalanceOf<T>: TryFrom<U256> + Into<U256>,

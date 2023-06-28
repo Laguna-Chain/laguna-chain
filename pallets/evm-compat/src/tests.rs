@@ -232,6 +232,7 @@ fn test_create() {
 				&mapped_origin,
 				&codehash,
 				&[],
+				&[],
 			);
 
 			let contract_addr_raw: [u8; 32] = (addr.clone()).into();

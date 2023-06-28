@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ethereum = { version = "0.12.0", default-features = false}
+ethereum = { version = "0.14.0", default-features = false}
 frame-support = {default-features = false, git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 sp-core = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42", default-features = false}
 codec = {default-features = false, features = ['derive'], package = 'parity-scale-codec', version = '3.0.0'}

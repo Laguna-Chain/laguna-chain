@@ -8,10 +8,8 @@ version = "0.1.0"
 [dependencies]
 codec = {version = "3.0.0", package = "parity-scale-codec"}
 serde = {version = "1.0.137", features = ["derive"]}
-
 pallet-evm-compat-rpc-runtime-api = {version = "0.1.0", path = "runtime-api"}
 primitives = {version = "0.1.0", path = "../../../primitives"}
-
 
 sp-api = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}
 pallet-contracts-primitives = {git = 'https://github.com/paritytech/substrate.git', branch = "polkadot-v0.9.42"}

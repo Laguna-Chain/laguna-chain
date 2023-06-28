@@ -12,7 +12,7 @@ use jsonrpsee::{core::RpcResult, proc_macros::rpc, types::error::CallError};
 pub use pallet_evm_compat_rpc_runtime_api::EvmCompatApi as EvmCompatApiRuntimeApi;
 
 use sc_client_api::client::BlockBackend;
-use sp_api::{BlockId, ProvideRuntimeApi};
+use sp_api::ProvideRuntimeApi;
 use sp_blockchain::HeaderBackend;
 use sp_runtime::{
 	app_crypto::sp_core::H160,
@@ -91,9 +91,8 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<AccountId> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
 
-		api.source_to_mapped_address(&at, source)
+		api.source_to_mapped_address(at.unwrap_or_else(|| self.client.info().best_hash), source)
 			.map_err(|e| CallError::from_std_error(e).into())
 	}
 
@@ -103,8 +102,7 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<AccountId>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
-		api.source_is_backed_by(&at, source)
+		api.source_is_backed_by(at.unwrap_or_else(|| self.client.info().best_hash), source)
 			.map_err(|e| CallError::from_std_error(e).into())
 	}
 
@@ -114,8 +112,10 @@ where
 		at: Option<<Block as BlockT>::Hash>,
 	) -> RpcResult<Option<H160>> {
 		let api = self.client.runtime_api();
-		let at = BlockId::hash(at.unwrap_or_else(|| self.client.info().best_hash));
-		api.check_contract_is_evm_compat(&at, contract_addr)
-			.map_err(|e| CallError::from_std_error(e).into())
+		api.check_contract_is_evm_compat(
+			at.unwrap_or_else(|| self.client.info().best_hash),
+			contract_addr,
+		)
+		.map_err(|e| CallError::from_std_error(e).into())
 	}
 }

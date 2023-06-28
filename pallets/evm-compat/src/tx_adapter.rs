@@ -16,6 +16,7 @@ use frame_support::{
 	traits::Currency,
 };
 
+use pallet_contracts::Determinism;
 use pallet_contracts_primitives::{
 	Code, ContractExecResult, ContractInstantiateResult, StorageDeposit,
 };
@@ -98,8 +99,9 @@ where
 				&(self.inner.value().try_into().unwrap_or_default()),
 				&self.inner.input()[..],
 			),
-			ActionRequest::Transfer(target) =>
-				Runner::<T>::transfer(source, &target, &self.inner.value()),
+			ActionRequest::Transfer(target) => {
+				Runner::<T>::transfer(source, &target, &self.inner.value())
+			},
 		}
 	}
 }
@@ -175,7 +177,7 @@ where
 		pallet_contracts::Pallet::<T>::instantiate_with_code(
 			elevated_origin,
 			*value,
-			(*max_weight).saturated_into(),
+			(*max_weight).saturated_into::<u64>().into(),
 			storage_deposit_limit,
 			code,
 			data,
@@ -203,6 +205,7 @@ where
 			from.clone(),
 			code,
 			storage_deposit_limit,
+			Determinism::Enforced,
 		)?;
 
 		let code = Code::Existing(upload_result.code_hash);
@@ -210,7 +213,7 @@ where
 		let mut instantiate_result = pallet_contracts::Pallet::<T>::bare_instantiate(
 			from,
 			*value,
-			(*max_weight).saturated_into(),
+			(*max_weight).saturated_into::<u64>().into(),
 			storage_deposit_limit,
 			code,
 			data,
@@ -255,7 +258,7 @@ where
 			elevated_origin,
 			contract_addr_source,
 			*value,
-			(*max_weight).saturated_into(),
+			(*max_weight).saturated_into::<u64>().into(),
 			storage_deposit_limit,
 			input.to_vec(),
 		)
@@ -280,10 +283,11 @@ where
 			from,
 			dest,
 			*value,
-			(*max_weight).saturated_into(),
+			(*max_weight).saturated_into::<u64>().into(),
 			storage_deposit_limit,
 			input.to_vec(),
 			true,
+			Determinism::Enforced,
 		)
 	}
 

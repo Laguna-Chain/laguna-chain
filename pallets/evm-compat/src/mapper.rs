@@ -25,28 +25,28 @@ pub trait BlockFilter {
 
 	fn result_event(
 		record: &EventRecord<
-			<Self::Runtime as frame_system::Config>::Event,
+			<Self::Runtime as frame_system::Config>::RuntimeEvent,
 			<Self::Runtime as frame_system::Config>::Hash,
 		>,
 	) -> Option<bool>;
 
 	fn payload_event(
 		record: &EventRecord<
-			<Self::Runtime as frame_system::Config>::Event,
+			<Self::Runtime as frame_system::Config>::RuntimeEvent,
 			<Self::Runtime as frame_system::Config>::Hash,
 		>,
 	) -> Option<H160>;
 
 	fn create_event(
 		record: &EventRecord<
-			<Self::Runtime as frame_system::Config>::Event,
+			<Self::Runtime as frame_system::Config>::RuntimeEvent,
 			<Self::Runtime as frame_system::Config>::Hash,
 		>,
 	) -> Option<H160>;
 
 	fn contract_event(
 		record: &EventRecord<
-			<Self::Runtime as frame_system::Config>::Event,
+			<Self::Runtime as frame_system::Config>::RuntimeEvent,
 			<Self::Runtime as frame_system::Config>::Hash,
 		>,
 	) -> Option<(H160, Vec<u8>)>;
@@ -64,7 +64,7 @@ where
 	type Time: Time;
 
 	fn transaction_status(block: &Block) -> Vec<(TransactionStatus, EthereumReceipt)> {
-		let records = frame_system::Pallet::<T>::read_events_no_consensus();
+		let records = frame_system::Pallet::<T>::read_events_no_consensus().collect::<Vec<_>>();
 
 		block
 			.extrinsics()
@@ -108,12 +108,12 @@ where
 					EthereumTransaction::Legacy(LegacyTransaction {
 						action: ethereum::TransactionAction::Call(to),
 						..
-					}) |
-					EthereumTransaction::EIP2930(EIP2930Transaction {
+					})
+					| EthereumTransaction::EIP2930(EIP2930Transaction {
 						action: ethereum::TransactionAction::Call(to),
 						..
-					}) |
-					EthereumTransaction::EIP1559(EIP1559Transaction {
+					})
+					| EthereumTransaction::EIP1559(EIP1559Transaction {
 						action: ethereum::TransactionAction::Call(to),
 						..
 					}) => Some(to),
@@ -159,9 +159,9 @@ where
 		let mut logs_bloom = Bloom::default();
 
 		for logs in receipts.iter().map(|r| match r {
-			EthereumReceipt::Legacy(t) |
-			EthereumReceipt::EIP1559(t) |
-			EthereumReceipt::EIP2930(t) => &t.logs,
+			EthereumReceipt::Legacy(t)
+			| EthereumReceipt::EIP1559(t)
+			| EthereumReceipt::EIP2930(t) => &t.logs,
 		}) {
 			for log in logs {
 				logs_bloom.accrue(BloomInput::Raw(&log.address[..]));
@@ -181,7 +181,9 @@ where
 		let beneficiary = Self::FindAuthor::find_author(digests.iter().map(|(a, b)| (*a, &b[..])))
 			.unwrap_or_default();
 
-		let receipts_root = ethereum::util::ordered_trie_root(receipts.iter().map(rlp::encode));
+		let receipts_root = ethereum::util::ordered_trie_root(
+			receipts.iter().map(|r: &EthereumReceipt| r.encode()),
+		);
 
 		PartialHeader {
 			parent_hash: *header.parent_hash(),

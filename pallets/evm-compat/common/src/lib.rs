@@ -50,10 +50,11 @@ pub trait EvmFeeRequest {
 impl EvmFeeRequest for TransactionMessage {
 	fn gas_price(&self) -> U256 {
 		match self {
-			TransactionMessage::Legacy(LegacyTransactionMessage { gas_price, .. }) |
-			TransactionMessage::EIP2930(EIP2930TransactionMessage { gas_price, .. }) => *gas_price,
-			TransactionMessage::EIP1559(EIP1559TransactionMessage { max_fee_per_gas, .. }) =>
-				*max_fee_per_gas,
+			TransactionMessage::Legacy(LegacyTransactionMessage { gas_price, .. })
+			| TransactionMessage::EIP2930(EIP2930TransactionMessage { gas_price, .. }) => *gas_price,
+			TransactionMessage::EIP1559(EIP1559TransactionMessage { max_fee_per_gas, .. }) => {
+				*max_fee_per_gas
+			},
 		}
 	}
 
@@ -76,9 +77,9 @@ impl EvmFeeRequest for TransactionMessage {
 
 	fn weight_limit(&self) -> U256 {
 		match self {
-			TransactionMessage::Legacy(LegacyTransactionMessage { gas_limit, .. }) |
-			TransactionMessage::EIP2930(EIP2930TransactionMessage { gas_limit, .. }) |
-			TransactionMessage::EIP1559(EIP1559TransactionMessage { gas_limit, .. }) => *gas_limit,
+			TransactionMessage::Legacy(LegacyTransactionMessage { gas_limit, .. })
+			| TransactionMessage::EIP2930(EIP2930TransactionMessage { gas_limit, .. })
+			| TransactionMessage::EIP1559(EIP1559TransactionMessage { gas_limit, .. }) => *gas_limit,
 		}
 	}
 }
@@ -112,17 +113,18 @@ pub trait EvmActionRequest {
 impl EvmActionRequest for TransactionMessage {
 	fn action_request(&self) -> ActionRequest {
 		match self {
-			TransactionMessage::Legacy(LegacyTransactionMessage { action, input, .. }) |
-			TransactionMessage::EIP2930(EIP2930TransactionMessage { action, input, .. }) |
-			TransactionMessage::EIP1559(EIP1559TransactionMessage { action, input, .. }) => {
+			TransactionMessage::Legacy(LegacyTransactionMessage { action, input, .. })
+			| TransactionMessage::EIP2930(EIP2930TransactionMessage { action, input, .. })
+			| TransactionMessage::EIP1559(EIP1559TransactionMessage { action, input, .. }) => {
 				match (action, input) {
 					(TransactionAction::Create, _) => ActionRequest::Create,
-					(TransactionAction::Call(target), input) =>
+					(TransactionAction::Call(target), input) => {
 						if input.is_empty() {
 							ActionRequest::Transfer(*target)
 						} else {
 							ActionRequest::Call(*target)
-						},
+						}
+					},
 				}
 			},
 		}
@@ -130,17 +132,17 @@ impl EvmActionRequest for TransactionMessage {
 
 	fn input(&self) -> Vec<u8> {
 		match self {
-			TransactionMessage::Legacy(LegacyTransactionMessage { input, .. }) |
-			TransactionMessage::EIP2930(EIP2930TransactionMessage { input, .. }) |
-			TransactionMessage::EIP1559(EIP1559TransactionMessage { input, .. }) => input.clone(),
+			TransactionMessage::Legacy(LegacyTransactionMessage { input, .. })
+			| TransactionMessage::EIP2930(EIP2930TransactionMessage { input, .. })
+			| TransactionMessage::EIP1559(EIP1559TransactionMessage { input, .. }) => input.clone(),
 		}
 	}
 
 	fn value(&self) -> U256 {
 		match self {
-			TransactionMessage::Legacy(LegacyTransactionMessage { value, .. }) |
-			TransactionMessage::EIP2930(EIP2930TransactionMessage { value, .. }) |
-			TransactionMessage::EIP1559(EIP1559TransactionMessage { value, .. }) => *value,
+			TransactionMessage::Legacy(LegacyTransactionMessage { value, .. })
+			| TransactionMessage::EIP2930(EIP2930TransactionMessage { value, .. })
+			| TransactionMessage::EIP1559(EIP1559TransactionMessage { value, .. }) => *value,
 		}
 	}
 }
